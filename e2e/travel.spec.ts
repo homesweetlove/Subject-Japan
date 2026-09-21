@@ -147,6 +147,17 @@ test("small screen, explicit fallback, manual Japanese and navigation", async ({
     path: "test-results/translate-light.png",
     fullPage: true,
   });
+  const expand = page.getByRole("button", {
+    name: "번역문 크게 보기",
+    exact: true,
+  });
+  await expand.scrollIntoViewIfNeeded();
+  const bounds = await expand.boundingBox();
+  expect(bounds).not.toBeNull();
+  expect(bounds!.x).toBeGreaterThanOrEqual(0);
+  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(320);
+  await expand.click();
+  await page.getByRole("button", { name: "닫기", exact: true }).click();
   await expect
     .poll(() =>
       page.evaluate(

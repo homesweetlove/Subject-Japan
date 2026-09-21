@@ -144,6 +144,7 @@ export const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 10 },
   between: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 10,
