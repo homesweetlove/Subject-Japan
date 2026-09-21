@@ -4,6 +4,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      upload-artifacts:
+        description: Upload Android APK (requires available GitHub artifact storage)
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -29,9 +34,11 @@ jobs:
       - run: ./gradlew :app:assembleDebug -PreactNativeArchitectures=arm64-v8a --no-daemon
         working-directory: android
       - uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch' && inputs.upload-artifacts
         with:
           name: android-debug
           path: android/app/build/outputs/apk/debug/*.apk
+          retention-days: 3
   ios:
     runs-on: macos-latest
     timeout-minutes: 45

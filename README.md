@@ -97,6 +97,8 @@ npm run test:e2e                  # build:bundles 또는 build:web 이후
 
 `expo export`는 Swift/Kotlin 컴파일을 대신하지 않습니다. GitHub Actions의 Native builds 워크플로는 Android debug APK와 iOS simulator용 앱을 컴파일합니다. 로컬 Windows에서는 iOS 네이티브 컴파일을 할 수 없습니다. 실제 모델 다운로드·비행기 모드 번역·디바이스 클립보드는 [기기 검증 체크리스트](docs/device-validation.md)로 별도 확인합니다.
 
+자동 CI는 컴파일만 수행합니다. APK를 GitHub 아티팩트로 보관하려면 Native builds를 수동 실행하며 `upload-artifacts`를 켭니다. 계정의 아티팩트 저장 용량이 남아 있어야 합니다. Debug APK는 개발 서버에 연결하는 개발용 빌드이며, 독립 실행 배포본은 EAS preview/production 프로필로 만듭니다.
+
 ## 개인정보와 보안
 
 프로필·옷 사이즈·번역 기록·즐겨찾기는 AsyncStorage에 보관합니다. 자체 서버, 로그인, 광고, 분석 SDK는 없습니다. Android 앱 백업을 비활성화하고 iOS AsyncStorage 백업 제외를 명시했습니다. 앱 저장소는 앱 수준 암호화 저장소가 아니므로 비밀번호·결제정보 저장에 사용하지 않습니다. 자세한 범위는 [개인정보 처리 설계](docs/privacy.md)를 참고하세요.

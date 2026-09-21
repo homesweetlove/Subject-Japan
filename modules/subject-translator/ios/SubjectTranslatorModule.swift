@@ -16,7 +16,7 @@ public class SubjectTranslatorModule: Module {
       let conditions = ModelDownloadConditions(allowsCellularAccess: false, allowsBackgroundDownloading: true)
       translator.downloadModelIfNeeded(with: conditions) { [translator] error in
         _ = translator // Retain the translator until its asynchronous work completes.
-        if let error = error { promise.reject("MODEL_DOWNLOAD", "Wi-Fi와 저장 공간을 확인해 주세요.", error) }
+        if error != nil { promise.reject("MODEL_DOWNLOAD", "Wi-Fi와 저장 공간을 확인해 주세요.") }
         else { promise.resolve(nil) }
       }
     }
@@ -32,7 +32,7 @@ public class SubjectTranslatorModule: Module {
       let translator = Translator.translator(options: options)
       translator.translate(text) { [translator] translated, error in
         _ = translator
-        if let error = error { promise.reject("TRANSLATION", "번역팩 설치 상태를 확인해 주세요.", error) }
+        if error != nil { promise.reject("TRANSLATION", "번역팩 설치 상태를 확인해 주세요.") }
         else if let translated = translated { promise.resolve(translated) }
         else { promise.reject("TRANSLATION", "번역 결과가 없어요.") }
       }
