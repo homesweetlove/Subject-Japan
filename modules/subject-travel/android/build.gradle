@@ -4,7 +4,13 @@ plugins {
 }
 group = 'expo.modules.subjecttravel'
 version = '1.0.0'
-android { namespace 'expo.modules.subjecttravel' }
+android {
+  namespace 'expo.modules.subjecttravel'
+  defaultConfig {
+    versionCode 1
+    versionName '1.0.0'
+  }
+}
 dependencies {
   implementation 'com.google.mlkit:text-recognition-japanese:16.0.1'
   implementation 'com.google.mlkit:text-recognition-korean:16.0.1'

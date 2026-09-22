@@ -88,6 +88,8 @@ export function Button({
           color: primary ? c.inverse : c.ink,
           fontSize: 14,
           fontWeight: "600",
+          flexShrink: 1,
+          textAlign: "center",
         }}
       >
         {label}

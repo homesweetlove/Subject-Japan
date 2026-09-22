@@ -48,6 +48,7 @@ private final class LocalVoice {
   private var promise: Promise?
   private var timeout: DispatchWorkItem?
   private var generation = UUID()
+  private var tapInstalled = false
   func start(_ language: String, _ promise: Promise) {
     guard self.promise == nil else { promise.reject("BUSY", "이미 듣고 있어요."); return }
     guard ["ko", "ja"].contains(language), let recognizer = SFSpeechRecognizer(locale: Locale(identifier: language == "ko" ? "ko-KR" : "ja-JP")), recognizer.supportsOnDeviceRecognition else {
@@ -75,6 +76,7 @@ private final class LocalVoice {
             let format = input.outputFormat(forBus: 0)
             guard format.sampleRate > 0, format.channelCount > 0 else { self.finish(nil, "마이크를 사용할 수 없어요."); return }
             input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in request.append(buffer) }
+            self.tapInstalled = true
             self.task = recognizer.recognitionTask(with: request) { result, error in
               DispatchQueue.main.async {
                 guard self.generation == token else { return }
@@ -96,7 +98,9 @@ private final class LocalVoice {
   private func finish(_ text: String?, _ error: String?) {
     guard let promise = promise else { return }
     self.promise = nil; generation = UUID(); timeout?.cancel(); timeout = nil
-    engine?.stop(); engine?.inputNode.removeTap(onBus: 0); engine = nil
+    engine?.stop()
+    if tapInstalled { engine?.inputNode.removeTap(onBus: 0) }
+    tapInstalled = false; engine = nil
     request?.endAudio(); task?.cancel(); task = nil; request = nil; recognizer = nil
     try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     if let error = error { promise.reject("VOICE", error) }
