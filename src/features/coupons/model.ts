@@ -38,6 +38,8 @@ export const officialHosts = new Set([
   "www.sugi-net.jp",
   "global.hankyu-hanshin-dept.co.jp",
   "cp.mistore.jp",
+  "satudora.jp",
+  "www.edion.com",
 ]);
 export function isOfficialCouponUrl(value: string): boolean {
   try {

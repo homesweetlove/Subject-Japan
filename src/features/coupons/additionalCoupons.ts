@@ -1,6 +1,71 @@
 import type { Coupon } from "./model";
 export const additionalCoupons: readonly Coupon[] = [
   {
+    id: "satudora-taxfree",
+    merchant: "사츠도라",
+    title: "면세점 공식 할인 쿠폰",
+    benefit: "세전 5,000엔부터 5% · 38,888엔부터 7%",
+    audience: "visitor",
+    category: "드럭스토어",
+    registrationRequired: false,
+    eligibility:
+      "사츠도라 면세점에서 면세 구매 조건을 충족하는 고객. 결제 전에 여권과 쿠폰을 제시해야 합니다.",
+    minimumSpend:
+      "대상 금액 세전 5,000엔 이상 5%, 38,888엔 이상 7% · 산정 제외 품목은 매장 확인",
+    validity: "공식 게시 쿠폰에 고정 종료일 미표기 · 사용 당일 최신 조건 확인",
+    checkedOn: "2026-09-22",
+    stores:
+      "면세 서비스를 제공하는 사츠도라 대상 매장. 공식 페이지의 면세점 목록 확인",
+    steps: [
+      "사츠도라 공식 쿠폰 페이지를 엽니다.",
+      "계산 전에 여권과 해당 금액대의 쿠폰 화면을 제시합니다. 결제 후 할인 적용은 불가합니다.",
+    ],
+    exclusions: [
+      "일부 상품은 할인에서 제외됩니다. 상세 제외 품목은 계산대에서 확인하세요.",
+      "고정 종료일이 없다는 사실이 영구 사용 가능을 뜻하지 않습니다.",
+    ],
+    stacking: "다른 우대와 동시에 사용할 수 없습니다.",
+    officialUrl: "https://satudora.jp/campaign/2502_GBP_taxfree/",
+    keywords: [
+      "satudora",
+      "satsudora",
+      "サツドラ",
+      "삿포로",
+      "홋카이도",
+      "약국",
+    ],
+  },
+  {
+    id: "edion-taxfree",
+    merchant: "에디온",
+    title: "면세 쇼핑 공식 쿠폰",
+    benefit: "대상 가전 7% · 식품·의약품·화장품 5%",
+    audience: "visitor",
+    category: "가전",
+    registrationRequired: false,
+    eligibility:
+      "일본에 거주하지 않는 여권 소지 관광객 등 공식 면세 조건에 해당하는 고객. 대상 점포·상품을 확인하세요.",
+    minimumSpend:
+      "면세 구매 금액 세전 5,000엔 이상 조건 및 상품별 산정 기준 확인",
+    validity: "2026년 10월 31일까지",
+    expiresOn: "2026-10-31",
+    checkedOn: "2026-09-22",
+    stores: "에디온 공식 안내의 면세 취급 대상 점포",
+    steps: [
+      "에디온 공식 방일 고객 페이지에서 쿠폰 이미지를 열어 상세를 확인합니다.",
+      "계산 전에 여권과 최신 쿠폰을 제시합니다. 품목별 7% 또는 5% 적용 여부를 확인하세요.",
+    ],
+    exclusions: [
+      "전단·일일특가·한정·처분 상품, 휴대전화, Surface·VAIO·Apple·Amazon 제품, PC 부품, 수입 시계 등은 할인 제외입니다.",
+      "완구·게임기·게임 소프트·관련 제품, 음반·영상·서적·주류·금권 등도 제외됩니다. 원본 약관의 전체 목록을 확인하세요.",
+    ],
+    stacking:
+      "다른 쿠폰·할인과 중복 사용 불가. 면세율과 쿠폰 할인율을 단순 합산하지 않습니다.",
+    officialUrl:
+      "https://www.edion.com/ito/contents/special/lp/edion_inbound/taxfree/en.html",
+    keywords: ["edion", "エディオン", "난바", "전자제품", "카메라"],
+  },
+  {
     id: "biccamera-livejapan",
     merchant: "빅카메라·코지마",
     title: "LIVE JAPAN 제휴 면세 쿠폰",
