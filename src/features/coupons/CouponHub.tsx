@@ -5,6 +5,7 @@ import { Choice } from "../../ui/Choice";
 import { GuideScreen } from "../guides/GuideScreen";
 import { guestGuides } from "../guides/catalog";
 import { CouponScreen } from "./CouponScreen";
+import { NearbyScreen } from "./NearbyScreen";
 export function CouponHub({
   state,
   onToggleSaved,
@@ -14,10 +15,17 @@ export function CouponHub({
   onToggleSaved: (id: string) => Promise<void>;
   onToggleGuide: (id: string) => Promise<void>;
 }) {
-  const [section, setSection] = useState<"coupons" | "guest">("coupons");
+  const [section, setSection] = useState<"coupons" | "guest" | "nearby">(
+    "coupons",
+  );
   return (
     <View style={{ gap: 24 }}>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        <Choice
+          label="주변 매장"
+          selected={section === "nearby"}
+          onPress={() => setSection("nearby")}
+        />
         <Choice
           label="쿠폰·혜택"
           selected={section === "coupons"}
@@ -29,7 +37,9 @@ export function CouponHub({
           onPress={() => setSection("guest")}
         />
       </View>
-      {section === "coupons" ? (
+      {section === "nearby" ? (
+        <NearbyScreen />
+      ) : section === "coupons" ? (
         <CouponScreen
           savedIds={state.savedCouponIds}
           onToggleSaved={onToggleSaved}

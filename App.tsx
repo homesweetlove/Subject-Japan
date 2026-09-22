@@ -13,7 +13,9 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { initialState, type LocalState } from "./src/domain/models";
 import { ProfileScreen } from "./src/features/profile/ProfileScreen";
-import { TranslateScreen } from "./src/features/translation/TranslateScreen";
+import { TranslationHub } from "./src/features/translation/TranslationHub";
+import { CardScreen } from "./src/features/cards/CardScreen";
+import { PayScreen } from "./src/features/pay/PayScreen";
 import { CouponHub } from "./src/features/coupons/CouponHub";
 import { TripScreen } from "./src/features/trip/TripScreen";
 import { REMINDER_LIMIT } from "./src/features/trip/countdown";
@@ -25,7 +27,6 @@ import {
 } from "./src/storage/state";
 import {
   Button,
-  Card,
   Icon,
   IconButton,
   Label,
@@ -46,7 +47,7 @@ const tabs: {
     title: "이동을 더 가볍게",
     icon: "card-outline",
     description:
-      "Suica · PASMO · ICOCA 잔액과 이용내역을 한곳에서 확인하는 기능을 준비하고 있어요.",
+      "Suica · PASMO · ICOCA 잔액과 이용내역을 한곳에서 확인하는 기능을 사용할 수 있어요.",
   },
   {
     key: "coupon",
@@ -67,15 +68,14 @@ const tabs: {
     label: "PAY",
     title: "계산은 간단하게",
     icon: "wallet-outline",
-    description:
-      "환율, 면세, 게스트 할인과 캐시백을 함께 계산하는 도구를 준비하고 있어요.",
+    description: "환율, 면세, 게스트 할인과 캐시백을 함께 계산하는 도구예요.",
   },
   {
     key: "trip",
     label: "TRIP",
     title: "나만의 여행 노트",
     icon: "map-outline",
-    description: "여행 일정과 예약 정보를 모아둘 공간을 준비하고 있어요.",
+    description: "여행 일정과 예약 정보를 모아둘 공간이에요.",
   },
 ];
 function Application() {
@@ -131,7 +131,6 @@ function Application() {
     setProfileOpen(true);
     scroll.current?.scrollTo({ y: 0, animated: false });
   };
-  const activeTab = tabs.find((t) => t.key === tab)!;
   const toggleGuide = (id: string) =>
     commit((s) => ({
       ...s,
@@ -254,7 +253,7 @@ function Application() {
                     }}
                   />
                 ) : tab === "translate" ? (
-                  <TranslateScreen
+                  <TranslationHub
                     state={state}
                     onRecord={(value) =>
                       commit((s) => recordTranslation(s, value))
@@ -275,9 +274,67 @@ function Application() {
                       commit((s) => toggleSavedCoupon(s, id))
                     }
                   />
+                ) : tab === "card" ? (
+                  <CardScreen
+                    cards={state.transitCards}
+                    rate={state.exchangeRate}
+                    onSave={(value) =>
+                      commit((s) => {
+                        if (
+                          !s.transitCards.some((c) => c.id === value.id) &&
+                          s.transitCards.length >= 20
+                        )
+                          throw new Error(
+                            "교통카드는 20장까지 저장할 수 있어요.",
+                          );
+                        return {
+                          ...s,
+                          transitCards: [
+                            value,
+                            ...s.transitCards.filter((c) => c.id !== value.id),
+                          ],
+                        };
+                      })
+                    }
+                    onDelete={(id) =>
+                      commit((s) => ({
+                        ...s,
+                        transitCards: s.transitCards.filter((c) => c.id !== id),
+                      }))
+                    }
+                  />
+                ) : tab === "pay" ? (
+                  <PayScreen
+                    rate={state.exchangeRate}
+                    onRate={(exchangeRate) =>
+                      commit((s) => ({ ...s, exchangeRate }))
+                    }
+                  />
                 ) : tab === "trip" ? (
                   <TripScreen
                     state={state}
+                    onSaveItem={(item) =>
+                      commit((s) => {
+                        if (
+                          !s.tripItems.some((t) => t.id === item.id) &&
+                          s.tripItems.length >= 200
+                        )
+                          throw new Error("일정은 200개까지 저장할 수 있어요.");
+                        return {
+                          ...s,
+                          tripItems: [
+                            ...s.tripItems.filter((t) => t.id !== item.id),
+                            item,
+                          ],
+                        };
+                      })
+                    }
+                    onDeleteItem={(id) =>
+                      commit((s) => ({
+                        ...s,
+                        tripItems: s.tripItems.filter((t) => t.id !== id),
+                      }))
+                    }
                     onToggleGuide={toggleGuide}
                     onSaveReminder={(reminder) =>
                       commit((s) => {
@@ -310,33 +367,7 @@ function Application() {
                       }))
                     }
                   />
-                ) : (
-                  <View style={{ gap: 24, paddingTop: 35 }}>
-                    <Icon name={activeTab.icon} size={38} />
-                    <Label size={30} weight="700">
-                      {activeTab.title}
-                    </Label>
-                    <Label muted>{activeTab.description}</Label>
-                    <Card>
-                      <Label weight="600">준비 중인 기능이에요</Label>
-                      <Label muted size={14}>
-                        지금은 번역, 나의 쇼핑 사이즈와 공식 쿠폰·혜택을 이용할
-                        수 있어요.
-                      </Label>
-                      <Button
-                        label="번역기로 이동"
-                        primary
-                        onPress={() => setTab("translate")}
-                      />
-                      {tab === "trip" && (
-                        <Button
-                          label="나의 프로필 · 사이즈"
-                          onPress={openProfile}
-                        />
-                      )}
-                    </Card>
-                  </View>
-                )}
+                ) : null}
               </ScrollView>
             </KeyboardAvoidingView>
           )}

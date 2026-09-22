@@ -165,15 +165,14 @@ test("small screen, explicit fallback, manual Japanese and navigation", async ({
       ),
     )
     .toBe(true);
-  for (const name of ["IC CARD", "PAY"]) {
+  for (const [name, title] of [
+    ["IC CARD", "이동을 더 가볍게"],
+    ["PAY", "결제 전, 한 번 더"],
+  ]) {
     await page.getByRole("tab", { name, exact: true }).click();
-    await expect(
-      page.getByText("준비 중인 기능이에요", { exact: true }),
-    ).toBeVisible();
+    await expect(page.getByText(title, { exact: true })).toBeVisible();
   }
-  await page
-    .getByRole("button", { name: "번역기로 이동", exact: true })
-    .click();
+  await page.getByRole("tab", { name: "TRANSLATE", exact: true }).click();
   await page.getByRole("button", { name: "사이즈/재고", exact: true }).click();
   await page
     .getByRole("button", { name: "상의 사이즈 등록하기", exact: true })

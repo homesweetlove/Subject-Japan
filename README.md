@@ -4,11 +4,17 @@
 
 ## 지금 사용할 수 있는 기능
 
+- 카메라·사진 번역: 일본어/한국어 OCR → 편집 → 기기 내 번역 (사진은 업로드하지 않음)
+- 음성 대화: 기기 내 음성 인식 → 원문 확인 → 번역 → 시스템 음성 읽기, 양방향 대화 기록
+- 실물 Suica/PASMO/ICOCA NFC 읽기, 마지막 잔액·최대 20건 기록, 카드 20장 이름 관리, 원화 환산
+- PAY: 키 없는 참고 환율·수동 환율, 순차 할인·면세/추후 환급·수수료·캐시백 계산
+- 여행 일정·예약번호·메모 200개, 완료 체크·수정·삭제·지도 연결
+- 주변 매장: 동의 후 위치 기반 반경 2km OSM 조회 및 브랜드 쿠폰 연결
 - 한국어 ↔ 일본어 텍스트 번역: Google ML Kit 기기 내 엔진 (전용 네이티브 빌드)
 - 한글/가나/한자 기반 자동 감지, 한국어·일본어 직접 선택 (혼합 문장·숫자는 수동 선택 안내)
 - 결과 복사, 원문/번역문 교환, 상대방에게 보여주는 전체화면
 - 로컬 최근 번역 100개, 즐겨찾기 100개, 기록 삭제
-- 8개 상황별 여행 문장 23개: 쇼핑, 사이즈/재고, 백화점/면세, 식당, 호텔, 예약, 교통, 응급상황
+- 8개 상황별 오프라인 여행 문장 23개, 캐주얼/일반 정중/매우 정중 일본어 표현: 쇼핑, 사이즈/재고, 백화점/면세, 식당, 호텔, 예약, 교통, 응급상황
 - 첫 실행 프로필 등록 및 사용자 페이지: 닉네임, 상의·하의·신발 사이즈 (모두 선택)
 - 사이즈가 들어간 한국어·일본어 쇼핑 문장 자동 완성
 - 시스템/라이트/다크 테마, 전체 로컬 데이터 초기화
@@ -81,12 +87,16 @@ src/features/translation/         번역 UI, 입력 검사, provider 계약 및 
 src/features/phrases/             상황별 양방향 문장팩, 로컬 사이즈 치환
 src/features/profile/             첫 실행 및 사용자 페이지
 src/features/coupons/             공식 혜택 카탈로그, 필터/기간 판단, 목록·상세 화면
-src/features/trip/                공항 노선, JST 날짜/카운트다운, 여행 화면
+src/features/trip/                공항 노선, JST 카운트다운, 일정·예약 관리
+src/features/cards/               FeliCa 기록 검증·해석, 여러 카드 관리
+src/features/pay/                 환율·할인·면세·환급·캐시백 계산
+src/features/tools/               OCR·음성·NFC 네이티브 어댑터
 src/features/guides/              공연·게스트/VIP 안내, 준비 체크리스트
 src/storage/                     버전 있는 로컬 저장소, 데이터 검증, 기록/즐겨찾기 정책
 src/ui/                          공통 컴포넌트, 테마
 modules/subject-translator/       ML Kit Swift/Kotlin Expo 모듈
 modules/subject-local-store/      Android Room 로컬 DB 및 Expo 브리지
+modules/subject-travel/           Android ML Kit / Apple Vision OCR, 음성 인식, NFC
 tests/                           제공자 경계·사이즈·저장소 단위 테스트
 e2e/                             실제 브라우저 사용자 흐름 테스트
 .github/workflows/                품질 검사 및 Android/iOS 네이티브 컴파일
@@ -116,7 +126,7 @@ Quality 검사는 모든 코드 변경에 실행하며, 네이티브 컴파일�
 
 ## 개인정보와 보안
 
-프로필·사이즈·기록·혜택·막차·체크리스트는 기기에만 보관합니다. Android 전용 빌드는 Room 2.8.5 DB를 사용하고 기존 AsyncStorage 데이터를 검증 후 자동 이전합니다. iOS·Expo Go·웹은 같은 저장소 계약의 AsyncStorage 구현을 사용합니다. 자체 서버, 로그인, 광고, 분석 SDK는 없습니다. Android 백업과 iOS AsyncStorage 백업을 비활성화했습니다. 저장소는 앱 수준 암호화 저장소가 아니므로 비밀번호·결제정보 저장에 사용하지 않습니다. [개인정보 처리 설계](docs/privacy.md)를 참고하세요.
+프로필·사이즈·기록·교통카드·환율·일정·혜택·막차·체크리스트는 기기에만 보관합니다. Android 전용 빌드는 Room 2.8.5 DB를 사용하고 기존 AsyncStorage 데이터를 검증 후 자동 이전합니다. iOS·Expo Go·웹은 같은 저장소 계약의 AsyncStorage 구현을 사용합니다. 자체 서버, 로그인, 광고, 분석 SDK는 없습니다. Android 백업과 iOS AsyncStorage 백업을 비활성화했습니다. 저장소는 앱 수준 암호화 저장소가 아니므로 비밀번호·결제정보 저장에 사용하지 않습니다. [개인정보 처리 설계](docs/privacy.md)를 참고하세요.
 
 `.env*`, 인증서, 키스토어, 플랫폼 서비스 설정은 `.gitignore`로 제외합니다. Expo의 `EXPO_PUBLIC_*`는 공개 번들 값이므로 비밀키를 넣지 않습니다.
 
@@ -124,16 +134,17 @@ Quality 검사는 모든 코드 변경에 실행하며, 네이티브 컴파일�
 
 ## 다음 단계
 
-IC CARD · PAY는 아직 준비 상태입니다. COUPON은 공식 출처 기반 카탈로그·게스트/VIP 안내, TRIP은 막차 타이머·공연 가이드가 구현되어 있습니다. 모든 장기 기능이 완료된 것은 아닙니다.
+다섯 탭에 실제 기능을 연결했습니다. 하드웨어·외부 데이터 의존성은 다음과 같습니다.
 
-- 카메라 번역: 메뉴판·안내문·영수증·표지판 OCR → 현재 번역 서비스
-- 음성 대화: 기기 음성 인식/TTS 지원 여부와 권한을 별도 어댑터로 처리
-- 캐주얼/일반 정중/매우 정중: 제공자 기능 지원과 검증된 문장팩을 구분
-- 교통카드: NFC-F/FeliCa, 기기 및 OS별 제약 검증 후 읽기 전용 어댑터
-- 쿠폰: 공식 혜택 확대, 갱신 파이프라인, 위치 기반 매장 정보 (권한 및 데이터 출처 확인 후)
-- 결제: 환율·면세·게스트 할인·카드 혜택 계산 도메인
-- 여행: 일정·예약 관리, 계약된 시간표 데이터 제공자 연동, OS별 로컬 알림
+- NFC: 실물 FeliCa 카드 읽기 전용. 동일 휴대폰 Wallet 카드 조회·충전·결제는 미지원입니다. iPhone 배포 서명에 NFC Tag Reading capability가 필요합니다. 역명 DB는 포함하지 않습니다.
+- 사진: Android는 번들 ML Kit 일본어/한국어 OCR, iOS는 Vision. 손글씨·세로쓰기·영수증의 작은 글자는 인식 오류가 있을 수 있어 수정 후 번역합니다.
+- 음성: Android 12 이상 및 기기 내 인식 서비스, iOS는 언어별 `supportsOnDeviceRecognition` 지원이 필요합니다. 지원하지 않으면 서버 인식으로 전환하지 않습니다. TTS는 기기 시스템 음성 서비스를 사용합니다.
+- 정중함: 미리 작성한 문장팩 23개에 3가지 표현을 제공합니다. ML Kit 자유 입력 번역에는 말투 제어 API가 없어 임의 문장의 정중함 변환은 미지원입니다.
+- 주변 쿠폰: OpenStreetMap에 등록된 매장 후보입니다. 검색할 때 동의 후 약 100m 단위 좌표를 Overpass에 전송하며, 지점의 쿠폰 사용 가능 여부를 보장하지 않습니다. 일본의 모든 쿠폰 수집·자동 갱신은 아직 제공하지 않습니다.
+- 막차: 확인한 시간 수동 등록 방식입니다. 실시간 운행·자동 막차 검색·앱 종료 중 알림은 별도 시간표 공급자와 알림 연동이 필요합니다.
+- 결제: 참고 계산이며 매장 승인·카드사 청구 금액을 보장하지 않습니다. 2026-11-01 면세 환급 방식 전환 안내와 국세청 출처를 제공합니다.
 
+기능별 사용법·제약과 공식 자료는 [기기 기능 안내](docs/device-features.md)에 정리했습니다.
 세부 설계는 [확장 계획](docs/architecture.md)을 참고하세요.
 
 공식 참고: [Expo 로컬 모듈](https://docs.expo.dev/modules/get-started/), [ML Kit 번역](https://developers.google.com/ml-kit/language/translation), [Android](https://developers.google.com/ml-kit/language/translation/android), [iOS](https://developers.google.com/ml-kit/language/translation/ios).

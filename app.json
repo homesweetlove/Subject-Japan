@@ -12,16 +12,20 @@
       "bundleIdentifier": "com.subjectjapan.app",
       "infoPlist": {
         "RCTAsyncStorageExcludeFromBackup": true,
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NFCReaderUsageDescription": "실물 일본 교통카드 잔액과 최근 기록을 읽습니다.",
+        "NSSpeechRecognitionUsageDescription": "한국어와 일본어 음성 대화를 기기에서 인식합니다.",
+        "NSMicrophoneUsageDescription": "번역할 음성을 인식할 때 마이크를 사용합니다.",
+        "com.apple.developer.nfc.readersession.felica.systemcodes": ["0003"]
+      },
+      "entitlements": {
+        "com.apple.developer.nfc.readersession.formats": ["TAG"]
       }
     },
     "android": {
       "package": "com.subjectjapan.app",
       "allowBackup": false,
-      "blockedPermissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.SYSTEM_ALERT_WINDOW"
-      ],
+      "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -42,7 +46,21 @@
           }
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "번역할 메뉴판·안내문 사진을 선택합니다.",
+          "cameraPermission": "번역할 글자를 촬영합니다.",
+          "microphonePermission": "번역할 음성을 인식할 때 마이크를 사용합니다."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "요청할 때 주변 쿠폰 매장을 찾기 위해 위치를 사용합니다."
+        }
+      ]
     ]
   }
 }

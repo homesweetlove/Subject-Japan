@@ -4,6 +4,9 @@ import {
   type Translation,
 } from "../domain/models";
 import { validReminder, REMINDER_LIMIT } from "../features/trip/countdown";
+import { validCard } from "../features/cards/model";
+import { validRate } from "../features/pay/calculator";
+import { validTripItem } from "../features/trip/itinerary";
 
 export const STORAGE_KEY = "subject-japan.local.v1";
 export const HISTORY_LIMIT = 100;
@@ -123,6 +126,27 @@ export function decodeState(raw: string | null): LocalState {
           ),
         ),
       ].slice(0, 300)
+    : [];
+  state.transitCards = Array.isArray(value.transitCards)
+    ? value.transitCards
+        .filter(validCard)
+        .filter(
+          (v: { id: string }, i: number, a: { id: string }[]) =>
+            a.findIndex((x) => x.id === v.id) === i,
+        )
+        .slice(0, 20)
+    : [];
+  state.exchangeRate = validRate(value.exchangeRate)
+    ? value.exchangeRate
+    : null;
+  state.tripItems = Array.isArray(value.tripItems)
+    ? value.tripItems
+        .filter(validTripItem)
+        .filter(
+          (v: { id: string }, i: number, a: { id: string }[]) =>
+            a.findIndex((x) => x.id === v.id) === i,
+        )
+        .slice(0, 200)
     : [];
   return state;
 }

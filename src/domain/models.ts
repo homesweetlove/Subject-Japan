@@ -1,4 +1,7 @@
 import type { AirportReminder } from "../features/trip/countdown";
+import type { TransitCard } from "../features/cards/model";
+import type { ExchangeRate } from "../features/pay/calculator";
+import type { TripItem } from "../features/trip/itinerary";
 export type Language = "ko" | "ja";
 export type SourceLanguage = Language | "auto";
 export type ThemePreference = "system" | "light" | "dark";
@@ -28,6 +31,9 @@ export interface LocalState {
   savedCouponIds: string[];
   airportReminders: AirportReminder[];
   guideChecks: string[];
+  transitCards: TransitCard[];
+  exchangeRate: ExchangeRate | null;
+  tripItems: TripItem[];
 }
 export const initialState = (): LocalState => ({
   version: 1,
@@ -39,6 +45,9 @@ export const initialState = (): LocalState => ({
   savedCouponIds: [],
   airportReminders: [],
   guideChecks: [],
+  transitCards: [],
+  exchangeRate: null,
+  tripItems: [],
 });
 export const languageNames: Record<Language, string> = {
   ko: "한국어",

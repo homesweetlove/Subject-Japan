@@ -34,6 +34,8 @@ import {
 import { useTheme } from "../../ui/theme";
 import { detectLanguage, opposite, translateText } from "./service";
 import { translationProvider } from "./provider";
+import { Choice } from "../../ui/Choice";
+import type { Register } from "../phrases/register";
 
 export function TranslateScreen({
   state,
@@ -53,6 +55,7 @@ export function TranslateScreen({
   const [source, setSource] = useState<SourceLanguage>("auto");
   const [result, setResult] = useState<Translation | null>(null);
   const [category, setCategory] = useState<Category>("쇼핑");
+  const [register, setRegister] = useState<Register>("polite");
   const [library, setLibrary] = useState<"phrases" | "history" | "favorites">(
     "phrases",
   );
@@ -133,7 +136,7 @@ export function TranslateScreen({
     }
   };
   const choosePhrase = async (phrase: Phrase) => {
-    const pair = resolvePhrase(phrase, state.profile);
+    const pair = resolvePhrase(phrase, state.profile, register);
     if (!pair) {
       onProfile();
       return;
@@ -481,6 +484,25 @@ export function TranslateScreen({
         </View>
         {library === "phrases" ? (
           <>
+            <View style={{ gap: 8 }}>
+              <Label size={12} muted>
+                오프라인 문장팩 · 일본어 표현 선택
+              </Label>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {(["casual", "polite", "formal"] as const).map((v, i) => (
+                  <Choice
+                    key={v}
+                    label={["캐주얼", "일반 정중", "매우 정중"][i]}
+                    selected={register === v}
+                    onPress={() => setRegister(v)}
+                  />
+                ))}
+              </View>
+              <Label size={12} muted>
+                아래 빠른 문장을 고를 때 적용돼요. 자유 입력 번역의 말투는
+                변경하지 않아요. 점원에게는 정중한 표현을 권해요.
+              </Label>
+            </View>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -515,7 +537,7 @@ export function TranslateScreen({
               {phrases
                 .filter((p) => p.category === category)
                 .map((phrase) => {
-                  const pair = resolvePhrase(phrase, state.profile);
+                  const pair = resolvePhrase(phrase, state.profile, register);
                   return (
                     <Pressable
                       key={phrase.id}

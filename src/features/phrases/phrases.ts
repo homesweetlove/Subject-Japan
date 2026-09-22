@@ -1,4 +1,5 @@
 import type { Language, Profile, SizeKey } from "../../domain/models";
+import { registers, type Register } from "./register";
 
 export const categories = [
   "쇼핑",
@@ -165,18 +166,26 @@ export const phrases: Phrase[] = [
 export function resolvePhrase(
   phrase: Phrase,
   profile: Profile,
+  register: Register = "polite",
 ): Record<Language, string> | null {
   const size = phrase.sizeKey ? profile.sizes[phrase.sizeKey].trim() : "";
   if (phrase.sizeKey && !size) return null;
   return {
     ko: phrase.ko.replace("{size}", () => size),
-    ja: phrase.ja.replace("{size}", () => size),
+    ja: (register === "polite"
+      ? phrase.ja
+      : (registers[phrase.id]?.[register] ?? phrase.ja)
+    ).replace("{size}", () => size),
   };
 }
 
 const normalize = (text: string) => text.trim().replace(/[\s。.!！?？]/g, "");
 export function findPhrase(text: string, source: Language, profile: Profile) {
   return phrases
-    .map((p) => resolvePhrase(p, profile))
+    .flatMap((p) =>
+      (["polite", "casual", "formal"] as const).map((register) =>
+        resolvePhrase(p, profile, register),
+      ),
+    )
     .find((p) => p && normalize(p[source]) === normalize(text));
 }

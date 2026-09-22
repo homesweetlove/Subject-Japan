@@ -6,21 +6,34 @@ import { GuideScreen } from "../guides/GuideScreen";
 import { ticketGuides } from "../guides/catalog";
 import { AirportScreen } from "./AirportScreen";
 import type { AirportReminder } from "./countdown";
+import type { TripItem } from "./itinerary";
+import { ItineraryScreen } from "./ItineraryScreen";
 export function TripScreen({
   state,
   onSaveReminder,
   onDeleteReminder,
   onToggleGuide,
+  onSaveItem,
+  onDeleteItem,
 }: {
   state: LocalState;
   onSaveReminder: (r: AirportReminder) => Promise<void>;
   onDeleteReminder: (id: string) => Promise<void>;
   onToggleGuide: (id: string) => Promise<void>;
+  onSaveItem: (item: TripItem) => Promise<void>;
+  onDeleteItem: (id: string) => Promise<void>;
 }) {
-  const [section, setSection] = useState<"airport" | "tickets">("airport");
+  const [section, setSection] = useState<"airport" | "tickets" | "itinerary">(
+    "airport",
+  );
   return (
     <View style={{ gap: 24 }}>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        <Choice
+          label="일정·예약"
+          selected={section === "itinerary"}
+          onPress={() => setSection("itinerary")}
+        />
         <Choice
           label="공항 막차"
           selected={section === "airport"}
@@ -32,7 +45,13 @@ export function TripScreen({
           onPress={() => setSection("tickets")}
         />
       </View>
-      {section === "airport" ? (
+      {section === "itinerary" ? (
+        <ItineraryScreen
+          items={state.tripItems}
+          onSave={onSaveItem}
+          onDelete={onDeleteItem}
+        />
+      ) : section === "airport" ? (
         <AirportScreen
           reminders={state.airportReminders}
           onSave={onSaveReminder}

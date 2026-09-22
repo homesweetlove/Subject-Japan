@@ -25,3 +25,10 @@
 | 여행 | trip repository | 버전 있는 데이터 마이그레이션, 백업/내보내기 동의 |
 
 Android 전용 앱의 documentStore는 Room 기반 SQLite로 전환했습니다. iOS·웹은 같은 계약 아래 AsyncStorage를 사용합니다. `airportReminders`, `guideChecks`는 기존 v1 상태를 유지하는 추가 필드이며 기존 설치에서는 빈 배열로 읽습니다. Room 이전의 실패·손상·정리 실패 테스트를 포함합니다. 계정 도입은 로컬 프로필의 서버 동기화를 의미하지 않습니다. [여행 기능의 경계와 출처](travel.md)를 참고하세요.
+
+
+## 구현 업데이트 (2026-09-22)
+
+`subject-travel` 네이티브 모듈과 `travelTools` 어댑터가 OCR·기기 내 음성 인식·NFC를 담당합니다. 사진 인식문과 음성 인식문은 공통 `translateText` 서비스로 전달합니다. `TranslationHub`의 모드 전환 시 진행 중인 녹음/스캔을 종료하며 오래된 결과로 화면을 덮어쓰지 않습니다. 문장팩에는 작성된 3단계 말투를 추가했으며 자유 입력에 접미사를 붙여 정중한 번역이라고 위장하지 않습니다.
+
+카드 디코더·결제 계산·일정 검증·거리/브랜드 매칭은 UI와 분리된 순수 함수입니다. `LocalState` v1에 `transitCards`, `exchangeRate`, `tripItems`를 추가하고 누락된 이전 데이터에는 기본값을 적용합니다. 각 항목을 검증/중복 제거한 뒤 로드하며 기존 직렬 커밋과 Room/AsyncStorage 저장 계약을 그대로 사용합니다. 거래/프로필/예약 정보는 외부 공급자 요청에 들어가지 않습니다. 자세한 네트워크 경계는 privacy.md를 참고하세요.

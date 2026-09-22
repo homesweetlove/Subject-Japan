@@ -1,0 +1,11 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+group = 'expo.modules.subjecttravel'
+version = '1.0.0'
+android { namespace 'expo.modules.subjecttravel' }
+dependencies {
+  implementation 'com.google.mlkit:text-recognition-japanese:16.0.1'
+  implementation 'com.google.mlkit:text-recognition-korean:16.0.1'
+}
