@@ -1,5 +1,6 @@
 export type CouponAudience = "general" | "visitor";
-export type CouponCategory = "종합쇼핑" | "백화점" | "패션" | "식음료";
+export type CouponCategory =
+  "종합쇼핑" | "백화점" | "패션" | "식음료" | "가전" | "드럭스토어";
 export interface Coupon {
   id: string;
   merchant: string;
@@ -19,6 +20,7 @@ export interface Coupon {
   exclusions: readonly string[];
   stacking: string;
   officialUrl: string;
+  sourceLabel?: string;
   keywords: readonly string[];
 }
 export const audienceLabels: Record<CouponAudience, string> = {
@@ -32,6 +34,10 @@ export const officialHosts = new Set([
   "faq.uniqlo.com",
   "www.mcdonalds.co.jp",
   "www.starbucks.co.jp",
+  "livejapan.com",
+  "www.sugi-net.jp",
+  "global.hankyu-hanshin-dept.co.jp",
+  "cp.mistore.jp",
 ]);
 export function isOfficialCouponUrl(value: string): boolean {
   try {

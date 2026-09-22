@@ -165,7 +165,7 @@ test("small screen, explicit fallback, manual Japanese and navigation", async ({
       ),
     )
     .toBe(true);
-  for (const name of ["IC CARD", "PAY", "TRIP"]) {
+  for (const name of ["IC CARD", "PAY"]) {
     await page.getByRole("tab", { name, exact: true }).click();
     await expect(
       page.getByText("준비 중인 기능이에요", { exact: true }),

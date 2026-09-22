@@ -192,8 +192,8 @@ export function ProfileScreen({
           {confirmReset && (
             <Card>
               <Label>
-                프로필, 사이즈, 번역 기록, 즐겨찾기와 저장한 혜택을 모두
-                삭제할까요? 이 작업은 되돌릴 수 없어요.
+                프로필, 사이즈, 번역 기록, 즐겨찾기, 혜택, 막차 타이머와 준비
+                체크리스트를 모두 삭제할까요? 이 작업은 되돌릴 수 없어요.
               </Label>
               <Button
                 label="모두 삭제"

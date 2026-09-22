@@ -14,7 +14,9 @@ import { StatusBar } from "expo-status-bar";
 import { initialState, type LocalState } from "./src/domain/models";
 import { ProfileScreen } from "./src/features/profile/ProfileScreen";
 import { TranslateScreen } from "./src/features/translation/TranslateScreen";
-import { CouponScreen } from "./src/features/coupons/CouponScreen";
+import { CouponHub } from "./src/features/coupons/CouponHub";
+import { TripScreen } from "./src/features/trip/TripScreen";
+import { REMINDER_LIMIT } from "./src/features/trip/countdown";
 import { localRepository } from "./src/storage/localRepository";
 import {
   recordTranslation,
@@ -130,6 +132,13 @@ function Application() {
     scroll.current?.scrollTo({ y: 0, animated: false });
   };
   const activeTab = tabs.find((t) => t.key === tab)!;
+  const toggleGuide = (id: string) =>
+    commit((s) => ({
+      ...s,
+      guideChecks: s.guideChecks.includes(id)
+        ? s.guideChecks.filter((value) => value !== id)
+        : [...s.guideChecks, id],
+    }));
   return (
     <ThemeContext.Provider value={colors}>
       <SafeAreaView
@@ -259,10 +268,46 @@ function Application() {
                     onProfile={openProfile}
                   />
                 ) : tab === "coupon" ? (
-                  <CouponScreen
-                    savedIds={state.savedCouponIds}
+                  <CouponHub
+                    state={state}
+                    onToggleGuide={toggleGuide}
                     onToggleSaved={(id) =>
                       commit((s) => toggleSavedCoupon(s, id))
+                    }
+                  />
+                ) : tab === "trip" ? (
+                  <TripScreen
+                    state={state}
+                    onToggleGuide={toggleGuide}
+                    onSaveReminder={(reminder) =>
+                      commit((s) => {
+                        if (
+                          !s.airportReminders.some(
+                            (r) => r.id === reminder.id,
+                          ) &&
+                          s.airportReminders.length >= REMINDER_LIMIT
+                        )
+                          throw new Error(
+                            "막차 타이머는 12개까지 저장할 수 있어요.",
+                          );
+                        return {
+                          ...s,
+                          airportReminders: [
+                            ...s.airportReminders.filter(
+                              (r) => r.id !== reminder.id,
+                            ),
+                            reminder,
+                          ],
+                        };
+                      })
+                    }
+                    onDeleteReminder={(id) =>
+                      commit((s) => ({
+                        ...s,
+                        airportReminders: s.airportReminders.filter(
+                          (r) => r.id !== id,
+                        ),
+                      }))
                     }
                   />
                 ) : (

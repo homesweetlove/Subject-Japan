@@ -1,7 +1,9 @@
 import type { Coupon } from "./model";
+import { additionalCoupons } from "./additionalCoupons";
 
 // Reviewed official terms, not live availability. Keep dates tied to actual review.
 export const couponCatalog: readonly Coupon[] = [
+  ...additionalCoupons,
   {
     id: "donki-visitor",
     merchant: "돈키호테",

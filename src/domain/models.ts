@@ -1,3 +1,4 @@
+import type { AirportReminder } from "../features/trip/countdown";
 export type Language = "ko" | "ja";
 export type SourceLanguage = Language | "auto";
 export type ThemePreference = "system" | "light" | "dark";
@@ -25,6 +26,8 @@ export interface LocalState {
   history: Translation[];
   favorites: Translation[];
   savedCouponIds: string[];
+  airportReminders: AirportReminder[];
+  guideChecks: string[];
 }
 export const initialState = (): LocalState => ({
   version: 1,
@@ -34,6 +37,8 @@ export const initialState = (): LocalState => ({
   history: [],
   favorites: [],
   savedCouponIds: [],
+  airportReminders: [],
+  guideChecks: [],
 });
 export const languageNames: Record<Language, string> = {
   ko: "한국어",

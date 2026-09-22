@@ -374,7 +374,8 @@ export function CouponScreen({
                 </DetailSection>
                 <View style={{ gap: 8 }}>
                   <Label muted size={12}>
-                    공식 출처 · 외부 브라우저로 열립니다
+                    {selected.sourceLabel ?? "공식 출처"} · 외부 브라우저로
+                    열립니다
                   </Label>
                   <Text
                     selectable

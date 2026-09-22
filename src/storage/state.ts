@@ -3,6 +3,7 @@ import {
   type LocalState,
   type Translation,
 } from "../domain/models";
+import { validReminder, REMINDER_LIMIT } from "../features/trip/countdown";
 
 export const STORAGE_KEY = "subject-japan.local.v1";
 export const HISTORY_LIMIT = 100;
@@ -103,6 +104,25 @@ export function decodeState(raw: string | null): LocalState {
           ),
         ),
       ].slice(0, SAVED_COUPON_LIMIT)
+    : [];
+  state.airportReminders = Array.isArray(value.airportReminders)
+    ? value.airportReminders
+        .filter(validReminder)
+        .filter(
+          (r: { id: string }, index: number, all: { id: string }[]) =>
+            all.findIndex((item) => item.id === r.id) === index,
+        )
+        .slice(0, REMINDER_LIMIT)
+    : [];
+  state.guideChecks = Array.isArray(value.guideChecks)
+    ? [
+        ...new Set<string>(
+          value.guideChecks.filter(
+            (id: unknown): id is string =>
+              typeof id === "string" && /^[a-z0-9-]{1,100}$/.test(id),
+          ),
+        ),
+      ].slice(0, 300)
     : [];
   return state;
 }

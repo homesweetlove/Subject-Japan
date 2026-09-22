@@ -1,0 +1,160 @@
+import type { Coupon } from "./model";
+export const additionalCoupons: readonly Coupon[] = [
+  {
+    id: "biccamera-livejapan",
+    merchant: "빅카메라·코지마",
+    title: "LIVE JAPAN 제휴 면세 쿠폰",
+    benefit: "대상 가전 7% · 생활용품 5% · 일본주 3%",
+    audience: "visitor",
+    category: "가전",
+    registrationRequired: false,
+    eligibility:
+      "면세 구매 자격을 충족하는 방일 외국인 관광객. 여권을 제시해야 합니다.",
+    minimumSpend:
+      "세전 5,000엔 이상 · 추가 쿠폰 할인 전 금액 기준, 최종 적용은 계산대 확인",
+    validity: "2026년 10월 31일까지 · 사용 전 최신 쿠폰 확인",
+    expiresOn: "2026-10-31",
+    checkedOn: "2026-09-22",
+    stores:
+      "일본 빅카메라·코지마 대상 점포. 일부 매장·상품 제외 여부를 확인하세요.",
+    steps: [
+      "LIVE JAPAN에서 배포하는 빅카메라 제휴 쿠폰을 엽니다.",
+      "계산하기 전에 최신 쿠폰 화면과 여권을 제시합니다. 캡처 대신 원본 링크를 사용하세요.",
+    ],
+    exclusions: [
+      "Apple 정품·수입 시계·그랜드 세이코·게임기 본체 및 공식 액세서리·게임 소프트·일부 VR 제품 등은 추가 할인 제외입니다.",
+      "일부 파나소닉·후지필름, DJI, 아울렛·중고품 등도 제외됩니다. 일본주는 닷사이·핫카이산 등 제외 품목을 확인하세요.",
+    ],
+    stacking:
+      "다른 이벤트·할인·쿠폰과 중복 불가. 면세율과 추가 할인율을 단순히 더한 17%로 계산하지 않습니다.",
+    officialUrl:
+      "https://livejapan.com/public/operation/coupon/biccamera/ko.html",
+    sourceLabel: "LIVE JAPAN · 빅카메라 제휴 배포",
+    keywords: ["biccamera", "ビックカメラ", "코지마", "카메라", "전자제품"],
+  },
+  {
+    id: "sugi-taxfree",
+    merchant: "스기약국",
+    title: "면세 쇼핑 전용 쿠폰",
+    benefit: "구매금액별 4% · 6% · 8%",
+    audience: "visitor",
+    category: "드럭스토어",
+    registrationRequired: false,
+    eligibility:
+      "스기약국 면세 구매 자격을 충족하는 고객. 공식 페이지는 조건 충족 비거주 일본인도 안내합니다.",
+    minimumSpend:
+      "10,000~29,999엔 4%, 30,000~49,999엔 6%, 50,000엔 이상 8%. 금액의 세금·제외 상품 산정은 공식 쿠폰과 매장 확인",
+    validity: "2026년 4월 1일~2027년 2월 28일",
+    expiresOn: "2027-02-28",
+    checkedOn: "2026-09-22",
+    stores: "면세 서비스를 제공하는 스기약국 대상 매장",
+    steps: [
+      "스기약국 공식 사이트 Coupon 구역에서 면세 쿠폰을 엽니다.",
+      "결제 전에 쿠폰을 제시하고 할인 대상 금액과 면세 조건을 확인합니다.",
+    ],
+    exclusions: [
+      "처방약·일부 화장품·백화점 화장품·일반 식품(과자 제외)·POSA 카드 등은 제외됩니다.",
+      "같은 페이지의 1개 품목 15% 쿠폰은 별도 쿠폰이며 면세 쿠폰과 병용할 수 없습니다.",
+    ],
+    stacking: "동일 상품에 다른 할인쿠폰·가격인하·특전 중복 적용 불가.",
+    officialUrl: "https://www.sugi-net.jp/en/",
+    keywords: ["sugi", "スギ薬局", "스기드럭", "약국", "화장품"],
+  },
+  {
+    id: "hankyu-guest",
+    merchant: "한큐 우메다",
+    title: "5% 게스트 쿠폰 · 사전등록 안내",
+    benefit: "대상 상품 5% 할인",
+    audience: "visitor",
+    category: "백화점",
+    registrationRequired: false,
+    eligibility:
+      "면세 자격을 가진 고객. 여권을 제시해 본인용 쿠폰을 발급받습니다.",
+    minimumSpend: "단품 세전 1,000엔 이상인 대상 상품",
+    validity: "발행일 포함 7일간 여러 번 사용",
+    checkedOn: "2026-09-22",
+    stores:
+      "한큐 우메다 본점 · B1 해외 고객 카운터, 1F Information Center 또는 면세 카운터",
+    steps: [
+      "공식 서비스 페이지의 게스트 쿠폰 사전등록 안내를 확인합니다.",
+      "여권을 지참하고 지정 카운터에서 발급받은 뒤 결제 전에 제시합니다.",
+    ],
+    exclusions: [
+      "세일·복주머니·상품권·식품·레스토랑·카페·일부 브랜드 등 제외.",
+      "사전등록은 발급 준비 절차이며 일반 고객의 대기열 우선권을 뜻하지 않습니다.",
+    ],
+    stacking:
+      "다른 우대·포인트 카드와 병용 불가. UnionPay·WeChat Pay·Alipay 결제의 별도 5% 우대와 게스트 쿠폰은 중복 불가.",
+    officialUrl:
+      "https://global.hankyu-hanshin-dept.co.jp/ko/store/hankyuhonten/service/",
+    keywords: ["hankyu", "阪急", "우메다", "오사카", "게스트 카드"],
+  },
+  {
+    id: "hankyu-vip",
+    merchant: "한큐 해외 고객 VIP",
+    title: "실적 회원 할인·우선 면세 수속",
+    benefit: "실버 7% · 골드 10% · 대상 점포 우선 면세",
+    audience: "visitor",
+    category: "백화점",
+    registrationRequired: true,
+    eligibility:
+      "최근 1년간 대상 점포에서 할인 후·세전 누적 100만 엔 이상 면세 수속을 한 개인 고객이 가입 대상입니다. 일반 방문객에게 자동 발급되지 않습니다.",
+    minimumSpend:
+      "실버 가입: 최근 1년 대상 실적 100만 엔 이상. 골드 승급: 실버 카드 발행 후 누적 구매 500만 엔 이상(세전), 규약 확인",
+    validity: "회원 카드 유효기간과 실적 산정 기간은 공식 규약 확인",
+    checkedOn: "2026-09-22",
+    stores:
+      "우선 면세: 한큐 우메다·고베 한큐·한큐 Men's 오사카/도쿄·하카타 한큐. 원스톱 상품 수령은 우메다만 해당",
+    steps: [
+      "공식 VIP 클럽 규약과 본인 실적의 인정 범위를 확인합니다.",
+      "카운터에서 회원 자격을 확인받고 카드 발급·우선 면세 수속 안내를 받습니다.",
+    ],
+    exclusions: [
+      "일부 브랜드·상품 제외. 구매 실적을 나중에 추가할 수 없습니다.",
+      "이 앱의 체크리스트는 회원 카드가 아니며 VIP 자격이나 우선 수속을 발급하지 않습니다.",
+    ],
+    stacking:
+      "VIP 카드는 다른 우대와 병용 불가. 면세는 자격·조건에 따라 별도 적용됩니다.",
+    officialUrl:
+      "https://global.hankyu-hanshin-dept.co.jp/ko/store/hankyuhonten/service/",
+    keywords: ["vip", "실버", "골드", "패스트트랙", "우선면세"],
+  },
+  {
+    id: "mistore-rewards",
+    merchant: "미츠코시이세탄",
+    title: "JAPAN 앱 REWARDS",
+    benefit: "대상 상품 5% 할인",
+    audience: "visitor",
+    category: "백화점",
+    registrationRequired: true,
+    eligibility:
+      "일본 이외 국가 여권 소지, 단기 체류 자격, 상륙 허가 후 6개월 미만 조건의 방문객. 공식 앱에서 회원가입·여권 정보 등록 후 카운터 활성화가 필요합니다.",
+    minimumSpend: "단품 세전 3,000엔 이상인 대상 상품",
+    validity: "유효기간 1년 · 공식 앱의 개인별 기간 확인",
+    checkedOn: "2026-09-22",
+    stores:
+      "일본 미츠코시이세탄 그룹 참여 백화점. 이용 가능 점포·카운터는 공식 앱 확인",
+    steps: [
+      "MITSUKOSHI ISETAN JAPAN 공식 앱을 내려받고 회원가입합니다.",
+      "공식 앱에서 REWARDS 약관과 여권 정보 등록을 진행합니다. Subject Japan에는 입력하지 않습니다.",
+      "방문 점포의 면세/서비스 카운터에서 활성화하고 구매 전에 REWARDS와 본인 여권을 제시합니다.",
+    ],
+    exclusions: [
+      "세일·단품 세전 3,000엔 미만·식품·식당·카페·서비스 비용·지정 럭셔리 브랜드 등 제외.",
+      "신용카드·UnionPay 명의는 REWARDS 명의와 일치해야 합니다. 대여·양도 불가.",
+      "2025년 3월 25일까지 발행된 구형 게스트 카드와 현재 앱 발급 절차를 혼동하지 마세요.",
+    ],
+    stacking:
+      "다른 할인·특전과 병용 불가. 비거주자는 면세 조건을 별도로 확인하세요.",
+    officialUrl: "https://cp.mistore.jp/global/en/app/rewards.html",
+    keywords: [
+      "isetan",
+      "mitsukoshi",
+      "伊勢丹",
+      "三越",
+      "신주쿠",
+      "긴자",
+      "게스트 카드",
+    ],
+  },
+];
