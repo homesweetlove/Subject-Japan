@@ -12,13 +12,15 @@
 
 ## 신규 기능
 
+쿠폰 초기 기능은 `features/coupons`의 독립 카탈로그·조건 모델·화면으로 구현되어 있습니다. 검색/대상/업종 필터, 일본 시간 만료 판단과 검토일 경과 표시를 순수 함수로 분리했습니다. `savedCouponIds`는 로컬 v1 스키마에 추가된 필드로, 이전 설치 데이터에서는 빈 배열로 기본화하며 프로필과 번역 기록을 유지합니다. 향후 원격 카탈로그 저장소·위치 검색은 별도 경계로 추가합니다. 자세한 관리 정책은 [쿠폰 문서](coupons.md)를 참고하세요.
+
 | 기능 | 새 경계 | 확인할 제약 |
 | --- | --- | --- |
 | 카메라/OCR | `features/camera`, OCR provider | 권한, 이미지 회전·영역 선택, 문자 인식 품질, 이미지 로컬 처리 |
 | 음성 대화 | speech recognizer/TTS adapter | OS별 오프라인 지원, 마이크 권한, 발화 중단 |
 | 정중함 | provider capabilities + curated phrases | ML Kit에 보장 없는 기능을 파라미터만으로 가장하지 않기 |
 | IC 카드 | `features/ic-card`, NFC reader module | Android NFC-F와 iOS Core NFC/FeliCa 지원, 시스템 월렛 접근 제약 |
-| 쿠폰 | coupon repository | 공식 URL/검증일/유효기간/조건, 위치 권한은 필요할 때 요청 |
+| 쿠폰 확장 | 원격 coupon repository / store locator | 공식 조건 갱신·캐시 정책, 위치 권한은 필요할 때 요청 |
 | 결제 | 독립 계산 함수 | 통화 최소단위, 할인 적용 순서, 환율 기준 시각 |
 | 여행 | trip repository | 버전 있는 데이터 마이그레이션, 백업/내보내기 동의 |
 

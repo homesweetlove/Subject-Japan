@@ -7,6 +7,18 @@ import {
 export const STORAGE_KEY = "subject-japan.local.v1";
 export const HISTORY_LIMIT = 100;
 export const FAVORITES_LIMIT = 100;
+export const SAVED_COUPON_LIMIT = 200;
+export function toggleSavedCoupon(state: LocalState, id: string): LocalState {
+  const exists = state.savedCouponIds.includes(id);
+  if (!exists && state.savedCouponIds.length >= SAVED_COUPON_LIMIT)
+    throw new Error("혜택은 200개까지 저장할 수 있어요.");
+  return {
+    ...state,
+    savedCouponIds: exists
+      ? state.savedCouponIds.filter((value) => value !== id)
+      : [...state.savedCouponIds, id],
+  };
+}
 export function sameTranslation(a: Translation, b: Translation) {
   return (
     a.original === b.original &&
@@ -80,6 +92,17 @@ export function decodeState(raw: string | null): LocalState {
     : [];
   state.favorites = Array.isArray(value.favorites)
     ? value.favorites.filter(validTranslation).slice(0, FAVORITES_LIMIT)
+    : [];
+  // Additive v1 migration: earlier installations have no savedCouponIds field.
+  state.savedCouponIds = Array.isArray(value.savedCouponIds)
+    ? [
+        ...new Set<string>(
+          value.savedCouponIds.filter(
+            (id: unknown): id is string =>
+              typeof id === "string" && /^[a-z0-9-]{1,80}$/.test(id),
+          ),
+        ),
+      ].slice(0, SAVED_COUPON_LIMIT)
     : [];
   return state;
 }

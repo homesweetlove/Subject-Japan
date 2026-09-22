@@ -24,6 +24,7 @@ export interface LocalState {
   theme: ThemePreference;
   history: Translation[];
   favorites: Translation[];
+  savedCouponIds: string[];
 }
 export const initialState = (): LocalState => ({
   version: 1,
@@ -32,6 +33,7 @@ export const initialState = (): LocalState => ({
   theme: "system",
   history: [],
   favorites: [],
+  savedCouponIds: [],
 });
 export const languageNames: Record<Language, string> = {
   ko: "한국어",

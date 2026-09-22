@@ -165,7 +165,7 @@ test("small screen, explicit fallback, manual Japanese and navigation", async ({
       ),
     )
     .toBe(true);
-  for (const name of ["IC CARD", "COUPON", "PAY", "TRIP"]) {
+  for (const name of ["IC CARD", "PAY", "TRIP"]) {
     await page.getByRole("tab", { name, exact: true }).click();
     await expect(
       page.getByText("준비 중인 기능이에요", { exact: true }),
@@ -179,4 +179,93 @@ test("small screen, explicit fallback, manual Japanese and navigation", async ({
     .getByRole("button", { name: "상의 사이즈 등록하기", exact: true })
     .click();
   await expect(page.getByText("내 옷 사이즈", { exact: true })).toBeVisible();
+});
+
+test("coupons: filter, official conditions, local save, reload and reset", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "나중에 입력하기", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "COUPON", exact: true }).click();
+  await page.getByRole("button", { name: "일반 고객용", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "돈키호테 상세 보기", exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("textbox", { name: "매장·혜택 검색", exact: true })
+    .fill("유니클로");
+  await page
+    .getByRole("button", { name: "유니클로 일본 상세 보기", exact: true })
+    .click();
+  await expect(
+    page.getByText("발급일을 포함해 31일 · 개인별 발급일에 따라 다름", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("https://faq.uniqlo.com/articles/faq/100005203", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "이 혜택 저장", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "이 혜택 저장 해제", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "혜택 상세 닫기", exact: true })
+    .click();
+  await page.reload();
+  await page.getByRole("tab", { name: "COUPON", exact: true }).click();
+  await page
+    .getByRole("button", { name: "저장한 혜택만", exact: true })
+    .click();
+  await expect(page.getByText("1개의 혜택", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "유니클로 일본 저장 해제", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "사용자 페이지", exact: true })
+    .click();
+  await page.getByRole("radio", { name: "다크", exact: true }).click();
+  await page
+    .getByRole("button", { name: "변경사항 저장", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "외국인·방문객용", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "다이마루 도쿄 상세 보기", exact: true })
+    .click();
+  await expect(
+    page.getByText(
+      "일본 입국 후 6개월 미만인 외국 국적 고객. 여권 제시가 필요합니다.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "혜택 상세 닫기", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "사용자 페이지", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "기기에 저장한 모든 정보 삭제", exact: true })
+    .click();
+  await page.getByRole("button", { name: "모두 삭제", exact: true }).click();
+  await page
+    .getByRole("button", { name: "나중에 입력하기", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "COUPON", exact: true }).click();
+  await page
+    .getByRole("button", { name: "저장한 혜택만", exact: true })
+    .click();
+  await expect(
+    page.getByText("조건에 맞는 혜택이 없어요", { exact: true }),
+  ).toBeVisible();
+  expect(errors).toEqual([]);
 });

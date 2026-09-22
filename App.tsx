@@ -14,8 +14,13 @@ import { StatusBar } from "expo-status-bar";
 import { initialState, type LocalState } from "./src/domain/models";
 import { ProfileScreen } from "./src/features/profile/ProfileScreen";
 import { TranslateScreen } from "./src/features/translation/TranslateScreen";
+import { CouponScreen } from "./src/features/coupons/CouponScreen";
 import { localRepository } from "./src/storage/localRepository";
-import { recordTranslation, toggleFavorite } from "./src/storage/state";
+import {
+  recordTranslation,
+  toggleFavorite,
+  toggleSavedCoupon,
+} from "./src/storage/state";
 import {
   Button,
   Card,
@@ -46,8 +51,7 @@ const tabs: {
     label: "COUPON",
     title: "여행의 작은 혜택",
     icon: "ticket-outline",
-    description:
-      "공식 쿠폰과 사용 조건, 가까운 매장 혜택을 모아 보여 드릴 예정이에요.",
+    description: "일반 고객과 방문객을 위한 공식 쿠폰·혜택을 확인하세요.",
   },
   {
     key: "translate",
@@ -254,6 +258,13 @@ function Application() {
                     }
                     onProfile={openProfile}
                   />
+                ) : tab === "coupon" ? (
+                  <CouponScreen
+                    savedIds={state.savedCouponIds}
+                    onToggleSaved={(id) =>
+                      commit((s) => toggleSavedCoupon(s, id))
+                    }
+                  />
                 ) : (
                   <View style={{ gap: 24, paddingTop: 35 }}>
                     <Icon name={activeTab.icon} size={38} />
@@ -264,7 +275,8 @@ function Application() {
                     <Card>
                       <Label weight="600">준비 중인 기능이에요</Label>
                       <Label muted size={14}>
-                        지금은 번역과 나의 쇼핑 사이즈를 먼저 이용할 수 있어요.
+                        지금은 번역, 나의 쇼핑 사이즈와 공식 쿠폰·혜택을 이용할
+                        수 있어요.
                       </Label>
                       <Button
                         label="번역기로 이동"
