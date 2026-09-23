@@ -2,9 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { Linking, View } from "react-native";
 import * as Location from "expo-location";
 import { Button, Card, Label } from "../../ui/components";
+import { Choice } from "../../ui/Choice";
+import { Field } from "../../ui/Field";
 import { couponCatalog as coupons } from "./catalog";
 import { findNearby, type NearbyStore } from "./nearby";
 export function NearbyScreen() {
+  const [manual, setManual] = useState(false);
+  const [region, setRegion] = useState("東京");
+  const [merchant, setMerchant] = useState("ビックカメラ");
   const [stores, setStores] = useState<NearbyStore[]>([]),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
@@ -29,6 +34,7 @@ export function NearbyScreen() {
     let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
       const permission = await Location.requestForegroundPermissionsAsync();
+      if (!alive.current || cancel.signal.aborted) return;
       if (!permission.granted)
         throw new Error(
           "위치 권한이 없어요. 쿠폰 목록의 공식 매장 안내를 이용해 주세요.",
@@ -95,6 +101,51 @@ export function NearbyScreen() {
         />
       </Card>
       {!!notice && <Label>{notice}</Label>}
+      <Button
+        label="위치 권한 없이 지역·매장으로 찾기"
+        onPress={() => setManual(!manual)}
+      />
+      {manual && (
+        <Card>
+          <Label weight="700">지역과 매장 이름으로 검색</Label>
+          <Label muted size={13}>
+            현재 위치를 요청하지 않아요. 선택한 지역과 입력한 매장 이름만 Google
+            Maps에 전달해요. 지점의 혜택 적용 여부는 공식 쿠폰에서 확인해
+            주세요.
+          </Label>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {[
+              ["도쿄", "東京"],
+              ["오사카", "大阪"],
+              ["후쿠오카", "福岡"],
+              ["삿포로", "札幌"],
+              ["나고야", "名古屋"],
+            ].map(([label, value]) => (
+              <Choice
+                key={value}
+                label={label}
+                selected={region === value}
+                onPress={() => setRegion(value)}
+              />
+            ))}
+          </View>
+          <Field
+            label="찾을 매장 이름"
+            value={merchant}
+            onChange={setMerchant}
+            maxLength={80}
+          />
+          <Button
+            label="선택한 지역의 매장을 지도에서 찾기"
+            disabled={!merchant.trim()}
+            onPress={() =>
+              void open(
+                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${region} ${merchant.trim()}`)}`,
+              )
+            }
+          />
+        </Card>
+      )}
       {searched && !stores.length && (
         <Label>
           지도 데이터에서 해당 매장을 찾지 못했어요. 모든 지점이 등록된 것은

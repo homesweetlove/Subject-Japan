@@ -1,4 +1,88 @@
 import { test, expect } from "@playwright/test";
+test("nearby query consent, coarse coordinates, store matching and permission-free fallback", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["geolocation"]);
+  await context.setGeolocation({ latitude: 35.681234, longitude: 139.767891 });
+  const queries: string[] = [];
+  await page.route("https://overpass-api.de/api/interpreter", async (route) => {
+    queries.push(
+      new URLSearchParams(route.request().postData() ?? "").get("data") ?? "",
+    );
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        elements: [
+          {
+            type: "node",
+            id: 1,
+            lat: 35.681,
+            lon: 139.768,
+            tags: { name: "ユニクロ 東京" },
+          },
+        ],
+      }),
+    });
+  });
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "나중에 입력하기", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "COUPON", exact: true }).click();
+  await page.getByRole("button", { name: "주변 매장", exact: true }).click();
+  expect(queries).toHaveLength(0);
+  await page
+    .getByRole("button", {
+      name: "위치 전송에 동의하고 주변 검색",
+      exact: true,
+    })
+    .click();
+  await expect(page.getByText("ユニクロ 東京", { exact: true })).toBeVisible();
+  expect(queries).toHaveLength(1);
+  expect(queries[0]).toContain("35.681,139.768");
+  expect(queries[0]).not.toContain("35.681234");
+  await page.unroute("https://overpass-api.de/api/interpreter");
+  await page.route("https://overpass-api.de/api/interpreter", (route) =>
+    route.fulfill({ status: 503, body: "unavailable" }),
+  );
+  await page
+    .getByRole("button", {
+      name: "위치 전송에 동의하고 주변 검색",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByText(
+      "주변 매장 서버가 응답하지 않아요. 잠시 후 다시 시도해 주세요.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(page.getByText("ユニクロ 東京", { exact: true })).toHaveCount(0);
+  await context.clearPermissions();
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page
+    .getByRole("button", {
+      name: "위치 권한 없이 지역·매장으로 찾기",
+      exact: true,
+    })
+    .click();
+  await page.getByRole("button", { name: "오사카", exact: true }).click();
+  await expect(
+    page.getByRole("textbox", { name: "찾을 매장 이름", exact: true }),
+  ).toHaveValue("ビックカメラ");
+  await expect(
+    page.getByRole("button", {
+      name: "선택한 지역의 매장을 지도에서 찾기",
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});
 test("payment calculation, persisted FX, itinerary edit and full reset", async ({
   page,
 }) => {

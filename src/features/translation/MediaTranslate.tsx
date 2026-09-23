@@ -74,6 +74,7 @@ export function MediaTranslate({
         if (!permission.granted)
           throw new Error("설정에서 카메라 권한을 허용해 주세요.");
       }
+      if (!alive.current || token !== sequence.current) return;
       const options: ImagePicker.ImagePickerOptions = {
         mediaTypes: ["images"],
         quality: 0.85,
