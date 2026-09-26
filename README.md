@@ -46,6 +46,12 @@ React Native + Expo SDK 57 + TypeScript. 공통 UI와 도메인 코드를 사용
 
 ## 실행
 
+### Android 테스트 APK 다운로드
+
+[GitHub Releases](https://github.com/homesweetlove/Subject-Japan/releases)에서 **Subject Japan Android Test** 릴리스의 `Subject-Japan-android-test-arm64.apk`를 내려받아 설치합니다. ARM64 Android 기기용이며 개발 서버나 Expo Go 없이 실행합니다. 설치된 앱 이름은 **Subject Japan Test**입니다. 처음 자유 입력 번역을 사용할 때는 Wi-Fi로 번역팩을 내려받습니다.
+
+테스트 전용 패키지 `com.subjectjapan.app.preview`는 정식 앱과 데이터가 분리됩니다. APK는 Expo 템플릿의 테스트 서명을 사용하며 Play Store 배포본이 아닙니다. 키 파일은 저장소나 릴리스에 올리지 않습니다. 다음 테스트 APK도 GitHub Actions의 **Android test APK → Run workflow**에서 생성할 수 있으며, 번들 포함·서명·패키지 ID를 검사한 후 GitHub 프리릴리스에 APK와 SHA-256을 게시합니다.
+
 Node.js 22.13 이상 (검증 환경: Node 24), npm을 사용합니다.
 
 ```sh

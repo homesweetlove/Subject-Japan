@@ -1,0 +1,84 @@
+name: Android test APK
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - run: npm ci
+      - name: Configure separate test app
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const config = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+          config.expo.name = 'Subject Japan Test';
+          config.expo.android.package = 'com.subjectjapan.app.preview';
+          config.expo.android.versionCode = Number(process.env.GITHUB_RUN_NUMBER);
+          config.expo.version += '-test.' + process.env.GITHUB_RUN_NUMBER;
+          fs.writeFileSync('app.json', JSON.stringify(config, null, 2));
+          NODE
+      - run: npx expo prebuild --platform android --no-install
+      - name: Build standalone APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon
+      - name: Verify packaged app and test signature
+        run: |
+          set -euo pipefail
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          test -s "$APK"
+          unzip -l "$APK" > apk-contents.txt
+          grep -q 'assets/index.android.bundle' apk-contents.txt
+          grep -q 'lib/arm64-v8a/libreactnative.so' apk-contents.txt
+          BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$APK"
+          "$BUILD_TOOLS/aapt" dump badging "$APK" > apk-info.txt
+          grep -q "name='com.subjectjapan.app.preview'" apk-info.txt
+          if grep -q '^application-debuggable' apk-info.txt; then
+            echo 'Expected a standalone release variant, not a debug/development-client APK.'
+            exit 1
+          fi
+          mkdir -p release-assets
+          cp "$APK" release-assets/Subject-Japan-android-test-arm64.apk
+          cp apk-info.txt release-assets/apk-info.txt
+          (cd release-assets && sha256sum Subject-Japan-android-test-arm64.apk > SHA256SUMS.txt)
+      - name: Publish GitHub prerelease with APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BUILD_SHA: ${{ github.sha }}
+          RELEASE_TAG: android-test-${{ github.run_id }}
+        run: |
+          cat > release-notes.md <<'NOTES'
+          Android 실기기 테스트용 APK입니다. Assets의 `Subject-Japan-android-test-arm64.apk`를 내려받아 설치하세요.
+
+          - 개발 서버·Expo Go 없이 실행되는 standalone release 빌드입니다.
+          - ARM64 Android 기기용이며 앱 이름은 **Subject Japan Test**입니다.
+          - 테스트 전용 패키지 `com.subjectjapan.app.preview`를 사용하여 정식 앱과 데이터가 분리됩니다.
+          - Expo 템플릿의 테스트 서명을 사용합니다. Play Store 배포용 서명은 아닙니다. 서명키·API 키·Secret은 업로드하지 않습니다.
+          - 첫 자유 입력 번역 전에 앱에서 Wi-Fi로 한국어·일본어 번역팩을 다운로드하세요.
+          - 실물 NFC 카드·카메라·마이크 기능은 설치 후 기기에서 검증해 주세요. 기기/언어의 지원 조건은 README를 참고하세요.
+          - 설치 시 다운로드한 브라우저/파일 앱의 ‘알 수 없는 앱 설치’ 허용이 필요할 수 있습니다.
+          NOTES
+          printf '\nSource commit: `%s`\n' "$BUILD_SHA" >> release-notes.md
+          gh release create "$RELEASE_TAG" --target "$BUILD_SHA" --title "Subject Japan Android Test #${GITHUB_RUN_NUMBER}" --notes-file release-notes.md --prerelease --draft
+          gh release upload "$RELEASE_TAG" release-assets/*
+          gh release edit "$RELEASE_TAG" --draft=false
