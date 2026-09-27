@@ -1,6 +1,9 @@
 name: Android test APK
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - build/android-apk-20260927
 permissions:
   contents: read
 jobs:
