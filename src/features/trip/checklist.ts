@@ -4,6 +4,8 @@ export interface ChecklistItem {
   title: string;
   jpName?: string;
   description: string;
+  actionLabel?: string;
+  url?: string;
   defaultChecked?: boolean;
 }
 
@@ -42,7 +44,31 @@ export const travelChecklistItems: ChecklistItem[] = [
     category: "prep",
     title: "Visit Japan Web 입국 QR 등록",
     jpName: "Visit Japan Web",
-    description: "입국 심사 및 세관 신고 QR 사전 등록",
+    description: "입국 심사·세관 신고 정보를 미리 등록하고 QR을 준비해 두세요.",
+    actionLabel: "Visit Japan Web 열기",
+    url: "https://www.vjw.digital.go.jp/",
+  },
+  {
+    id: "prep-offline-qr",
+    category: "prep",
+    title: "입국 QR · 항공권 · 예약번호 오프라인 저장",
+    description:
+      "공항에서 데이터가 느릴 때를 대비해 QR과 예약번호를 캡처하거나 오프라인 파일로 저장",
+  },
+  {
+    id: "prep-hotel-contact",
+    category: "prep",
+    title: "첫 숙소 주소 · 전화번호 메모",
+    jpName: "宿泊先の住所・電話番号",
+    description:
+      "입국 등록, 택시 이용, 길 찾기 때 바로 보여줄 수 있도록 일본어 주소와 전화번호를 저장",
+  },
+  {
+    id: "prep-payment-backup",
+    category: "prep",
+    title: "결제 수단 2개 이상 + 소액 현금",
+    description:
+      "카드 결제 실패나 현금 전용 매장을 대비해 서로 다른 카드와 소액 엔화를 분산 보관",
   },
 
   // Drugstore
