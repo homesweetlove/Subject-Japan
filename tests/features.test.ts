@@ -16,6 +16,7 @@ import {
   findPhrase,
 } from "../src/features/phrases/phrases";
 import { registers } from "../src/features/phrases/register";
+import { estimateJapanSize } from "../src/features/profile/sizeConversion";
 const payment: PaymentInput = {
   price: 11000,
   includesTax: true,
@@ -238,6 +239,32 @@ describe("nearby store candidates", () => {
     ).toBeGreaterThan(1000);
   });
 });
+describe("Japan shopping size helpers", () => {
+  it("converts shoe millimeters to Japan centimeter notation", () => {
+    expect(estimateJapanSize("shoe", "285")?.display).toBe("JP 28.5 cm");
+  });
+
+  it("converts waist inches to an approximate centimeter shopping size", () => {
+    expect(estimateJapanSize("bottom", "38")?.display).toContain("97 cm");
+  });
+
+  it("suggests a larger Japan starting size for alphabetic tops", () => {
+    expect(estimateJapanSize("top", "2XL")?.display).toContain("3XL");
+  });
+
+  it("keeps the Korean phrase raw while using the Japan estimate in Japanese", () => {
+    const profile = {
+      nickname: "",
+      sizes: { top: "2XL", bottom: "38", shoe: "285" },
+    };
+    const top = resolvePhrase(phrases.find((p) => p.id === "top")!, profile)!;
+    const shoe = resolvePhrase(phrases.find((p) => p.id === "shoe")!, profile)!;
+    expect(top.ko).toContain("2XL");
+    expect(top.ja).toContain("3XL");
+    expect(shoe.ja).toContain("28.5センチ");
+  });
+});
+
 describe("offline politeness", () => {
   it("has authored variants for every phrase and keeps size placeholders literal", () => {
     const profile = {
