@@ -1,5 +1,6 @@
 import type { Language, Profile, SizeKey } from "../../domain/models";
 import { registers, type Register } from "./register";
+import { japanPhraseSize } from "../profile/sizeConversion";
 
 export const categories = [
   "쇼핑",
@@ -170,12 +171,13 @@ export function resolvePhrase(
 ): Record<Language, string> | null {
   const size = phrase.sizeKey ? profile.sizes[phrase.sizeKey].trim() : "";
   if (phrase.sizeKey && !size) return null;
+  const japanSize = phrase.sizeKey ? japanPhraseSize(phrase.sizeKey, size) : size;
   return {
     ko: phrase.ko.replace("{size}", () => size),
     ja: (register === "polite"
       ? phrase.ja
       : (registers[phrase.id]?.[register] ?? phrase.ja)
-    ).replace("{size}", () => size),
+    ).replace("{size}", () => japanSize),
   };
 }
 
