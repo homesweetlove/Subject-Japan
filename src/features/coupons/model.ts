@@ -76,6 +76,43 @@ export const statusLabels = {
   review: "최신 조건 재확인 필요",
   checked: "공식 안내 확인",
 };
+
+export type CouponDDayStatus =
+  "ongoing" | "d-day" | "ending-soon" | "valid" | "expired";
+
+export interface CouponDDayInfo {
+  status: CouponDDayStatus;
+  label: string;
+  daysRemaining?: number;
+}
+
+export function couponDDay(coupon: Coupon, now = Date.now()): CouponDDayInfo {
+  if (!coupon.expiresOn) {
+    return { status: "ongoing", label: "상시 혜택" };
+  }
+  const expiry = Date.parse(`${coupon.expiresOn}T23:59:59.999+09:00`);
+  if (!Number.isFinite(expiry) || now > expiry) {
+    return { status: "expired", label: "기간 만료" };
+  }
+  const msRemaining = expiry - now;
+  const daysRemaining = Math.max(0, Math.ceil(msRemaining / 86400000));
+  if (daysRemaining === 0) {
+    return { status: "d-day", label: "오늘 마감 (D-Day)", daysRemaining: 0 };
+  }
+  if (daysRemaining <= 7) {
+    return {
+      status: "ending-soon",
+      label: `마감 임박 (D-${daysRemaining})`,
+      daysRemaining,
+    };
+  }
+  return {
+    status: "valid",
+    label: `D-${daysRemaining}`,
+    daysRemaining,
+  };
+}
+
 export function filterCoupons(
   coupons: readonly Coupon[],
   filters: {
@@ -84,11 +121,17 @@ export function filterCoupons(
     category: CouponCategory | "all";
     savedOnly: boolean;
     savedIds: readonly string[];
+    validOnly?: boolean;
+    now?: number;
   },
 ): Coupon[] {
   const query = filters.query.trim().normalize("NFKC").toLocaleLowerCase();
-  return coupons.filter(
-    (c) =>
+  const currentNow = filters.now ?? Date.now();
+  return coupons.filter((c) => {
+    if (filters.validOnly && couponStatus(c, currentNow) === "expired") {
+      return false;
+    }
+    return (
       (filters.audience === "all" || c.audience === filters.audience) &&
       (filters.category === "all" || c.category === filters.category) &&
       (!filters.savedOnly || filters.savedIds.includes(c.id)) &&
@@ -96,6 +139,7 @@ export function filterCoupons(
         .join(" ")
         .normalize("NFKC")
         .toLocaleLowerCase()
-        .includes(query),
-  );
+        .includes(query)
+    );
+  });
 }

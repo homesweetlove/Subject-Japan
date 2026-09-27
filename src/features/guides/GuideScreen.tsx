@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
-import { Button, Card, Label } from "../../ui/components";
+import { ScreenHeader, Button, Card, Label } from "../../ui/components";
 import { Choice } from "../../ui/Choice";
 import { useTheme } from "../../ui/theme";
 import { openTravelLink } from "./links";
@@ -46,12 +46,7 @@ export function GuideScreen({
   );
   return (
     <View style={{ gap: 22 }}>
-      <View style={{ gap: 8 }}>
-        <Label size={28} weight="700">
-          {title}
-        </Label>
-        <Label muted>{subtitle}</Label>
-      </View>
+      <ScreenHeader title={title} subtitle={subtitle} />
       <TextInput
         accessibilityLabel="가이드 검색"
         placeholder="판매처, 백화점, 준비물 검색"

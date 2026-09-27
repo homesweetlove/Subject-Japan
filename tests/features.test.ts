@@ -84,14 +84,12 @@ describe("payment order and refund timing", () => {
     expect(validRate({ krwPer100Jpy: -1 })).toBe(false);
   });
   it("validates external exchange response and scales JPY to 100", async () => {
-    const fetch = vi
-      .fn()
-      .mockResolvedValue({
-        ok: true,
-        json: async () => [
-          { base: "JPY", quote: "KRW", date: "2026-09-22", rate: 8.7 },
-        ],
-      });
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
+        { base: "JPY", quote: "KRW", date: "2026-09-22", rate: 8.7 },
+      ],
+    });
     vi.stubGlobal("fetch", fetch);
     try {
       expect((await fetchRate()).krwPer100Jpy).toBeCloseTo(870);
@@ -100,6 +98,16 @@ describe("payment order and refund timing", () => {
         json: async () => [{ base: "JPY", quote: "KRW", date: "bad", rate: 0 }],
       });
       await expect(fetchRate()).rejects.toThrow();
+      // Well-formed but implausible upstream values are rejected too.
+      for (const rate of [0.5, 900]) {
+        fetch.mockResolvedValue({
+          ok: true,
+          json: async () => [
+            { base: "JPY", quote: "KRW", date: "2026-09-22", rate },
+          ],
+        });
+        await expect(fetchRate()).rejects.toThrow();
+      }
     } finally {
       vi.unstubAllGlobals();
     }

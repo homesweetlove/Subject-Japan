@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
-import { Button, Card, Label } from "../../ui/components";
+import { ScreenHeader, Button, Card, Label } from "../../ui/components";
 import { Field } from "../../ui/Field";
 import { travelTools } from "../tools/native";
 import { decodeCard, type TransitCard } from "./model";
@@ -58,12 +58,10 @@ export function CardScreen({
   };
   return (
     <View style={{ gap: 22 }}>
-      <Label size={30} weight="700">
-        이동을 더 가볍게
-      </Label>
-      <Label muted>
-        Suica · PASMO · ICOCA 실물 카드의 마지막 기록을 확인해요.
-      </Label>
+      <ScreenHeader
+        title="이동을 더 가볍게"
+        subtitle="Suica · PASMO · ICOCA 실물 카드의 마지막 기록을 확인해요."
+      />
       <Card>
         <Button
           label="교통카드 NFC 읽기"

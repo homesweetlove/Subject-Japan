@@ -6,7 +6,7 @@ import * as Speech from "expo-speech";
 import * as Clipboard from "expo-clipboard";
 import { File, Paths } from "expo-file-system";
 import type { Language, LocalState, Translation } from "../../domain/models";
-import { Button, Card, Label, styles } from "../../ui/components";
+import { ScreenHeader, Button, Card, Label, styles } from "../../ui/components";
 import { Choice } from "../../ui/Choice";
 import { Field } from "../../ui/Field";
 import { useTheme } from "../../ui/theme";
@@ -173,14 +173,16 @@ export function MediaTranslate({
   };
   return (
     <View style={{ gap: 20 }}>
-      <Label size={28} weight="700">
-        {mode === "camera" ? "사진 속 말도 가까이" : "한 문장씩, 함께 대화"}
-      </Label>
-      <Label muted>
-        {mode === "camera"
-          ? "메뉴판·안내문·영수증·표지판을 촬영하거나 사진에서 골라 주세요. 사진은 서버에 보내지 않아요."
-          : "한국어와 일본어를 번갈아 선택하고 말해 주세요. 기기 내 음성 인식을 지원하는 기기·언어에서 사용할 수 있어요."}
-      </Label>
+      <ScreenHeader
+        title={
+          mode === "camera" ? "사진 속 말도 가까이" : "한 문장씩, 함께 대화"
+        }
+        subtitle={
+          mode === "camera"
+            ? "메뉴판·안내문·영수증·표지판을 촬영하거나 사진에서 골라 주세요. 사진은 서버에 보내지 않아요."
+            : "한국어와 일본어를 번갈아 선택하고 말해 주세요. 기기 내 음성 인식을 지원하는 기기·언어에서 사용할 수 있어요."
+        }
+      />
       <View style={styles.between}>
         {(["ko", "ja"] as const).map((l) => (
           <Choice

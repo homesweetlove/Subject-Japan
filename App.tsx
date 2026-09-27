@@ -17,66 +17,45 @@ import { TranslationHub } from "./src/features/translation/TranslationHub";
 import { CardScreen } from "./src/features/cards/CardScreen";
 import { PayScreen } from "./src/features/pay/PayScreen";
 import { CouponHub } from "./src/features/coupons/CouponHub";
-import { TripScreen } from "./src/features/trip/TripScreen";
+import { TripScreen, type TripSection } from "./src/features/trip/TripScreen";
+import { TodayScreen, type AppTab } from "./src/features/today/TodayScreen";
+import { planNotifications } from "./src/features/today/model";
+import { notifier } from "./src/features/today/notifications";
 import { REMINDER_LIMIT } from "./src/features/trip/countdown";
 import { localRepository } from "./src/storage/localRepository";
 import {
+  deleteDutyFreeReceipt,
   recordTranslation,
+  saveDutyFreeReceipt,
+  setAutoRefreshRate,
   toggleFavorite,
   toggleSavedCoupon,
 } from "./src/storage/state";
-import {
-  Button,
-  Icon,
-  IconButton,
-  Label,
-  type IconName,
-} from "./src/ui/components";
+import { Button, Icon, Label, type IconName } from "./src/ui/components";
 import { dark, light, ThemeContext } from "./src/ui/theme";
 
 const tabs: {
-  key: string;
+  key: AppTab;
   label: string;
-  title: string;
   icon: IconName;
-  description: string;
+  activeIcon: IconName;
 }[] = [
-  {
-    key: "card",
-    label: "IC CARD",
-    title: "이동을 더 가볍게",
-    icon: "card-outline",
-    description:
-      "Suica · PASMO · ICOCA 잔액과 이용내역을 한곳에서 확인하는 기능을 사용할 수 있어요.",
-  },
+  { key: "today", label: "오늘", icon: "today-outline", activeIcon: "today" },
+  { key: "card", label: "교통카드", icon: "card-outline", activeIcon: "card" },
   {
     key: "coupon",
-    label: "COUPON",
-    title: "여행의 작은 혜택",
+    label: "쿠폰",
     icon: "ticket-outline",
-    description: "일반 고객과 방문객을 위한 공식 쿠폰·혜택을 확인하세요.",
+    activeIcon: "ticket",
   },
   {
     key: "translate",
-    label: "TRANSLATE",
-    title: "",
+    label: "번역",
     icon: "language-outline",
-    description: "",
+    activeIcon: "language",
   },
-  {
-    key: "pay",
-    label: "PAY",
-    title: "계산은 간단하게",
-    icon: "wallet-outline",
-    description: "환율, 면세, 게스트 할인과 캐시백을 함께 계산하는 도구예요.",
-  },
-  {
-    key: "trip",
-    label: "TRIP",
-    title: "나만의 여행 노트",
-    icon: "map-outline",
-    description: "여행 일정과 예약 정보를 모아둘 공간이에요.",
-  },
+  { key: "pay", label: "결제", icon: "wallet-outline", activeIcon: "wallet" },
+  { key: "trip", label: "여행", icon: "map-outline", activeIcon: "map" },
 ];
 function Application() {
   const systemTheme = useColorScheme();
@@ -85,7 +64,42 @@ function Application() {
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [tab, setTab] = useState("translate");
+  const [tab, setTab] = useState<AppTab>("today");
+  // Remount key lets Today (or a tapped notification) open a TRIP section.
+  const [tripTarget, setTripTarget] = useState<{
+    section: TripSection;
+    nonce: number;
+  }>({ section: "itinerary", nonce: 0 });
+  const navigate = (next: AppTab, section?: TripSection) => {
+    if (next === "trip" && section)
+      setTripTarget((t) => ({ section, nonce: t.nonce + 1 }));
+    setTab(next);
+    setProfileOpen(false);
+    scroll.current?.scrollTo({ y: 0, animated: false });
+  };
+  // Keep the OS schedule in step with saved timers, trips and settings.
+  useEffect(() => {
+    if (!loaded || !notifier.available) return;
+    const timer = setTimeout(() => {
+      void notifier
+        .sync(
+          planNotifications({
+            tripItems: state.tripItems,
+            airportReminders: state.airportReminders,
+            settings: state.notifications,
+          }),
+        )
+        .catch(() => {});
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [loaded, state.tripItems, state.airportReminders, state.notifications]);
+  useEffect(
+    () =>
+      notifier.onOpen((target) =>
+        navigate("trip", target === "airport" ? "airport" : "itinerary"),
+      ),
+    [],
+  );
   const [resetConfirm, setResetConfirm] = useState(false);
   const scroll = useRef<ScrollView>(null);
   const isDark =
@@ -150,29 +164,77 @@ function Application() {
         >
           <View
             style={{
-              paddingHorizontal: 24,
-              height: 68,
+              paddingHorizontal: 20,
+              height: 64,
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "center",
             }}
           >
-            <Text
-              style={{
-                color: colors.ink,
-                fontWeight: "800",
-                fontSize: 17,
-                letterSpacing: 1.5,
-              }}
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+              accessibilityRole="header"
+              accessibilityLabel="Subject Japan"
             >
-              SUBJECT<Text style={{ color: colors.accent }}>:</Text>JAPAN
-            </Text>
-            {loaded && state.onboarded && (
-              <IconButton
-                name="person-circle-outline"
-                label="사용자 페이지"
+              <View
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 9,
+                  backgroundColor: colors.ink,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <View
+                  style={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: 6,
+                    backgroundColor: colors.accent,
+                  }}
+                />
+              </View>
+              <Text
+                style={{
+                  color: colors.ink,
+                  fontWeight: "800",
+                  fontSize: 17,
+                  letterSpacing: 0.4,
+                }}
+              >
+                SUBJECT JAPAN
+              </Text>
+            </View>
+            {loaded && state.onboarded && !profileOpen && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="사용자 페이지"
                 onPress={openProfile}
-              />
+                hitSlop={6}
+                style={({ pressed }) => ({
+                  width: 38,
+                  height: 38,
+                  borderRadius: 19,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: pressed ? colors.line : colors.soft,
+                })}
+              >
+                {state.profile.nickname ? (
+                  <Text
+                    style={{
+                      color: colors.ink,
+                      fontWeight: "800",
+                      fontSize: 15,
+                    }}
+                  >
+                    {[...state.profile.nickname][0]?.toUpperCase()}
+                  </Text>
+                ) : (
+                  <Icon name="person" size={18} color={colors.muted} />
+                )}
+              </Pressable>
             )}
           </View>
           {!loaded ? (
@@ -225,9 +287,9 @@ function Application() {
                 ref={scroll}
                 keyboardShouldPersistTaps="handled"
                 contentContainerStyle={{
-                  paddingHorizontal: 24,
-                  paddingTop: 18,
-                  paddingBottom: 36,
+                  paddingHorizontal: 20,
+                  paddingTop: 8,
+                  paddingBottom: 40,
                 }}
               >
                 {!state.onboarded || profileOpen ? (
@@ -248,9 +310,27 @@ function Application() {
                     onReset={async (fresh) => {
                       await commit(() => fresh);
                       setProfileOpen(false);
-                      setTab("translate");
+                      setTab("today");
                       scroll.current?.scrollTo({ y: 0, animated: false });
                     }}
+                  />
+                ) : tab === "today" ? (
+                  <TodayScreen
+                    state={state}
+                    onNavigate={navigate}
+                    onWeatherCity={(weatherCity) =>
+                      commit((s) => ({ ...s, weatherCity }))
+                    }
+                    onWeather={(weather) =>
+                      commit((s) =>
+                        s.weatherCity === weather.cityId
+                          ? { ...s, weather }
+                          : s,
+                      )
+                    }
+                    onNotifications={(notifications) =>
+                      commit((s) => ({ ...s, notifications }))
+                    }
                   />
                 ) : tab === "translate" ? (
                   <TranslationHub
@@ -309,10 +389,24 @@ function Application() {
                     onRate={(exchangeRate) =>
                       commit((s) => ({ ...s, exchangeRate }))
                     }
+                    dutyFreeReceipts={state.dutyFreeReceipts}
+                    autoRefreshRate={state.autoRefreshRate}
+                    onSaveReceipt={(receipt) =>
+                      commit((s) => saveDutyFreeReceipt(s, receipt))
+                    }
+                    onDeleteReceipt={(id) =>
+                      commit((s) => deleteDutyFreeReceipt(s, id))
+                    }
+                    onToggleAutoRefresh={(enabled) =>
+                      commit((s) => setAutoRefreshRate(s, enabled))
+                    }
                   />
                 ) : tab === "trip" ? (
                   <TripScreen
+                    key={tripTarget.nonce}
+                    initialSection={tripTarget.section}
                     state={state}
+                    onRestore={(restored) => commit(() => restored)}
                     onSaveItem={(item) =>
                       commit((s) => {
                         if (
@@ -373,50 +467,65 @@ function Application() {
           )}
           {loaded && state.onboarded && !profileOpen && (
             <View
+              accessibilityRole="tablist"
               style={{
                 flexDirection: "row",
                 borderTopWidth: 1,
                 borderColor: colors.line,
-                paddingTop: 10,
-                paddingBottom: 8,
-                backgroundColor: colors.bg,
+                paddingTop: 8,
+                paddingBottom: 6,
+                paddingHorizontal: 6,
+                backgroundColor: colors.surface,
               }}
             >
-              {tabs.map((t) => (
-                <Pressable
-                  key={t.key}
-                  accessibilityRole="tab"
-                  accessibilityLabel={t.label}
-                  accessibilityState={{ selected: tab === t.key }}
-                  onPress={() => {
-                    setTab(t.key);
-                    scroll.current?.scrollTo({ y: 0, animated: false });
-                  }}
-                  style={{
-                    flex: 1,
-                    alignItems: "center",
-                    gap: 6,
-                    paddingVertical: 8,
-                    minHeight: 52,
-                  }}
-                >
-                  <Icon
-                    name={t.icon}
-                    size={22}
-                    color={tab === t.key ? colors.accent : colors.muted}
-                  />
-                  <Text
+              {tabs.map((t) => {
+                const on = tab === t.key;
+                return (
+                  <Pressable
+                    key={t.key}
+                    accessibilityRole="tab"
+                    accessibilityLabel={t.label}
+                    accessibilityState={{ selected: on }}
+                    onPress={() => {
+                      setTab(t.key);
+                      scroll.current?.scrollTo({ y: 0, animated: false });
+                    }}
                     style={{
-                      fontSize: 9,
-                      fontWeight: tab === t.key ? "800" : "500",
-                      color: tab === t.key ? colors.accent : colors.muted,
-                      letterSpacing: 0.4,
+                      flex: 1,
+                      alignItems: "center",
+                      gap: 4,
+                      paddingVertical: 4,
+                      minHeight: 52,
                     }}
                   >
-                    {t.label}
-                  </Text>
-                </Pressable>
-              ))}
+                    <View
+                      style={{
+                        width: 56,
+                        height: 30,
+                        borderRadius: 15,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: on ? colors.accentSoft : "transparent",
+                      }}
+                    >
+                      <Icon
+                        name={on ? t.activeIcon : t.icon}
+                        size={21}
+                        color={on ? colors.accent : colors.muted}
+                      />
+                    </View>
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: on ? "800" : "600",
+                        color: on ? colors.ink : colors.muted,
+                      }}
+                    >
+                      {t.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
           )}
         </View>

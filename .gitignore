@@ -50,3 +50,8 @@ coverage/
 # generated native folders
 /ios
 /android
+
+# native module build caches
+modules/*/android/.gradle/
+modules/*/android/build/
+modules/*/ios/build/

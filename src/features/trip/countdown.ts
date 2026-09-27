@@ -117,3 +117,24 @@ export function validReminder(value: unknown): value is AirportReminder {
     r.verifiedAt > 0
   );
 }
+
+export const JAPAN_DAYS_OF_WEEK = ["일", "월", "화", "수", "목", "금", "토"];
+
+export function formatLiveJapanTime(now = Date.now()): {
+  date: string;
+  time: string;
+  dayOfWeek: string;
+  fullText: string;
+} {
+  const jstDate = new Date(now + 9 * 3600000);
+  const iso = jstDate.toISOString();
+  const date = iso.slice(0, 10);
+  const time = iso.slice(11, 19);
+  const dayOfWeek = JAPAN_DAYS_OF_WEEK[jstDate.getUTCDay()];
+  return {
+    date,
+    time,
+    dayOfWeek,
+    fullText: `${date} (${dayOfWeek}) ${time} JST`,
+  };
+}

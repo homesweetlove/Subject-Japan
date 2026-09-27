@@ -9,7 +9,8 @@ test("five regions, countdown editing, guide persistence and reset", async ({
   await page
     .getByRole("button", { name: "나중에 입력하기", exact: true })
     .click();
-  await page.getByRole("tab", { name: "TRIP", exact: true }).click();
+  await page.getByRole("tab", { name: "여행", exact: true }).click();
+  await page.getByRole("button", { name: "공항 막차", exact: true }).click();
   for (const region of ["도쿄", "오사카", "후쿠오카", "삿포로", "나고야"])
     await page.getByRole("button", { name: region, exact: true }).click();
   await expect(
@@ -44,7 +45,8 @@ test("five regions, countdown editing, guide persistence and reset", async ({
     page.getByText("메이테츠 나고야 → 주부 센트레아 NGO", { exact: true }),
   ).toBeVisible();
   await page.reload();
-  await page.getByRole("tab", { name: "TRIP", exact: true }).click();
+  await page.getByRole("tab", { name: "여행", exact: true }).click();
+  await page.getByRole("button", { name: "공항 막차", exact: true }).click();
   await expect(
     page.getByText("메이테츠 나고야 → 주부 센트레아 NGO", { exact: true }),
   ).toBeVisible();
@@ -74,7 +76,7 @@ test("five regions, countdown editing, guide persistence and reset", async ({
     })
     .click();
   await page.reload();
-  await page.getByRole("tab", { name: "TRIP", exact: true }).click();
+  await page.getByRole("tab", { name: "여행", exact: true }).click();
   await page.getByRole("button", { name: "공연 티켓팅", exact: true }).click();
   await expect(
     page.getByRole("checkbox", {
@@ -82,7 +84,7 @@ test("five regions, countdown editing, guide persistence and reset", async ({
       exact: true,
     }),
   ).toHaveAttribute("aria-checked", "true");
-  await page.getByRole("tab", { name: "COUPON", exact: true }).click();
+  await page.getByRole("tab", { name: "쿠폰", exact: true }).click();
   await page
     .getByRole("textbox", { name: "매장·혜택 검색", exact: true })
     .fill("빅카메라");
@@ -95,9 +97,7 @@ test("five regions, countdown editing, guide persistence and reset", async ({
   await page
     .getByRole("button", { name: "혜택 상세 닫기", exact: true })
     .click();
-  await page
-    .getByRole("button", { name: "게스트·VIP 패스트트랙", exact: true })
-    .click();
+  await page.getByRole("button", { name: "게스트·VIP", exact: true }).click();
   await page
     .getByRole("button", {
       name: "한큐 VIP 우선 면세 수속 펼치기",
@@ -120,7 +120,8 @@ test("five regions, countdown editing, guide persistence and reset", async ({
   await page
     .getByRole("button", { name: "나중에 입력하기", exact: true })
     .click();
-  await page.getByRole("tab", { name: "TRIP", exact: true }).click();
+  await page.getByRole("tab", { name: "여행", exact: true }).click();
+  await page.getByRole("button", { name: "공항 막차", exact: true }).click();
   await expect(
     page.getByText("메이테츠 나고야 → 주부 센트레아 NGO", { exact: true }),
   ).toHaveCount(0);
@@ -132,4 +133,68 @@ test("five regions, countdown editing, guide persistence and reset", async ({
     }),
   ).toHaveAttribute("aria-checked", "false");
   expect(errors).toEqual([]);
+});
+
+test("backup copies to the clipboard and restores only after validation and confirmation", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "나중에 입력하기", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "여행", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "일정 이름", exact: true })
+    .fill("료칸 체크인");
+  await page
+    .getByRole("textbox", {
+      name: "일본 날짜·시각 (YYYY-MM-DD HH:mm)",
+      exact: true,
+    })
+    .fill("2026-10-04 15:00");
+  await page.getByRole("button", { name: "일정 추가", exact: true }).click();
+  await page
+    .getByRole("button", { name: "디지털 & 백업", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "여행 데이터 백업", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "내 데이터 백업 복사", exact: true })
+    .click();
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  expect(JSON.parse(copied).tripItems).toHaveLength(1);
+
+  // Foreign clipboard content is rejected without touching saved data.
+  await page.evaluate(() => navigator.clipboard.writeText("not a backup"));
+  await page
+    .getByRole("button", { name: "클립보드에서 백업 불러오기", exact: true })
+    .click();
+  await expect(
+    page.getByText("Subject Japan 백업 형식이 아니에요.", { exact: true }),
+  ).toBeVisible();
+
+  await page.evaluate(
+    (raw) =>
+      navigator.clipboard.writeText(
+        JSON.stringify({ ...JSON.parse(raw), tripItems: [] }),
+      ),
+    copied,
+  );
+  await page
+    .getByRole("button", { name: "클립보드에서 백업 불러오기", exact: true })
+    .click();
+  await expect(page.getByText(/일정 0개/)).toBeVisible();
+  await page
+    .getByRole("button", { name: "현재 데이터를 백업으로 대체", exact: true })
+    .click();
+  await expect(
+    page.getByText("백업을 복원했어요. 클립보드의 백업 데이터도 지웠어요.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "일정·예약", exact: true }).click();
+  await expect(page.getByText("료칸 체크인", { exact: true })).toHaveCount(0);
 });

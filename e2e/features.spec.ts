@@ -29,7 +29,7 @@ test("nearby query consent, coarse coordinates, store matching and permission-fr
   await page
     .getByRole("button", { name: "나중에 입력하기", exact: true })
     .click();
-  await page.getByRole("tab", { name: "COUPON", exact: true }).click();
+  await page.getByRole("tab", { name: "쿠폰", exact: true }).click();
   await page.getByRole("button", { name: "주변 매장", exact: true }).click();
   expect(queries).toHaveLength(0);
   await page
@@ -90,9 +90,9 @@ test("payment calculation, persisted FX, itinerary edit and full reset", async (
   await page
     .getByRole("button", { name: "나중에 입력하기", exact: true })
     .click();
-  await page.getByRole("tab", { name: "PAY", exact: true }).click();
+  await page.getByRole("tab", { name: "결제", exact: true }).click();
   await page
-    .getByRole("textbox", { name: "100엔당 원화 환율", exact: true })
+    .getByRole("textbox", { name: "현재 환율 (100 JPY → KRW)", exact: true })
     .fill("900");
   await page.getByRole("button", { name: "환율 저장", exact: true }).click();
   await page
@@ -118,11 +118,14 @@ test("payment calculation, persisted FX, itinerary edit and full reset", async (
     .click();
   await expect(page.getByText("₩79,515", { exact: true })).toBeVisible();
   await page.reload();
-  await page.getByRole("tab", { name: "PAY", exact: true }).click();
+  await page.getByRole("tab", { name: "결제", exact: true }).click();
   await expect(
-    page.getByRole("textbox", { name: "100엔당 원화 환율", exact: true }),
+    page.getByRole("textbox", {
+      name: "현재 환율 (100 JPY → KRW)",
+      exact: true,
+    }),
   ).toHaveValue("900");
-  await page.getByRole("tab", { name: "TRIP", exact: true }).click();
+  await page.getByRole("tab", { name: "여행", exact: true }).click();
   await page.getByRole("button", { name: "일정·예약", exact: true }).click();
   await page
     .getByRole("textbox", { name: "일정 이름", exact: true })
@@ -144,7 +147,7 @@ test("payment calculation, persisted FX, itinerary edit and full reset", async (
     .getByRole("checkbox", { name: "호텔 체크인 완료", exact: true })
     .click();
   await page.reload();
-  await page.getByRole("tab", { name: "TRIP", exact: true }).click();
+  await page.getByRole("tab", { name: "여행", exact: true }).click();
   await page.getByRole("button", { name: "일정·예약", exact: true }).click();
   await expect(
     page.getByRole("checkbox", { name: "호텔 체크인 완료", exact: true }),
@@ -169,11 +172,14 @@ test("payment calculation, persisted FX, itinerary edit and full reset", async (
   await page
     .getByRole("button", { name: "나중에 입력하기", exact: true })
     .click();
-  await page.getByRole("tab", { name: "PAY", exact: true }).click();
+  await page.getByRole("tab", { name: "결제", exact: true }).click();
   await expect(
-    page.getByRole("textbox", { name: "100엔당 원화 환율", exact: true }),
+    page.getByRole("textbox", {
+      name: "현재 환율 (100 JPY → KRW)",
+      exact: true,
+    }),
   ).toHaveValue("");
-  await page.getByRole("tab", { name: "TRIP", exact: true }).click();
+  await page.getByRole("tab", { name: "여행", exact: true }).click();
   await page.getByRole("button", { name: "일정·예약", exact: true }).click();
   await expect(
     page.getByText("첫 일정을 추가해 보세요. 최대 200개를 저장할 수 있어요.", {
@@ -199,6 +205,7 @@ test("native feature fallback, authored formal phrases and no automatic network 
   await page
     .getByRole("button", { name: "나중에 입력하기", exact: true })
     .click();
+  await page.getByRole("tab", { name: "번역", exact: true }).click();
   await page.getByRole("button", { name: "매우 정중", exact: true }).click();
   await page
     .getByRole("button", { name: "카드로 결제할 수 있나요?", exact: true })
@@ -226,7 +233,7 @@ test("native feature fallback, authored formal phrases and no automatic network 
       exact: true,
     }),
   ).toBeVisible();
-  await page.getByRole("tab", { name: "IC CARD", exact: true }).click();
+  await page.getByRole("tab", { name: "교통카드", exact: true }).click();
   await page
     .getByRole("button", { name: "교통카드 NFC 읽기", exact: true })
     .click();
@@ -235,7 +242,7 @@ test("native feature fallback, authored formal phrases and no automatic network 
       exact: true,
     }),
   ).toBeVisible();
-  await page.getByRole("tab", { name: "COUPON", exact: true }).click();
+  await page.getByRole("tab", { name: "쿠폰", exact: true }).click();
   await page.getByRole("button", { name: "주변 매장", exact: true }).click();
   await expect(
     page.getByRole("button", {
@@ -243,6 +250,12 @@ test("native feature fallback, authored formal phrases and no automatic network 
       exact: true,
     }),
   ).toBeVisible();
+  // Rate auto-refresh is opt-in, so opening PAY must stay offline too.
+  await page.getByRole("tab", { name: "결제", exact: true }).click();
+  await expect(
+    page.getByText("계산은 똑똑하게", { exact: true }),
+  ).toBeVisible();
+  await page.waitForTimeout(500);
   expect(external).toEqual([]);
   expect(errors).toEqual([]);
 });

@@ -7,6 +7,16 @@ import { validReminder, REMINDER_LIMIT } from "../features/trip/countdown";
 import { validCard } from "../features/cards/model";
 import { validRate } from "../features/pay/calculator";
 import { validTripItem } from "../features/trip/itinerary";
+import {
+  defaultNotificationSettings,
+  validNotificationSettings,
+} from "../features/today/model";
+import { isWeatherCity, validWeather } from "../features/today/weather";
+import {
+  validReceipt,
+  RECEIPT_LIMIT,
+  type DutyFreeReceipt,
+} from "../features/pay/taxFreeTracker";
 
 export const STORAGE_KEY = "subject-japan.local.v1";
 export const HISTORY_LIMIT = 100;
@@ -56,18 +66,55 @@ export function toggleFavorite(
       : [translation, ...state.favorites],
   };
 }
+export function saveDutyFreeReceipt(
+  state: LocalState,
+  receipt: DutyFreeReceipt,
+): LocalState {
+  if (!validReceipt(receipt)) throw new Error("영수증 정보를 확인해 주세요.");
+  const existing = state.dutyFreeReceipts.findIndex((r) => r.id === receipt.id);
+  let updated: DutyFreeReceipt[];
+  if (existing >= 0) {
+    updated = state.dutyFreeReceipts.map((r) =>
+      r.id === receipt.id ? receipt : r,
+    );
+  } else {
+    if (state.dutyFreeReceipts.length >= RECEIPT_LIMIT)
+      throw new Error(`영수증은 ${RECEIPT_LIMIT}개까지 등록할 수 있어요.`);
+    updated = [receipt, ...state.dutyFreeReceipts];
+  }
+  return { ...state, dutyFreeReceipts: updated };
+}
+export function deleteDutyFreeReceipt(
+  state: LocalState,
+  id: string,
+): LocalState {
+  return {
+    ...state,
+    dutyFreeReceipts: state.dutyFreeReceipts.filter((r) => r.id !== id),
+  };
+}
+export function setAutoRefreshRate(
+  state: LocalState,
+  enabled: boolean,
+): LocalState {
+  return { ...state, autoRefreshRate: enabled };
+}
 function validTranslation(value: unknown): value is Translation {
   if (!value || typeof value !== "object") return false;
   const t = value as Translation;
   return (
     typeof t.id === "string" &&
+    t.id.length > 0 &&
+    t.id.length <= 120 &&
     ["ko", "ja"].includes(t.source) &&
     ["ko", "ja"].includes(t.target) &&
     t.source !== t.target &&
     typeof t.original === "string" &&
     t.original.length <= 2000 &&
     typeof t.translated === "string" &&
+    t.translated.length <= 4000 &&
     typeof t.provider === "string" &&
+    t.provider.length <= 60 &&
     Number.isFinite(t.createdAt)
   );
 }
@@ -148,5 +195,28 @@ export function decodeState(raw: string | null): LocalState {
         )
         .slice(0, 200)
     : [];
+  state.dutyFreeReceipts = Array.isArray(value.dutyFreeReceipts)
+    ? value.dutyFreeReceipts
+        .filter(validReceipt)
+        .filter(
+          (v: { id: string }, i: number, a: { id: string }[]) =>
+            a.findIndex((x) => x.id === v.id) === i,
+        )
+        .slice(0, RECEIPT_LIMIT)
+    : [];
+  state.autoRefreshRate = value.autoRefreshRate === true;
+  state.notifications = validNotificationSettings(value.notifications)
+    ? {
+        enabled: value.notifications.enabled,
+        tripLeadMinutes: value.notifications.tripLeadMinutes,
+      }
+    : defaultNotificationSettings();
+  state.weatherCity = isWeatherCity(value.weatherCity)
+    ? value.weatherCity
+    : null;
+  state.weather =
+    validWeather(value.weather) && value.weather.cityId === state.weatherCity
+      ? value.weather
+      : null;
   return state;
 }

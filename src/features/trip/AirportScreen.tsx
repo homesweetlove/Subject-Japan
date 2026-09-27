@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppState, Text, TextInput, View } from "react-native";
-import { Button, Card, Label, styles } from "../../ui/components";
+import { ScreenHeader, Button, Card, Label, styles } from "../../ui/components";
 import { Choice } from "../../ui/Choice";
 import { useTheme } from "../../ui/theme";
 import { openTravelLink } from "../guides/links";
@@ -9,6 +9,7 @@ import {
   countdown,
   createReminder,
   duration,
+  formatLiveJapanTime,
   japanDateTime,
   type AirportReminder,
 } from "./countdown";
@@ -130,17 +131,48 @@ export function AirportScreen({
   };
   return (
     <View style={{ gap: 22 }}>
-      <View style={{ gap: 8 }}>
-        <Label muted size={12} weight="700">
-          LAST TRAIN · JAPAN TIME
-        </Label>
-        <Label size={28} weight="700">
-          공항으로 가는 마지막 시간
-        </Label>
-        <Label muted>
-          공식 시간표에서 확인한 막차를 저장하고, 역으로 출발할 시간까지
-          챙기세요.
-        </Label>
+      <ScreenHeader
+        eyebrow="LAST TRAIN · JAPAN TIME"
+        title="공항으로 가는 마지막 시간"
+        subtitle="공식 시간표에서 확인한 막차를 저장하고, 역으로 출발할 시간까지 챙기세요."
+      />
+      <View
+        style={{
+          padding: 14,
+          borderRadius: 16,
+          backgroundColor: c.soft,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <View style={{ gap: 2 }}>
+          <Label muted size={11} weight="700">
+            일본 현지 실시간 시계 (JST UTC+9)
+          </Label>
+          <Text
+            style={{
+              color: c.ink,
+              fontSize: 16,
+              fontWeight: "700",
+              fontVariant: ["tabular-nums"],
+            }}
+          >
+            {formatLiveJapanTime(now).fullText}
+          </Text>
+        </View>
+        <View
+          style={{
+            backgroundColor: c.accent,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 8,
+          }}
+        >
+          <Text style={{ color: c.inverse, fontSize: 11, fontWeight: "700" }}>
+            LIVE
+          </Text>
+        </View>
       </View>
       <Card>
         <Label weight="600">확인한 시각으로 작동하는 타이머</Label>

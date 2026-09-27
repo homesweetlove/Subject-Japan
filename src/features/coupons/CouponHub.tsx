@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View } from "react-native";
 import type { LocalState } from "../../domain/models";
-import { Choice } from "../../ui/Choice";
+import { SubNav } from "../../ui/components";
 import { GuideScreen } from "../guides/GuideScreen";
 import { guestGuides } from "../guides/catalog";
 import { CouponScreen } from "./CouponScreen";
@@ -19,24 +19,16 @@ export function CouponHub({
     "coupons",
   );
   return (
-    <View style={{ gap: 24 }}>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        <Choice
-          label="주변 매장"
-          selected={section === "nearby"}
-          onPress={() => setSection("nearby")}
-        />
-        <Choice
-          label="쿠폰·혜택"
-          selected={section === "coupons"}
-          onPress={() => setSection("coupons")}
-        />
-        <Choice
-          label="게스트·VIP 패스트트랙"
-          selected={section === "guest"}
-          onPress={() => setSection("guest")}
-        />
-      </View>
+    <View style={{ gap: 22 }}>
+      <SubNav
+        items={[
+          { key: "coupons", label: "쿠폰·혜택", icon: "ticket-outline" },
+          { key: "nearby", label: "주변 매장", icon: "location-outline" },
+          { key: "guest", label: "게스트·VIP", icon: "star-outline" },
+        ]}
+        value={section}
+        onChange={setSection}
+      />
       {section === "nearby" ? (
         <NearbyScreen />
       ) : section === "coupons" ? (

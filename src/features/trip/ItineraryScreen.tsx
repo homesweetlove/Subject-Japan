@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Linking, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
-import { Button, Card, Label } from "../../ui/components";
+import { ScreenHeader, Button, Card, Label } from "../../ui/components";
 import { Field } from "../../ui/Field";
 import { Choice } from "../../ui/Choice";
 import { validTripItem, type TripItem } from "./itinerary";
@@ -49,13 +49,10 @@ export function ItineraryScreen({
   };
   return (
     <View style={{ gap: 20 }}>
-      <Label size={28} weight="700">
-        나만의 여행 노트
-      </Label>
-      <Label muted>
-        일정·예약번호·메모를 기기에만 저장해요. 모든 일정은 일본 시각(JST)
-        기준이에요.
-      </Label>
+      <ScreenHeader
+        title="나만의 여행 노트"
+        subtitle="일정·예약번호·메모를 기기에만 저장해요. 모든 일정은 일본 시각(JST) 기준이에요."
+      />
       <Card>
         {field("title", "일정 이름", 80)}
         {field("when", "일본 날짜·시각 (YYYY-MM-DD HH:mm)", 16)}

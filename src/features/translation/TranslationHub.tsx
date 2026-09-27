@@ -1,22 +1,21 @@
 import { useState, type ComponentProps } from "react";
 import { View } from "react-native";
-import { Choice } from "../../ui/Choice";
+import { SubNav } from "../../ui/components";
 import { TranslateScreen } from "./TranslateScreen";
 import { MediaTranslate } from "./MediaTranslate";
 export function TranslationHub(props: ComponentProps<typeof TranslateScreen>) {
   const [mode, setMode] = useState<"text" | "camera" | "voice">("text");
   return (
-    <View style={{ gap: 24 }}>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {(["text", "camera", "voice"] as const).map((m, i) => (
-          <Choice
-            key={m}
-            label={["텍스트", "카메라 번역", "음성 대화"][i]}
-            selected={mode === m}
-            onPress={() => setMode(m)}
-          />
-        ))}
-      </View>
+    <View style={{ gap: 22 }}>
+      <SubNav
+        items={[
+          { key: "text", label: "텍스트", icon: "create-outline" },
+          { key: "camera", label: "카메라 번역", icon: "camera-outline" },
+          { key: "voice", label: "음성 대화", icon: "mic-outline" },
+        ]}
+        value={mode}
+        onChange={setMode}
+      />
       {mode === "text" ? (
         <TranslateScreen {...props} />
       ) : (

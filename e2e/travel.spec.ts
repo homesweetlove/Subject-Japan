@@ -31,6 +31,8 @@ test("profile → personalized phrase → favorites → reload → edit → clea
   await page
     .getByRole("button", { name: "내 여행 시작하기", exact: true })
     .click();
+  // The app now opens on Today; translation is one tap away.
+  await page.getByRole("tab", { name: "번역", exact: true }).click();
   await expect(
     page.getByText("말이 통하는 여행", { exact: true }),
   ).toBeVisible();
@@ -61,6 +63,7 @@ test("profile → personalized phrase → favorites → reload → edit → clea
     page.getByRole("textbox", { name: "번역할 문장", exact: true }),
   ).toHaveValue("この商品の44サイズはありますか？");
   await page.reload();
+  await page.getByRole("tab", { name: "번역", exact: true }).click();
   await page.getByRole("tab", { name: "즐겨찾기", exact: true }).click();
   await expect(
     page.getByText("この商品の44サイズはありますか？", { exact: true }),
@@ -126,6 +129,7 @@ test("small screen, explicit fallback, manual Japanese and navigation", async ({
   await page
     .getByRole("button", { name: "나중에 입력하기", exact: true })
     .click();
+  await page.getByRole("tab", { name: "번역", exact: true }).click();
   await page
     .getByRole("textbox", { name: "번역할 문장", exact: true })
     .fill("내일 몇 시에 문을 여나요?");
@@ -166,13 +170,13 @@ test("small screen, explicit fallback, manual Japanese and navigation", async ({
     )
     .toBe(true);
   for (const [name, title] of [
-    ["IC CARD", "이동을 더 가볍게"],
-    ["PAY", "결제 전, 한 번 더"],
+    ["교통카드", "이동을 더 가볍게"],
+    ["결제", "계산은 똑똑하게"],
   ]) {
     await page.getByRole("tab", { name, exact: true }).click();
     await expect(page.getByText(title, { exact: true })).toBeVisible();
   }
-  await page.getByRole("tab", { name: "TRANSLATE", exact: true }).click();
+  await page.getByRole("tab", { name: "번역", exact: true }).click();
   await page.getByRole("button", { name: "사이즈/재고", exact: true }).click();
   await page
     .getByRole("button", { name: "상의 사이즈 등록하기", exact: true })
@@ -190,7 +194,7 @@ test("coupons: filter, official conditions, local save, reload and reset", async
   await page
     .getByRole("button", { name: "나중에 입력하기", exact: true })
     .click();
-  await page.getByRole("tab", { name: "COUPON", exact: true }).click();
+  await page.getByRole("tab", { name: "쿠폰", exact: true }).click();
   await page.getByRole("button", { name: "일반 고객용", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "돈키호테 상세 보기", exact: true }),
@@ -219,7 +223,7 @@ test("coupons: filter, official conditions, local save, reload and reset", async
     .getByRole("button", { name: "혜택 상세 닫기", exact: true })
     .click();
   await page.reload();
-  await page.getByRole("tab", { name: "COUPON", exact: true }).click();
+  await page.getByRole("tab", { name: "쿠폰", exact: true }).click();
   await page
     .getByRole("button", { name: "저장한 혜택만", exact: true })
     .click();
@@ -259,7 +263,7 @@ test("coupons: filter, official conditions, local save, reload and reset", async
   await page
     .getByRole("button", { name: "나중에 입력하기", exact: true })
     .click();
-  await page.getByRole("tab", { name: "COUPON", exact: true }).click();
+  await page.getByRole("tab", { name: "쿠폰", exact: true }).click();
   await page
     .getByRole("button", { name: "저장한 혜택만", exact: true })
     .click();

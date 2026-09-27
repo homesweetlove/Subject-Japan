@@ -24,6 +24,7 @@ import {
 } from "../phrases/phrases";
 import { sameTranslation } from "../../storage/state";
 import {
+  ScreenHeader,
   Button,
   Card,
   Icon,
@@ -31,7 +32,7 @@ import {
   Label,
   styles,
 } from "../../ui/components";
-import { useTheme } from "../../ui/theme";
+import { elevation, useTheme } from "../../ui/theme";
 import { detectLanguage, opposite, translateText } from "./service";
 import { translationProvider } from "./provider";
 import { Choice } from "../../ui/Choice";
@@ -167,28 +168,26 @@ export function TranslateScreen({
     result && state.favorites.some((t) => sameTranslation(t, result));
   return (
     <View style={{ gap: 24 }}>
-      <View style={styles.between}>
-        <View style={{ gap: 5, flex: 1 }}>
-          <Label muted size={11} weight="700">
-            YOUR WORDS, A LITTLE CLOSER.
-          </Label>
-          <Label size={30} weight="700">
-            말이 통하는 여행
-          </Label>
-        </View>
-        <View
-          style={{
-            width: 46,
-            height: 46,
-            borderRadius: 23,
-            backgroundColor: c.soft,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: c.accent, fontSize: 23 }}>あ</Text>
-        </View>
-      </View>
+      <ScreenHeader
+        eyebrow="YOUR WORDS, A LITTLE CLOSER"
+        title="말이 통하는 여행"
+        trailing={
+          <View
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              backgroundColor: c.accentSoft,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: c.accent, fontSize: 22, fontWeight: "700" }}>
+              あ
+            </Text>
+          </View>
+        }
+      />
       <View style={{ gap: 10 }}>
         <View style={styles.between}>
           <View style={[styles.row, { flex: 1 }]}>
@@ -247,13 +246,14 @@ export function TranslateScreen({
         )}
       </View>
       <View
-        style={{
-          borderWidth: 1,
-          borderColor: c.line,
-          borderRadius: 26,
-          overflow: "hidden",
-          backgroundColor: c.surface,
-        }}
+        style={[
+          {
+            borderRadius: 24,
+            overflow: "hidden",
+            backgroundColor: c.surface,
+          },
+          elevation(c, 2),
+        ]}
       >
         <View style={{ padding: 20, gap: 18 }}>
           <View style={styles.between}>
@@ -273,16 +273,18 @@ export function TranslateScreen({
                     setSource(value);
                   }}
                   style={{
-                    borderRadius: 10,
-                    paddingVertical: 9,
-                    paddingHorizontal: 11,
-                    backgroundColor: source === value ? c.soft : "transparent",
+                    borderRadius: 999,
+                    paddingVertical: 8,
+                    paddingHorizontal: 13,
+                    backgroundColor:
+                      source === value ? c.selected : "transparent",
                   }}
                 >
                   <Label
                     size={13}
-                    weight={source === value ? "700" : "400"}
+                    weight={source === value ? "700" : "500"}
                     muted={source !== value}
+                    style={source === value && { color: c.onSelected }}
                   >
                     {value === "auto" ? "자동 감지" : languageNames[value]}
                   </Label>
@@ -367,50 +369,62 @@ export function TranslateScreen({
             padding: 22,
             gap: 16,
             minHeight: 180,
-            backgroundColor: c.soft,
+            backgroundColor: result ? c.selected : c.soft,
           }}
         >
           <View style={styles.between}>
-            <Label size={12} weight="700">
+            <Label
+              size={12}
+              weight="700"
+              style={{ color: result ? c.accent : c.muted, letterSpacing: 1 }}
+            >
               {result
                 ? languageNames[result.target]
                 : detected
                   ? languageNames[opposite(detected)]
                   : "번역"}
             </Label>
-            <Label muted size={10}>
+            <Label
+              muted
+              size={11}
+              style={result && { color: c.onSelected, opacity: 0.7 }}
+            >
               {result?.provider ?? "가볍게, 자연스럽게"}
             </Label>
           </View>
           <Text
             selectable
             style={{
-              color: result ? c.ink : c.muted,
-              fontSize: result ? 23 : 17,
-              lineHeight: 36,
+              color: result ? c.onSelected : c.muted,
+              fontSize: result ? 25 : 17,
+              lineHeight: result ? 38 : 28,
+              fontWeight: result ? "600" : "400",
             }}
           >
             {result?.translated ?? "여행의 다음 대화가\n여기에서 시작됩니다."}
           </Text>
           {result && (
             <View style={styles.between}>
-              <Label muted size={11}>
+              <Label size={11} style={{ color: c.onSelected, opacity: 0.7 }}>
                 번역 결과는 참고용이에요.
               </Label>
               <View style={styles.row}>
                 <IconButton
                   name={starred ? "bookmark" : "bookmark-outline"}
                   label={starred ? "즐겨찾기 해제" : "즐겨찾기 저장"}
+                  color={c.onSelected}
                   onPress={() => void favorite(result)}
                 />
                 <IconButton
                   name="copy-outline"
                   label="번역 결과 복사"
+                  color={c.onSelected}
                   onPress={() => void copy(result.translated)}
                 />
                 <IconButton
                   name="expand-outline"
                   label="번역문 크게 보기"
+                  color={c.onSelected}
                   onPress={() => setFullscreen(true)}
                 />
               </View>
@@ -517,7 +531,10 @@ export function TranslateScreen({
                   style={{
                     paddingHorizontal: 15,
                     paddingVertical: 10,
-                    backgroundColor: category === value ? c.accent : c.surface,
+                    backgroundColor:
+                      category === value ? c.selected : c.surface,
+                    borderWidth: 1,
+                    borderColor: category === value ? c.selected : c.line,
                     borderRadius: 20,
                   }}
                 >
@@ -525,7 +542,7 @@ export function TranslateScreen({
                     style={{
                       fontSize: 13,
                       fontWeight: "600",
-                      color: category === value ? c.inverse : c.muted,
+                      color: category === value ? c.onSelected : c.ink,
                     }}
                   >
                     {value}

@@ -10,11 +10,19 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Card, IconButton, Label, styles } from "../../ui/components";
+import {
+  ScreenHeader,
+  Button,
+  Card,
+  IconButton,
+  Label,
+  styles,
+} from "../../ui/components";
 import { useTheme } from "../../ui/theme";
 import { couponCatalog } from "./catalog";
 import {
   audienceLabels,
+  couponDDay,
   couponStatus,
   filterCoupons,
   isOfficialCouponUrl,
@@ -45,14 +53,14 @@ function Chip({
         justifyContent: "center",
         paddingHorizontal: 15,
         borderRadius: 22,
-        backgroundColor: selected ? c.accent : c.soft,
+        backgroundColor: selected ? c.selected : c.soft,
       }}
     >
       <Text
         style={{
-          color: selected ? c.inverse : c.ink,
+          color: selected ? c.onSelected : c.ink,
           fontSize: 13,
-          fontWeight: "600",
+          fontWeight: selected ? "700" : "600",
         }}
       >
         {label}
@@ -88,6 +96,7 @@ export function CouponScreen({
   const [audience, setAudience] = useState<CouponAudience | "all">("all");
   const [category, setCategory] = useState<CouponCategory | "all">("all");
   const [savedOnly, setSavedOnly] = useState(false);
+  const [validOnly, setValidOnly] = useState(false);
   const [selected, setSelected] = useState<Coupon | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -108,6 +117,8 @@ export function CouponScreen({
     category,
     savedOnly,
     savedIds,
+    validOnly,
+    now,
   });
   const save = async (id: string) => {
     setBusy(true);
@@ -137,23 +148,18 @@ export function CouponScreen({
     setAudience("all");
     setCategory("all");
     setSavedOnly(false);
+    setValidOnly(false);
   };
   const categories = [
     ...new Set(couponCatalog.map((coupon) => coupon.category)),
   ];
   return (
     <View style={{ gap: 22 }}>
-      <View style={{ gap: 8 }}>
-        <Label muted size={12} weight="700">
-          COUPON & BENEFITS
-        </Label>
-        <Label size={30} weight="700">
-          같은 여행, 더 좋은 혜택
-        </Label>
-        <Label muted>
-          방문객 전용 쿠폰부터 일본 고객이 쓰는 일상 혜택까지.
-        </Label>
-      </View>
+      <ScreenHeader
+        eyebrow="COUPON & BENEFITS"
+        title="같은 여행, 더 좋은 혜택"
+        subtitle="방문객 전용 쿠폰부터 일본 고객이 쓰는 일상 혜택까지."
+      />
       <TextInput
         accessibilityLabel="매장·혜택 검색"
         placeholder="매장, 브랜드, 혜택 검색"
@@ -211,11 +217,18 @@ export function CouponScreen({
         <Label muted size={13}>
           {results.length}개의 혜택
         </Label>
-        <Chip
-          label="저장한 혜택만"
-          selected={savedOnly}
-          onPress={() => setSavedOnly((value) => !value)}
-        />
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <Chip
+            label="사용 가능만"
+            selected={validOnly}
+            onPress={() => setValidOnly((value) => !value)}
+          />
+          <Chip
+            label="저장한 혜택만"
+            selected={savedOnly}
+            onPress={() => setSavedOnly((value) => !value)}
+          />
+        </View>
       </View>
       <Label muted size={12}>
         공식 안내를 정리한 목록으로 실시간 발급·재고를 보장하지 않아요. 일반
@@ -235,53 +248,87 @@ export function CouponScreen({
           <Button label="필터 초기화" onPress={resetFilters} />
         </Card>
       ) : null}
-      {results.map((coupon) => (
-        <Card key={coupon.id}>
-          <View style={styles.between}>
-            <Label muted size={12}>
-              {audienceLabels[coupon.audience]} · {coupon.category}
-            </Label>
-            <Label muted size={12}>
-              {statusLabels[couponStatus(coupon, now)]}
-            </Label>
-          </View>
-          <View style={{ gap: 3 }}>
-            <Label weight="700" size={21}>
-              {coupon.merchant}
+      {results.map((coupon) => {
+        const dDayInfo = couponDDay(coupon, now);
+        const status = couponStatus(coupon, now);
+        return (
+          <Card key={coupon.id}>
+            <View style={styles.between}>
+              <Label muted size={12}>
+                {audienceLabels[coupon.audience]} · {coupon.category}
+              </Label>
+              <View
+                style={{ flexDirection: "row", gap: 6, alignItems: "center" }}
+              >
+                <View
+                  style={{
+                    paddingHorizontal: 8,
+                    paddingVertical: 2,
+                    borderRadius: 8,
+                    backgroundColor:
+                      dDayInfo.status === "ending-soon" ||
+                      dDayInfo.status === "d-day"
+                        ? c.accent
+                        : c.soft,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      fontWeight: "700",
+                      color:
+                        dDayInfo.status === "ending-soon" ||
+                        dDayInfo.status === "d-day"
+                          ? c.inverse
+                          : c.ink,
+                    }}
+                  >
+                    {dDayInfo.label}
+                  </Text>
+                </View>
+                <Label muted size={12}>
+                  {statusLabels[status]}
+                </Label>
+              </View>
+            </View>
+            <View style={{ gap: 3 }}>
+              <Label weight="700" size={21}>
+                {coupon.merchant}
+              </Label>
+              <Label muted size={13}>
+                {coupon.title}
+              </Label>
+            </View>
+            <Label size={19} weight="600">
+              {coupon.benefit}
             </Label>
             <Label muted size={13}>
-              {coupon.title}
+              {coupon.registrationRequired
+                ? "일본 앱·회원 발급 조건 확인 필요"
+                : coupon.audience === "visitor"
+                  ? "여권·방문객 자격 등 사용 조건 확인"
+                  : "개인 컵 등 사용 조건 확인"}
             </Label>
-          </View>
-          <Label size={19} weight="600">
-            {coupon.benefit}
-          </Label>
-          <Label muted size={13}>
-            {coupon.registrationRequired
-              ? "일본 앱·회원 발급 조건 확인 필요"
-              : coupon.audience === "visitor"
-                ? "여권·방문객 자격 등 사용 조건 확인"
-                : "개인 컵 등 사용 조건 확인"}
-          </Label>
-          <View style={styles.between}>
-            <Button
-              label={`${coupon.merchant} 상세 보기`}
-              onPress={() => {
-                setError("");
-                setSelected(coupon);
-              }}
-            />
-            <Button
-              label={`${coupon.merchant} ${savedIds.includes(coupon.id) ? "저장 해제" : "저장"}`}
-              icon={
-                savedIds.includes(coupon.id) ? "bookmark" : "bookmark-outline"
-              }
-              disabled={busy}
-              onPress={() => void save(coupon.id)}
-            />
-          </View>
-        </Card>
-      ))}
+            <View style={styles.between}>
+              <Button
+                label={`${coupon.merchant} 상세 보기`}
+                onPress={() => {
+                  setError("");
+                  setSelected(coupon);
+                }}
+              />
+              <Button
+                label={`${coupon.merchant} ${savedIds.includes(coupon.id) ? "저장 해제" : "저장"}`}
+                icon={
+                  savedIds.includes(coupon.id) ? "bookmark" : "bookmark-outline"
+                }
+                disabled={busy}
+                onPress={() => void save(coupon.id)}
+              />
+            </View>
+          </Card>
+        );
+      })}
       <Label muted size={12}>
         목록과 저장한 혜택은 기기에서 볼 수 있어요. 실제 사용에는 공식
         사이트·앱의 최신 쿠폰이 필요하며, 주변 매장 검색은 아직 지원하지 않아요.

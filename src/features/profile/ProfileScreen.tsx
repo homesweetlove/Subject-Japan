@@ -7,7 +7,15 @@ import {
   type SizeKey,
   type ThemePreference,
 } from "../../domain/models";
-import { Button, Card, Icon, Label, styles } from "../../ui/components";
+import {
+  Button,
+  Card,
+  Icon,
+  IconButton,
+  Label,
+  ScreenHeader,
+  styles,
+} from "../../ui/components";
 import { useTheme } from "../../ui/theme";
 
 const fields: { key: SizeKey; title: string; hint: string }[] = [
@@ -53,21 +61,18 @@ export function ProfileScreen({
   };
   return (
     <View style={{ gap: 24 }}>
-      <View style={styles.between}>
-        <Label size={12} weight="700" muted>
-          {state.onboarded ? "MY PROFILE" : "WELCOME TO JAPAN"}
-        </Label>
-        {state.onboarded && <Button label="닫기" onPress={onClose} />}
-      </View>
-      <View style={{ gap: 8 }}>
-        <Label size={30} weight="700">
-          {state.onboarded ? "나에게 맞춘 여행" : "여행의 시작,\n나에게 맞게."}
-        </Label>
-        <Label muted>
-          사이즈를 한 번 저장하면, 쇼핑할 때{"\n"}일본어 문장에 바로 담아
-          드려요.
-        </Label>
-      </View>
+      <ScreenHeader
+        eyebrow={state.onboarded ? "MY PROFILE" : "WELCOME TO JAPAN"}
+        title={
+          state.onboarded ? "나에게 맞춘 여행" : "여행의 시작,\n나에게 맞게."
+        }
+        subtitle="사이즈를 한 번 저장하면, 쇼핑할 때 일본어 문장에 바로 담아 드려요."
+        trailing={
+          state.onboarded ? (
+            <IconButton name="close" label="닫기" onPress={onClose} />
+          ) : undefined
+        }
+      />
       <Card>
         <Label weight="600">어떻게 불러 드릴까요?</Label>
         <TextInput
@@ -79,9 +84,9 @@ export function ProfileScreen({
           maxLength={24}
           style={{
             color: c.ink,
-            backgroundColor: c.bg,
+            backgroundColor: c.soft,
             borderRadius: 14,
-            padding: 16,
+            padding: 15,
             fontSize: 16,
           }}
         />
@@ -115,9 +120,9 @@ export function ProfileScreen({
               }
               style={{
                 color: c.ink,
-                backgroundColor: c.bg,
+                backgroundColor: c.soft,
                 borderRadius: 14,
-                padding: 16,
+                padding: 15,
                 fontSize: 16,
               }}
             />
@@ -130,22 +135,54 @@ export function ProfileScreen({
       </Card>
       <Card>
         <Label weight="600">화면 스타일</Label>
-        <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
+        <View
+          accessibilityRole="radiogroup"
+          style={{
+            flexDirection: "row",
+            gap: 4,
+            padding: 4,
+            borderRadius: 14,
+            backgroundColor: c.soft,
+          }}
+        >
           {(["system", "light", "dark"] as const).map((value, i) => (
             <Pressable
               key={value}
               onPress={() => setTheme(value)}
               accessibilityRole="radio"
+              accessibilityLabel={["시스템", "라이트", "다크"][i]}
               accessibilityState={{ checked: theme === value }}
               style={{
-                backgroundColor: theme === value ? c.soft : c.bg,
-                padding: 13,
-                borderRadius: 12,
-                borderColor: theme === value ? c.accent : c.line,
-                borderWidth: 1,
+                flex: 1,
+                flexDirection: "row",
+                gap: 6,
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: 42,
+                borderRadius: 11,
+                backgroundColor: theme === value ? c.surface : "transparent",
               }}
             >
-              <Label size={13}>{["시스템", "라이트", "다크"][i]}</Label>
+              <Icon
+                name={
+                  (
+                    [
+                      "phone-portrait-outline",
+                      "sunny-outline",
+                      "moon-outline",
+                    ] as const
+                  )[i]
+                }
+                size={16}
+                color={theme === value ? c.ink : c.muted}
+              />
+              <Label
+                size={13}
+                weight={theme === value ? "700" : "500"}
+                muted={theme !== value}
+              >
+                {["시스템", "라이트", "다크"][i]}
+              </Label>
             </Pressable>
           ))}
         </View>
@@ -169,6 +206,7 @@ export function ProfileScreen({
       {!state.onboarded && (
         <Button
           label="나중에 입력하기"
+          variant="ghost"
           disabled={saving}
           onPress={async () => {
             setSaving(true);
@@ -186,11 +224,13 @@ export function ProfileScreen({
         <View style={{ gap: 12 }}>
           <Button
             label="기기에 저장한 모든 정보 삭제"
+            variant="danger"
+            icon="trash-outline"
             disabled={saving}
             onPress={() => setConfirmReset(true)}
           />
           {confirmReset && (
-            <Card>
+            <Card tone="accent">
               <Label>
                 프로필, 사이즈, 번역 기록, 즐겨찾기, 교통카드, 환율, 일정, 혜택,
                 막차 타이머와 준비 체크리스트를 모두 삭제할까요? 이 작업은
@@ -198,6 +238,7 @@ export function ProfileScreen({
               </Label>
               <Button
                 label="모두 삭제"
+                variant="danger"
                 busy={saving}
                 onPress={async () => {
                   setSaving(true);

@@ -92,6 +92,8 @@ export function validRate(v: unknown): v is ExchangeRate {
     ["manual", "Frankfurter"].includes(r.source)
   );
 }
+/** Plausible KRW per 100 JPY for server responses; manual input stays wide. */
+export const FETCHED_RATE_RANGE = [200, 5000] as const;
 export async function fetchRate(signal?: AbortSignal): Promise<ExchangeRate> {
   const response = await fetch(
     "https://api.frankfurter.dev/v2/rates?base=JPY&quotes=KRW",
@@ -111,6 +113,48 @@ export async function fetchRate(signal?: AbortSignal): Promise<ExchangeRate> {
     fetchedAt: Date.now(),
     source: "Frankfurter",
   };
-  if (!validRate(value)) throw new Error("환율 응답을 확인할 수 없어요.");
+  // A compromised or buggy upstream must not silently skew every price.
+  if (
+    !validRate(value) ||
+    value.krwPer100Jpy < FETCHED_RATE_RANGE[0] ||
+    value.krwPer100Jpy > FETCHED_RATE_RANGE[1]
+  )
+    throw new Error("환율 응답을 확인할 수 없어요.");
   return value;
+}
+
+export const RATE_TTL_MS = 6 * 3600 * 1000; // 6 hours
+
+export function isRateStale(
+  rate: ExchangeRate | null,
+  maxAgeMs = RATE_TTL_MS,
+  now = Date.now(),
+): boolean {
+  if (!rate || !rate.fetchedAt) return true;
+  return now - rate.fetchedAt > maxAgeMs || rate.fetchedAt > now;
+}
+
+export function formatRateAge(fetchedAt: number, now = Date.now()): string {
+  const diffMs = Math.max(0, now - fetchedAt);
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return "방금 전";
+  if (minutes < 60) return `${minutes}분 전`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}시간 전`;
+  const days = Math.floor(hours / 24);
+  return `${days}일 전`;
+}
+
+export const QUICK_CONVERSION_AMOUNTS = [
+  100, 500, 1000, 3000, 5000, 10000, 30000, 50000,
+];
+
+export function quickConversions(
+  krwPer100Jpy: number,
+): { jpy: number; krw: number }[] {
+  if (!Number.isFinite(krwPer100Jpy) || krwPer100Jpy <= 0) return [];
+  return QUICK_CONVERSION_AMOUNTS.map((jpy) => ({
+    jpy,
+    krw: Math.round((jpy * krwPer100Jpy) / 100),
+  }));
 }
