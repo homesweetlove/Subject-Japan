@@ -1,6 +1,9 @@
 name: Android test APK
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/convenience-polish-20260927
 permissions:
   contents: read
 jobs:
