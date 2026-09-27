@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Clipboard from "expo-clipboard";
+import * as Speech from "expo-speech";
 import {
   languageNames,
   type LocalState,
@@ -79,6 +80,7 @@ export function TranslateScreen({
     return () => {
       alive.current = false;
       request.current++;
+      void Speech.stop();
     };
   }, []);
   const invalidate = () => {
@@ -123,6 +125,19 @@ export function TranslateScreen({
       );
     } catch {
       setNotice("복사하지 못했어요. 번역문을 길게 눌러 복사해 주세요.");
+    }
+  };
+  const speak = async (value: string, language: Translation["target"]) => {
+    if (!value.trim()) return;
+    try {
+      await Speech.stop();
+      Speech.speak(value, {
+        language: language === "ja" ? "ja-JP" : "ko-KR",
+        rate: 0.9,
+        pitch: 1,
+      });
+    } catch {
+      setNotice("기기의 음성 읽기 기능을 사용할 수 없어요. TTS 언어 설정을 확인해 주세요.");
     }
   };
   const favorite = async (value: Translation) => {
@@ -416,6 +431,12 @@ export function TranslateScreen({
                   onPress={() => void favorite(result)}
                 />
                 <IconButton
+                  name="volume-high-outline"
+                  label="번역 결과 읽어주기"
+                  color={c.onSelected}
+                  onPress={() => void speak(result.translated, result.target)}
+                />
+                <IconButton
                   name="copy-outline"
                   label="번역 결과 복사"
                   color={c.onSelected}
@@ -673,6 +694,11 @@ export function TranslateScreen({
                         onPress={() => void favorite(value)}
                       />
                       <IconButton
+                        name="volume-high-outline"
+                        label={`${value.original} 번역 읽어주기`}
+                        onPress={() => void speak(value.translated, value.target)}
+                      />
+                      <IconButton
                         name="copy-outline"
                         label={`${value.original} 번역 복사`}
                         onPress={() => void copy(value.translated)}
@@ -713,6 +739,13 @@ export function TranslateScreen({
                 {result?.translated}
               </Text>
             </ScrollView>
+            {result ? (
+              <Button
+                label="번역문 읽어주기"
+                icon="volume-high-outline"
+                onPress={() => void speak(result.translated, result.target)}
+              />
+            ) : null}
             <Label muted>{result?.original}</Label>
           </View>
         </SafeAreaView>
