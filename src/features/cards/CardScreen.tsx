@@ -1,11 +1,74 @@
 import { useEffect, useRef, useState } from "react";
-import { View } from "react-native";
-import { ScreenHeader, Button, Card, Label } from "../../ui/components";
+import { Pressable, View } from "react-native";
+import {
+  Button,
+  Icon,
+  Label,
+  ScreenHeader,
+  SubNav,
+  styles,
+} from "../../ui/components";
 import { Field } from "../../ui/Field";
+import { useTheme } from "../../ui/theme";
+import { MembershipScreen } from "../membership/MembershipScreen";
+import type { MembershipCard } from "../membership/model";
+import type { ExchangeRate } from "../pay/calculator";
 import { travelTools } from "../tools/native";
 import { decodeCard, type TransitCard } from "./model";
-import type { ExchangeRate } from "../pay/calculator";
+
+type CardSection = "transit" | "membership";
+
 export function CardScreen({
+  cards,
+  memberships,
+  rate,
+  onSave,
+  onDelete,
+  onSaveMembership,
+  onDeleteMembership,
+}: {
+  cards: TransitCard[];
+  memberships: MembershipCard[];
+  rate: ExchangeRate | null;
+  onSave: (v: TransitCard) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  onSaveMembership: (v: MembershipCard) => Promise<void>;
+  onDeleteMembership: (id: string) => Promise<void>;
+}) {
+  const [section, setSection] = useState<CardSection>("transit");
+  return (
+    <View style={{ gap: 18 }}>
+      <ScreenHeader
+        title="카드"
+        subtitle="교통카드 잔액과 매장 멤버십을 한곳에서 관리합니다."
+      />
+      <SubNav
+        items={[
+          { key: "transit", label: "교통카드", icon: "train-outline" },
+          { key: "membership", label: "멤버십", icon: "barcode-outline" },
+        ]}
+        value={section}
+        onChange={setSection}
+      />
+      {section === "transit" ? (
+        <TransitSection
+          cards={cards}
+          rate={rate}
+          onSave={onSave}
+          onDelete={onDelete}
+        />
+      ) : (
+        <MembershipScreen
+          cards={memberships}
+          onSave={onSaveMembership}
+          onDelete={onDeleteMembership}
+        />
+      )}
+    </View>
+  );
+}
+
+function TransitSection({
   cards,
   rate,
   onSave,
@@ -16,12 +79,14 @@ export function CardScreen({
   onSave: (v: TransitCard) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
-  const [busy, setBusy] = useState(false),
-    [notice, setNotice] = useState("");
-  const [selected, setSelected] = useState(""),
-    [name, setName] = useState(""),
-    [confirm, setConfirm] = useState("");
+  const c = useTheme();
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [selected, setSelected] = useState("");
+  const [name, setName] = useState("");
+  const [confirm, setConfirm] = useState("");
   const alive = useRef(true);
+
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -29,145 +94,171 @@ export function CardScreen({
       void travelTools.cancel();
     };
   }, []);
+
   const scan = async () => {
     setBusy(true);
-    setNotice("카드 한 장을 휴대폰 NFC 위치에 대고 움직이지 마세요.");
+    setNotice("카드를 휴대폰 NFC 위치에 대고 잠시 그대로 두세요.");
     try {
       const value = decodeCard(await travelTools.scanCard());
       if (!alive.current) return;
-      const existing = cards.find((c) => c.id === value.id);
+      const existing = cards.find((card) => card.id === value.id);
       value.name = existing?.name ?? `교통카드 ${cards.length + 1}`;
       await onSave(value);
       setSelected(value.id);
       setName(value.name);
-      setNotice("기록을 읽어 기기에 저장했어요.");
-    } catch (e) {
-      if (alive.current) setNotice((e as Error).message);
+      setNotice("최근 기록을 기기에 저장했어요.");
+    } catch (error) {
+      if (alive.current) setNotice((error as Error).message);
     } finally {
       if (alive.current) setBusy(false);
     }
   };
-  const card = cards.find((c) => c.id === selected);
-  const action = async (f: () => Promise<void>) => {
+
+  const selectedCard = cards.find((card) => card.id === selected);
+  const action = async (run: () => Promise<void>) => {
     try {
-      await f();
+      await run();
       setNotice("저장했어요.");
-    } catch (e) {
-      setNotice((e as Error).message);
+    } catch (error) {
+      setNotice((error as Error).message);
     }
   };
+
   return (
-    <View style={{ gap: 22 }}>
-      <ScreenHeader
-        title="이동을 더 가볍게"
-        subtitle="Suica · PASMO · ICOCA 실물 카드의 마지막 기록을 확인해요."
-      />
-      <Card>
+    <View style={{ gap: 18 }}>
+      <View
+        style={{
+          paddingVertical: 14,
+          borderTopWidth: 1,
+          borderBottomWidth: 1,
+          borderColor: c.line,
+          gap: 10,
+        }}
+      >
         <Button
-          label="교통카드 NFC 읽기"
+          label="NFC로 교통카드 읽기"
           primary
           busy={busy}
           onPress={() => void scan()}
         />
-        {busy && (
-          <Button
-            label="카드 읽기 취소"
-            onPress={() => void travelTools.cancel()}
-          />
-        )}
-        <Label size={12} muted>
+        {busy ? (
+          <Button label="읽기 취소" variant="ghost" onPress={() => void travelTools.cancel()} />
+        ) : null}
+        <Label size={11} muted>
           {travelTools.available
-            ? "NFC 지원 기기와 실물 카드가 필요해요."
-            : "NFC 읽기는 전용 Android·iPhone 앱에서 지원해요."}{" "}
-          같은 휴대폰의 Apple Wallet·모바일 교통카드는 읽을 수 없어요.
-          충전·결제·카드 복제 기능은 제공하지 않아요.
+            ? "실물 Suica · PASMO · ICOCA 계열 카드의 저장 기록을 읽습니다."
+            : "NFC 읽기는 전용 Android·iPhone 앱에서 지원합니다."}{" "}
+          모바일 지갑 속 교통카드는 읽지 않으며 충전·복제 기능은 제공하지 않습니다.
         </Label>
-      </Card>
-      {!!notice && <Label>{notice}</Label>}
-      {cards.map((c) => (
-        <Card key={c.id}>
-          <Label weight="700">{c.name}</Label>
-          <Label size={30} weight="700">
-            ¥{c.entries[0].balance.toLocaleString()}
-          </Label>
-          {rate && (
-            <Label muted>
-              약 ₩
-              {Math.round(
-                (c.entries[0].balance * rate.krwPer100Jpy) / 100,
-              ).toLocaleString()}{" "}
-              · {rate.date} 환율
-            </Label>
-          )}
-          <Label size={12} muted>
-            마지막 읽기 {new Date(c.readAt).toLocaleString()} · 실시간 잔액이
-            아니에요.
-          </Label>
-          <Button
-            label={`${c.name} 이용내역·이름 관리`}
+      </View>
+
+      {!!notice && <Label muted size={13}>{notice}</Label>}
+
+      <View>
+        {cards.map((card) => (
+          <Pressable
+            key={card.id}
+            accessibilityRole="button"
+            accessibilityLabel={`${card.name} 상세 보기`}
             onPress={() => {
-              setSelected(c.id);
-              setName(c.name);
+              setSelected(card.id);
+              setName(card.name);
               setConfirm("");
             }}
-          />
-        </Card>
-      ))}
-      {!cards.length && (
-        <Label muted>
-          저장된 카드가 없어요. 최대 20장을 관리할 수 있어요. 원화 환산 환율은
-          PAY에서 설정해 주세요.
+            style={({ pressed }) => ({
+              paddingVertical: 16,
+              borderBottomWidth: 1,
+              borderColor: c.line,
+              opacity: pressed ? 0.62 : 1,
+            })}
+          >
+            <View style={styles.between}>
+              <View style={{ gap: 3 }}>
+                <Label weight="700">{card.name}</Label>
+                <Label muted size={11}>
+                  {new Date(card.readAt).toLocaleString()} 기준
+                </Label>
+              </View>
+              <View style={{ alignItems: "flex-end", gap: 2 }}>
+                <Label size={22} weight="700">
+                  ¥{card.entries[0].balance.toLocaleString()}
+                </Label>
+                {rate ? (
+                  <Label muted size={11}>
+                    약 ₩{Math.round((card.entries[0].balance * rate.krwPer100Jpy) / 100).toLocaleString()}
+                  </Label>
+                ) : null}
+              </View>
+            </View>
+          </Pressable>
+        ))}
+      </View>
+
+      {!cards.length ? (
+        <Label muted size={13}>
+          저장된 교통카드가 없습니다. 최대 20장을 관리할 수 있어요.
         </Label>
-      )}
-      {card && (
-        <Card>
-          <Field
-            label="카드 이름"
-            value={name}
-            onChange={setName}
-            maxLength={40}
-          />
+      ) : null}
+
+      {selectedCard ? (
+        <View
+          style={{
+            borderTopWidth: 1,
+            borderColor: c.line,
+            paddingTop: 18,
+            gap: 14,
+          }}
+        >
+          <View style={styles.between}>
+            <Label size={17} weight="700">카드 상세</Label>
+            <Icon name="card-outline" size={18} color={c.muted} />
+          </View>
+          <Field label="카드 이름" value={name} onChange={setName} maxLength={40} />
           <Button
-            label="카드 이름 저장"
+            label="이름 저장"
             onPress={() =>
               void action(async () => {
                 if (!name.trim()) throw new Error("카드 이름을 입력해 주세요.");
-                await onSave({ ...card, name: name.trim() });
+                await onSave({ ...selectedCard, name: name.trim() });
               })
             }
           />
-          <Label weight="700">최근 카드 기록 · 최대 20건</Label>
-          <Label size={12} muted>
-            기록 당시의 잔액이에요. 카드 유형은 자동 판별하지 않으며, 역명·결제
-            금액을 추측해 표시하지 않아요.
-          </Label>
-          {card.entries.map((e, i) => (
-            <View key={i} style={{ gap: 4 }}>
-              <Label>
-                {e.date ?? "날짜 정보 없음"} · {e.kind}
+          <Label size={13} weight="700">최근 기록</Label>
+          {selectedCard.entries.map((entry, index) => (
+            <View
+              key={index}
+              style={{
+                paddingVertical: 10,
+                borderBottomWidth: 1,
+                borderColor: c.line,
+                gap: 2,
+              }}
+            >
+              <Label size={14}>
+                {entry.date ?? "날짜 정보 없음"} · {entry.kind}
               </Label>
-              <Label muted size={13}>
-                처리 후 잔액 ¥{e.balance.toLocaleString()} · 코드{" "}
-                {e.processCode.toString(16).padStart(2, "0")}
+              <Label muted size={12}>
+                처리 후 ¥{entry.balance.toLocaleString()}
               </Label>
             </View>
           ))}
           <Button
-            label={confirm === card.id ? "이 카드 삭제 확인" : "카드 삭제"}
+            label={confirm === selectedCard.id ? "삭제 확인" : "카드 삭제"}
+            variant="danger"
             onPress={() => {
-              if (confirm !== card.id) {
-                setConfirm(card.id);
+              if (confirm !== selectedCard.id) {
+                setConfirm(selectedCard.id);
                 return;
               }
               void action(async () => {
-                await onDelete(card.id);
+                await onDelete(selectedCard.id);
                 setSelected("");
                 setConfirm("");
               });
             }}
           />
-        </Card>
-      )}
+        </View>
+      ) : null}
     </View>
   );
 }
