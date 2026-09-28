@@ -22,6 +22,7 @@ import { TodayScreen, type AppTab } from "./src/features/today/TodayScreen";
 import { planNotifications } from "./src/features/today/model";
 import { notifier } from "./src/features/today/notifications";
 import { REMINDER_LIMIT } from "./src/features/trip/countdown";
+import { MEMBERSHIP_LIMIT } from "./src/features/membership/model";
 import { localRepository } from "./src/storage/localRepository";
 import {
   deleteDutyFreeReceipt,
@@ -41,7 +42,7 @@ const tabs: {
   activeIcon: IconName;
 }[] = [
   { key: "today", label: "오늘", icon: "today-outline", activeIcon: "today" },
-  { key: "card", label: "교통카드", icon: "card-outline", activeIcon: "card" },
+  { key: "card", label: "카드", icon: "card-outline", activeIcon: "card" },
   {
     key: "coupon",
     label: "쿠폰",
@@ -357,6 +358,7 @@ function Application() {
                 ) : tab === "card" ? (
                   <CardScreen
                     cards={state.transitCards}
+                    memberships={state.membershipCards}
                     rate={state.exchangeRate}
                     onSave={(value) =>
                       commit((s) => {
@@ -380,6 +382,34 @@ function Application() {
                       commit((s) => ({
                         ...s,
                         transitCards: s.transitCards.filter((c) => c.id !== id),
+                      }))
+                    }
+                    onSaveMembership={(value) =>
+                      commit((s) => {
+                        if (
+                          !s.membershipCards.some((card) => card.id === value.id) &&
+                          s.membershipCards.length >= MEMBERSHIP_LIMIT
+                        )
+                          throw new Error(
+                            `멤버십은 ${MEMBERSHIP_LIMIT}개까지 저장할 수 있어요.`,
+                          );
+                        return {
+                          ...s,
+                          membershipCards: [
+                            value,
+                            ...s.membershipCards.filter(
+                              (card) => card.id !== value.id,
+                            ),
+                          ],
+                        };
+                      })
+                    }
+                    onDeleteMembership={(id) =>
+                      commit((s) => ({
+                        ...s,
+                        membershipCards: s.membershipCards.filter(
+                          (card) => card.id !== id,
+                        ),
                       }))
                     }
                   />
