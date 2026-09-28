@@ -184,24 +184,8 @@ export function TranslateScreen({
   return (
     <View style={{ gap: 24 }}>
       <ScreenHeader
-        eyebrow="YOUR WORDS, A LITTLE CLOSER"
-        title="말이 통하는 여행"
-        trailing={
-          <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: c.accentSoft,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: c.accent, fontSize: 22, fontWeight: "700" }}>
-              あ
-            </Text>
-          </View>
-        }
+        title="번역"
+        subtitle="한국어와 일본어를 빠르게 바꾸고 바로 들려줄 수 있어요."
       />
       <View style={{ gap: 10 }}>
         <View style={styles.between}>
@@ -587,7 +571,7 @@ export function TranslateScreen({
                       onPress={() => void choosePhrase(phrase)}
                       style={({ pressed }) => ({
                         padding: 19,
-                        borderRadius: 18,
+                        borderRadius: 8,
                         backgroundColor: pressed ? c.soft : c.surface,
                         borderWidth: 1,
                         borderColor: c.line,
