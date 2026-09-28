@@ -173,38 +173,27 @@ function Application() {
             }}
           >
             <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+              style={{ flexDirection: "row", alignItems: "center", gap: 9 }}
               accessibilityRole="header"
               accessibilityLabel="Subject Japan"
             >
               <View
                 style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 9,
-                  backgroundColor: colors.ink,
-                  alignItems: "center",
-                  justifyContent: "center",
+                  width: 3,
+                  height: 18,
+                  borderRadius: 1,
+                  backgroundColor: colors.accent,
                 }}
-              >
-                <View
-                  style={{
-                    width: 12,
-                    height: 12,
-                    borderRadius: 6,
-                    backgroundColor: colors.accent,
-                  }}
-                />
-              </View>
+              />
               <Text
                 style={{
                   color: colors.ink,
-                  fontWeight: "800",
+                  fontWeight: "700",
                   fontSize: 17,
-                  letterSpacing: 0.4,
+                  letterSpacing: -0.2,
                 }}
               >
-                SUBJECT JAPAN
+                Subject Japan
               </Text>
             </View>
             {loaded && state.onboarded && !profileOpen && (
@@ -214,12 +203,14 @@ function Application() {
                 onPress={openProfile}
                 hitSlop={6}
                 style={({ pressed }) => ({
-                  width: 38,
-                  height: 38,
-                  borderRadius: 19,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 7,
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: pressed ? colors.line : colors.soft,
+                  backgroundColor: pressed ? colors.soft : "transparent",
+                  borderWidth: 1,
+                  borderColor: colors.line,
                 })}
               >
                 {state.profile.nickname ? (
@@ -502,8 +493,8 @@ function Application() {
                 flexDirection: "row",
                 borderTopWidth: 1,
                 borderColor: colors.line,
-                paddingTop: 8,
-                paddingBottom: 6,
+                paddingTop: 7,
+                paddingBottom: 5,
                 paddingHorizontal: 6,
                 backgroundColor: colors.surface,
               }}
@@ -530,12 +521,9 @@ function Application() {
                   >
                     <View
                       style={{
-                        width: 56,
-                        height: 30,
-                        borderRadius: 15,
+                        height: 28,
                         alignItems: "center",
                         justifyContent: "center",
-                        backgroundColor: on ? colors.accentSoft : "transparent",
                       }}
                     >
                       <Icon
@@ -547,7 +535,7 @@ function Application() {
                     <Text
                       style={{
                         fontSize: 11,
-                        fontWeight: on ? "800" : "600",
+                        fontWeight: on ? "700" : "500",
                         color: on ? colors.ink : colors.muted,
                       }}
                     >
