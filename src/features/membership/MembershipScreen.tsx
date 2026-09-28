@@ -84,6 +84,11 @@ export function MembershipScreen({
     () => [...cards].sort((a, b) => b.updatedAt - a.updatedAt),
     [cards],
   );
+  const previewValue = barcodeValue.trim();
+  const previewReady =
+    previewValue.length > 0 &&
+    previewValue.length <= 24 &&
+    /^[\x20-\x7E]+$/.test(previewValue);
 
   return (
     <View style={{ gap: 18 }}>
@@ -191,13 +196,17 @@ export function MembershipScreen({
             fontVariant: ["tabular-nums"],
           }}
         />
-        {barcodeValue.trim() ? (
+        {previewReady ? (
           <View style={{ gap: 6 }}>
-            <BarcodeView value={barcodeValue.trim()} compact />
+            <BarcodeView value={previewValue} compact />
             <Label muted size={11}>
               유효한 EAN-13 번호는 EAN-13으로, 그 외 값은 CODE 128로 기기에서 생성해요.
             </Label>
           </View>
+        ) : previewValue ? (
+          <Label muted size={11}>
+            바코드 미리보기는 영문·숫자·기호 24자까지 지원해요.
+          </Label>
         ) : null}
         <TextInput
           accessibilityLabel="멤버십 바로가기"
@@ -323,7 +332,11 @@ export function MembershipScreen({
                     label="공식 멤버십 열기"
                     icon="open-outline"
                     primary
-                    onPress={() => void Linking.openURL(presenting.link)}
+                    onPress={() =>
+                      void Linking.openURL(presenting.link).catch(() =>
+                        setNotice("멤버십 링크를 열지 못했어요."),
+                      )
+                    }
                   />
                 ) : null}
                 {presenting.note ? (
