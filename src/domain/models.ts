@@ -1,5 +1,6 @@
 import type { AirportReminder } from "../features/trip/countdown";
 import type { TransitCard } from "../features/cards/model";
+import type { MembershipCard } from "../features/membership/model";
 import type { ExchangeRate } from "../features/pay/calculator";
 import type { TripItem } from "../features/trip/itinerary";
 import type { DutyFreeReceipt } from "../features/pay/taxFreeTracker";
@@ -38,6 +39,7 @@ export interface LocalState {
   airportReminders: AirportReminder[];
   guideChecks: string[];
   transitCards: TransitCard[];
+  membershipCards: MembershipCard[];
   exchangeRate: ExchangeRate | null;
   tripItems: TripItem[];
   dutyFreeReceipts: DutyFreeReceipt[];
@@ -58,6 +60,7 @@ export const initialState = (): LocalState => ({
   airportReminders: [],
   guideChecks: [],
   transitCards: [],
+  membershipCards: [],
   exchangeRate: null,
   tripItems: [],
   dutyFreeReceipts: [],
