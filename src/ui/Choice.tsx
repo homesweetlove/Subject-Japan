@@ -40,8 +40,10 @@ export function Choice({
         gap: 8,
         paddingHorizontal: checkbox ? 12 : 15,
         paddingVertical: 10,
-        borderRadius: checkbox ? radius.md : radius.pill,
+        borderRadius: radius.md,
         backgroundColor: bg,
+        borderWidth: 1,
+        borderColor: selected ? c.selected : c.line,
         opacity: disabled ? 0.5 : pressed ? 0.8 : 1,
       })}
     >
