@@ -6,6 +6,9 @@ on:
       - feature/convenience-polish-20260927
 permissions:
   contents: read
+concurrency:
+  group: android-test-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   apk:
     runs-on: ubuntu-latest
