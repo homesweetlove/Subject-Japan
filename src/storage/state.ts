@@ -5,6 +5,10 @@ import {
 } from "../domain/models";
 import { validReminder, REMINDER_LIMIT } from "../features/trip/countdown";
 import { validCard } from "../features/cards/model";
+import {
+  MEMBERSHIP_LIMIT,
+  validMembershipCard,
+} from "../features/membership/model";
 import { validRate } from "../features/pay/calculator";
 import { validTripItem } from "../features/trip/itinerary";
 import {
@@ -182,6 +186,16 @@ export function decodeState(raw: string | null): LocalState {
             a.findIndex((x) => x.id === v.id) === i,
         )
         .slice(0, 20)
+    : [];
+  // Additive v1 migration: older installs have no membershipCards field.
+  state.membershipCards = Array.isArray(value.membershipCards)
+    ? value.membershipCards
+        .filter(validMembershipCard)
+        .filter(
+          (v: { id: string }, i: number, a: { id: string }[]) =>
+            a.findIndex((x) => x.id === v.id) === i,
+        )
+        .slice(0, MEMBERSHIP_LIMIT)
     : [];
   state.exchangeRate = validRate(value.exchangeRate)
     ? value.exchangeRate
