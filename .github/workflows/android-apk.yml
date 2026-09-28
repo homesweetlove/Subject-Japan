@@ -9,6 +9,8 @@ permissions:
 jobs:
   apk:
     runs-on: ubuntu-latest
+    env:
+      EXPO_PUBLIC_SUBJECT_JAPAN_API_BASE: ${{ vars.SUBJECT_JAPAN_API_BASE }}
     timeout-minutes: 40
     permissions:
       contents: write
