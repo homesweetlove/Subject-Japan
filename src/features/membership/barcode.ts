@@ -29,11 +29,8 @@ export function ean13CheckDigit(first12: string): number {
 }
 
 export function normalizeEan13(value: string): string | null {
-  if (/^\d{12}$/.test(value)) return value + ean13CheckDigit(value);
-  if (/^\d{13}$/.test(value)) {
-    return ean13CheckDigit(value.slice(0, 12)) === Number(value[12]) ? value : null;
-  }
-  return null;
+  if (!/^\d{13}$/.test(value)) return null;
+  return ean13CheckDigit(value.slice(0, 12)) === Number(value[12]) ? value : null;
 }
 
 function ean13Bits(value: string): string {
