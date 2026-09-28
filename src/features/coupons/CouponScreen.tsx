@@ -272,10 +272,84 @@ export function CouponScreen({
         const status = couponStatus(coupon, now);
         const sourceStatus = sourceStatuses[coupon.id];
         const sourceLabel = couponSourceStatusLabel(sourceStatus);
+        const saved = savedIds.includes(coupon.id);
         return (
-          <Card key={coupon.id}>
-            <View style={styles.between}>
+          <View
+            key={coupon.id}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              borderBottomWidth: 1,
+              borderColor: c.line,
+            }}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${coupon.merchant} 상세 보기`}
+              onPress={() => {
+                setError("");
+                setSelected(coupon);
+              }}
+              style={({ pressed }) => ({
+                flex: 1,
+                paddingVertical: 15,
+                gap: 5,
+                opacity: pressed ? 0.62 : 1,
+              })}
+            >
+              <View style={styles.between}>
+                <Label muted size={11}>
+                  {audienceLabels[coupon.audience]} · {coupon.category}
+                </Label>
+                <Label
+                  size={11}
+                  weight="600"
+                  style={{
+                    color:
+                      dDayInfo.status === "ending-soon" ||
+                      dDayInfo.status === "d-day"
+                        ? c.accent
+                        : c.muted,
+                  }}
+                >
+                  {dDayInfo.label}
+                </Label>
+              </View>
+              <View style={styles.between}>
+                <Label weight="700" size={17}>
+                  {coupon.merchant}
+                </Label>
+                <Label size={15} weight="700">
+                  {coupon.benefit}
+                </Label>
+              </View>
               <Label muted size={12}>
+                {coupon.title}
+              </Label>
+              <Label
+                size={11}
+                weight="600"
+                style={{
+                  color:
+                    sourceStatus?.changed || sourceStatus?.state === "stale"
+                      ? c.error
+                      : c.muted,
+                }}
+              >
+                {sourceLabel ?? statusLabels[status]}
+              </Label>
+            </Pressable>
+            <IconButton
+              name={saved ? "bookmark" : "bookmark-outline"}
+              label={`${coupon.merchant} ${saved ? "저장 해제" : "저장"}`}
+              onPress={() => void save(coupon.id)}
+              color={saved ? c.accent : c.muted}
+            />
+          </View>
+        );
+      })}
+      <Label muted size={12}>
                 {audienceLabels[coupon.audience]} · {coupon.category}
               </Label>
               <View
