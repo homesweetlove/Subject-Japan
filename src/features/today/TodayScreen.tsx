@@ -131,10 +131,20 @@ export function TodayScreen({
         />
         <Tile
           icon="card-outline"
-          label="교통카드"
-          value={card ? `¥${card.entries[0].balance.toLocaleString()}` : "읽기"}
+          label="카드"
+          value={
+            card
+              ? `¥${card.entries[0].balance.toLocaleString()}`
+              : state.membershipCards.length
+                ? `멤버십 ${state.membershipCards.length}개`
+                : "열기"
+          }
           hint={
-            card ? `${card.name || "내 카드"} 마지막 잔액` : "NFC로 잔액 확인"
+            card
+              ? `${card.name || "내 카드"} · 멤버십 ${state.membershipCards.length}개`
+              : state.membershipCards.length
+                ? "바코드·바로가기 저장됨"
+                : "교통카드와 멤버십"
           }
           onPress={() => onNavigate("card")}
         />
