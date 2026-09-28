@@ -65,13 +65,8 @@ export function TodayScreen({
   return (
     <View style={{ gap: 18 }}>
       <ScreenHeader
-        eyebrow="TODAY IN JAPAN"
-        title={
-          state.profile.nickname
-            ? `${state.profile.nickname}님의 오늘`
-            : "오늘의 여행"
-        }
-        subtitle={`일본 시각 ${jstHeadline(now)}`}
+        title="오늘"
+        subtitle={`${jstHeadline(now)} · 일본 시각`}
       />
       <WeatherCard
         city={state.weatherCity}
