@@ -31,6 +31,12 @@ import {
   type CouponAudience,
   type CouponCategory,
 } from "./model";
+import {
+  couponSourceStatusLabel,
+  fetchCouponSourceStatuses,
+  formatRemoteCheckedAt,
+  type CouponSourceStatus,
+} from "./liveStatus";
 
 function Chip({
   label,
@@ -101,6 +107,9 @@ export function CouponScreen({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(Date.now);
+  const [sourceStatuses, setSourceStatuses] = useState<
+    Record<string, CouponSourceStatus>
+  >({});
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 60000);
     const subscription = AppState.addEventListener("change", (state) => {
@@ -110,6 +119,15 @@ export function CouponScreen({
       clearInterval(timer);
       subscription.remove();
     };
+  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetchCouponSourceStatuses(controller.signal)
+      .then(setSourceStatuses)
+      .catch(() => {
+        // Live freshness is an enhancement; the built-in catalog remains usable offline.
+      });
+    return () => controller.abort();
   }, []);
   const results = filterCoupons(couponCatalog, {
     query,
@@ -251,6 +269,8 @@ export function CouponScreen({
       {results.map((coupon) => {
         const dDayInfo = couponDDay(coupon, now);
         const status = couponStatus(coupon, now);
+        const sourceStatus = sourceStatuses[coupon.id];
+        const sourceLabel = couponSourceStatusLabel(sourceStatus);
         return (
           <Card key={coupon.id}>
             <View style={styles.between}>
@@ -309,6 +329,20 @@ export function CouponScreen({
                   ? "여권·방문객 자격 등 사용 조건 확인"
                   : "개인 컵 등 사용 조건 확인"}
             </Label>
+            {sourceLabel ? (
+              <Label
+                size={12}
+                weight="600"
+                style={{
+                  color:
+                    sourceStatus?.changed || sourceStatus?.state === "stale"
+                      ? c.error
+                      : c.accent,
+                }}
+              >
+                {sourceLabel}
+              </Label>
+            ) : null}
             <View style={styles.between}>
               <Button
                 label={`${coupon.merchant} 상세 보기`}
@@ -383,12 +417,18 @@ export function CouponScreen({
                 </View>
                 <Card>
                   <Label weight="600">
-                    {statusLabels[couponStatus(selected, now)]}
+                    {couponSourceStatusLabel(sourceStatuses[selected.id]) ??
+                      statusLabels[couponStatus(selected, now)]}
                   </Label>
                   <Label muted size={13}>
-                    공식 안내 확인일 {selected.checkedOn}
-                    {"\n"}확인일은 사용 보장일이 아니에요. 결제 전 최신 조건을
-                    확인해 주세요.
+                    앱 내 검토일 {selected.checkedOn}
+                    {sourceStatuses[selected.id]?.checkedAt
+                      ? `\n자동 확인 ${formatRemoteCheckedAt(
+                          sourceStatuses[selected.id].checkedAt,
+                        ) ?? ""}`
+                      : ""}
+                    {"\n"}자동 확인은 공식 페이지 접근 상태와 변경 여부를 보는
+                    보조 정보예요. 결제 전 실제 쿠폰 조건을 확인해 주세요.
                   </Label>
                 </Card>
                 <DetailSection title="누가 사용할 수 있나요?">
