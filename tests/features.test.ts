@@ -21,6 +21,14 @@ import {
   couponSourceStatusLabel,
   parseCouponSourceStatuses,
 } from "../src/features/coupons/liveStatus";
+import {
+  barcodeModules,
+  ean13CheckDigit,
+} from "../src/features/membership/barcode";
+import {
+  makeMembershipCard,
+  validMembershipCard,
+} from "../src/features/membership/model";
 const payment: PaymentInput = {
   price: 11000,
   includesTax: true,
@@ -243,6 +251,54 @@ describe("nearby store candidates", () => {
     ).toBeGreaterThan(1000);
   });
 });
+describe("membership wallet", () => {
+  it("creates and validates a barcode-only membership card locally", () => {
+    const card = makeMembershipCard({
+      name: "Ponta",
+      barcodeValue: "ABC123456",
+      now: 123,
+    });
+    expect(validMembershipCard(card)).toBe(true);
+    expect(card.link).toBe("");
+  });
+
+  it("accepts https link-only cards and rejects unsafe links", () => {
+    const card = makeMembershipCard({
+      name: "Store",
+      link: "https://example.com/member",
+      now: 123,
+    });
+    expect(card.link).toBe("https://example.com/member");
+    expect(() =>
+      makeMembershipCard({ name: "Bad", link: "http://example.com" }),
+    ).toThrow(/https/);
+  });
+
+  it("generates EAN-13 and CODE 128 locally", () => {
+    expect(ean13CheckDigit("400638133393")).toBe(1);
+    const ean = barcodeModules("4006381333931");
+    expect(ean.kind).toBe("ean13");
+    expect(ean.modules).toHaveLength(95);
+    const code128 = barcodeModules("ABC123");
+    expect(code128.kind).toBe("code128");
+    expect(code128.modules.length).toBeGreaterThan(60);
+  });
+
+  it("migrates older local state and restores valid memberships", () => {
+    const empty = decodeState(JSON.stringify({ version: 1, onboarded: true }));
+    expect(empty.membershipCards).toEqual([]);
+    const card = makeMembershipCard({
+      name: "My card",
+      barcodeValue: "1234567890",
+      now: 100,
+    });
+    const restored = decodeState(
+      JSON.stringify({ ...initialState(), membershipCards: [card, card, {}] }),
+    );
+    expect(restored.membershipCards).toEqual([card]);
+  });
+});
+
 describe("coupon live source status", () => {
   it("maps backend source IDs to app coupon IDs without exposing unknown records", () => {
     const status = parseCouponSourceStatuses({
