@@ -58,7 +58,9 @@ function Chip({
         minHeight: 44,
         justifyContent: "center",
         paddingHorizontal: 15,
-        borderRadius: 22,
+        borderRadius: 7,
+        borderWidth: 1,
+        borderColor: selected ? c.selected : c.line,
         backgroundColor: selected ? c.selected : c.soft,
       }}
     >
@@ -174,9 +176,8 @@ export function CouponScreen({
   return (
     <View style={{ gap: 22 }}>
       <ScreenHeader
-        eyebrow="COUPON & BENEFITS"
-        title="같은 여행, 더 좋은 혜택"
-        subtitle="방문객 전용 쿠폰부터 일본 고객이 쓰는 일상 혜택까지."
+        title="쿠폰"
+        subtitle="할인 조건과 공식 페이지 최신 상태를 빠르게 확인합니다."
       />
       <TextInput
         accessibilityLabel="매장·혜택 검색"
@@ -190,7 +191,7 @@ export function CouponScreen({
           backgroundColor: c.surface,
           borderWidth: 1,
           borderColor: c.line,
-          borderRadius: 16,
+          borderRadius: 7,
           padding: 16,
           fontSize: 15,
         }}
