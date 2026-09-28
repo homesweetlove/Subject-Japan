@@ -43,15 +43,15 @@ export function Field({
         textAlignVertical={multiline ? "top" : "center"}
         style={{
           color: editable ? c.ink : c.muted,
-          backgroundColor: focused ? c.surface : c.soft,
-          borderColor: focused ? c.accent : "transparent",
-          borderWidth: 1.5,
+          backgroundColor: c.surface,
+          borderColor: focused ? c.ink : c.line,
+          borderWidth: 1,
           outlineWidth: 0,
           borderRadius: radius.md,
           paddingHorizontal: 14,
           paddingVertical: 12,
           fontSize: 16,
-          minHeight: multiline ? 110 : 50,
+          minHeight: multiline ? 110 : 46,
         }}
       />
     </View>
