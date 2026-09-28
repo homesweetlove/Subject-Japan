@@ -17,6 +17,10 @@ import {
 } from "../src/features/phrases/phrases";
 import { registers } from "../src/features/phrases/register";
 import { estimateJapanSize } from "../src/features/profile/sizeConversion";
+import {
+  couponSourceStatusLabel,
+  parseCouponSourceStatuses,
+} from "../src/features/coupons/liveStatus";
 const payment: PaymentInput = {
   price: 11000,
   includesTax: true,
@@ -239,6 +243,41 @@ describe("nearby store candidates", () => {
     ).toBeGreaterThan(1000);
   });
 });
+describe("coupon live source status", () => {
+  it("maps backend source IDs to app coupon IDs without exposing unknown records", () => {
+    const status = parseCouponSourceStatuses({
+      items: [
+        {
+          id: "donki-coupon",
+          status: "fresh",
+          checkedAt: "2026-09-28T01:00:00Z",
+          lastSuccessfulAt: "2026-09-28T01:00:00Z",
+          changed: false,
+          sourceUrl: "should-not-be-used",
+        },
+        {
+          id: "hankyu-service",
+          status: "stale",
+          checkedAt: "2026-09-28T01:00:00Z",
+          changed: true,
+        },
+      ],
+    });
+    expect(status["donki-visitor"]?.state).toBe("fresh");
+    expect(status["hankyu-guest"]?.state).toBe("stale");
+    expect(status["hankyu-vip"]?.changed).toBe(true);
+    expect(couponSourceStatusLabel(status["hankyu-vip"])).toMatch(/변경/);
+  });
+
+  it("ignores malformed backend items", () => {
+    expect(
+      parseCouponSourceStatuses({
+        items: [{ id: 1, status: "fresh" }, { id: "x", status: "bad" }],
+      }),
+    ).toEqual({});
+  });
+});
+
 describe("Japan shopping size helpers", () => {
   it("converts shoe millimeters to Japan centimeter notation", () => {
     expect(estimateJapanSize("shoe", "285")?.display).toBe("JP 28.5 cm");
