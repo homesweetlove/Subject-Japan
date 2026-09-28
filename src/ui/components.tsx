@@ -112,7 +112,8 @@ export function Button({
         {
           backgroundColor: bg,
           opacity: pressed ? 0.78 : 1,
-          transform: [{ scale: pressed ? 0.985 : 1 }],
+          borderWidth: kind === "primary" ? 0 : 1,
+          borderColor: kind === "danger" ? c.accentSoft : c.line,
         },
       ]}
     >
@@ -191,10 +192,12 @@ export function Card({
         {
           backgroundColor: bg,
           borderRadius: radius.lg,
-          padding: 20,
-          gap: 14,
+          padding: 16,
+          gap: 12,
+          borderWidth: 1,
+          borderColor: c.line,
         },
-        tone === "default" && elevation(c),
+        
         style,
       ]}
     >
@@ -216,14 +219,14 @@ export function ScreenHeader({
 }) {
   const c = useTheme();
   return (
-    <View style={{ gap: 8 }}>
+    <View style={{ gap: 5 }}>
       {!!eyebrow && (
         <Text
           style={{
-            color: c.accent,
-            fontSize: 12,
-            fontWeight: "700",
-            letterSpacing: 1.2,
+            color: c.muted,
+            fontSize: 11,
+            fontWeight: "600",
+            letterSpacing: 0.4,
           }}
         >
           {eyebrow}
@@ -231,7 +234,7 @@ export function ScreenHeader({
       )}
       <View style={[styles.row, { alignItems: "flex-start" }]}>
         <View style={{ flex: 1 }}>
-          <Label size={28} weight="800">
+          <Label size={26} weight="700">
             {title}
           </Label>
         </View>
@@ -267,8 +270,10 @@ export function SubNav<K extends string>({
           flexDirection: "row",
           backgroundColor: c.soft,
           borderRadius: radius.md,
-          padding: 4,
-          gap: 4,
+          padding: 3,
+          gap: 3,
+          borderWidth: 1,
+          borderColor: c.line,
         }}
       >
         {items.map((item) => {
@@ -292,7 +297,7 @@ export function SubNav<K extends string>({
                   justifyContent: "center",
                   backgroundColor: on ? c.surface : "transparent",
                 },
-                on && elevation(c),
+                on && { borderWidth: 1, borderColor: c.line },
               ]}
             >
               {item.icon && (
@@ -334,7 +339,7 @@ export function SubNav<K extends string>({
             style={({ pressed }) => ({
               minHeight: 40,
               paddingHorizontal: 14,
-              borderRadius: radius.pill,
+              borderRadius: radius.md,
               flexDirection: "row",
               alignItems: "center",
               gap: 6,
@@ -384,7 +389,7 @@ export function Badge({
     <View
       style={{
         backgroundColor: bg,
-        borderRadius: radius.pill,
+        borderRadius: radius.sm,
         paddingHorizontal: 10,
         paddingVertical: 3,
         alignSelf: "flex-start",
@@ -406,7 +411,7 @@ export const styles = StyleSheet.create({
     gap: 10,
   },
   button: {
-    minHeight: 50,
+    minHeight: 46,
     paddingHorizontal: 18,
     paddingVertical: 12,
     borderRadius: radius.md,
