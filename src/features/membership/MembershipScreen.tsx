@@ -195,7 +195,7 @@ export function MembershipScreen({
           <View style={{ gap: 6 }}>
             <BarcodeView value={barcodeValue.trim()} compact />
             <Label muted size={11}>
-              숫자 12~13자리는 EAN-13, 그 외 값은 CODE 128로 기기에서 생성해요.
+              유효한 EAN-13 번호는 EAN-13으로, 그 외 값은 CODE 128로 기기에서 생성해요.
             </Label>
           </View>
         ) : null}
