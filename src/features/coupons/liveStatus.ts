@@ -36,9 +36,11 @@ const couponSourceIds: Record<string, string> = {
   "mistore-rewards": "mistore-rewards",
 };
 
-export function dataApiBase(): string | null {
+const DEFAULT_DATA_API_BASE = "https://subject-japan-data.vercel.app";
+
+export function dataApiBase(): string {
   const raw = process.env.EXPO_PUBLIC_SUBJECT_JAPAN_API_BASE?.trim();
-  return raw ? raw.replace(/\/+$/, "") : null;
+  return (raw || DEFAULT_DATA_API_BASE).replace(/\/+$/, "");
 }
 
 function stringOrNull(value: unknown) {
