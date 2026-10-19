@@ -4,7 +4,13 @@
 
 A Japan travel utility app for Korean travelers, targeting both Android and iPhone. Its first feature is **shopping phrases that remember your translations and personal sizes**.
 
-## Features Available Now
+## Implementation and verification status
+
+The feature list below describes **implemented source code and supported UI paths**, not a claim that every feature has passed physical-device testing. Android and iOS native bridges exist for ML Kit translation, camera OCR, offline speech recognition and FeliCa reading; their runtime support depends on the device, OS, model availability, permissions and app signing. Expo Go and web support a reduced feature set.
+
+**Still required before calling the iPhone version production-ready:** a signed iPhone build, bidirectional offline-translation checks, camera and microphone tests, Apple NFC Tag Reading entitlement verification, genuine Suica/PASMO/ICOCA scans (including cards with fewer than 20 usable records), and notification tests. The source includes Android/iOS build workflows, but this review did not run them. See [native validation checklist](docs/device-validation.md).
+
+## Features implemented in source
 
 - Today (Home): current Japan time, current temperature + 3-day forecast for the selected city (Japan Meteorological Agency/JMA, free for commercial use with attribution), next-schedule and airport-last-train countdowns, exchange rate and transit-card balance, plus shortcuts to translation, emergency SOS, restaurant cards, and coupons
 - Local last-train / schedule notifications (native app): notifications 30 minutes before and at the saved last-train departure time, and 30 minutes / 1 hour / 2 hours before an itinerary item. These are scheduled locally on the device with no server or push token, and reservation numbers, notes, and addresses are intentionally omitted from lock-screen notifications
