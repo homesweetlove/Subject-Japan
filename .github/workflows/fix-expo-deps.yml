@@ -1,0 +1,34 @@
+# Temporary one-shot dependency repair workflow for the iOS readiness branch.
+# Remove this file before merging the pull request.
+name: Refresh Expo SDK dependencies
+on:
+  push:
+    branches: [fix/ios-readiness-20261019]
+    paths: [.github/workflows/fix-expo-deps.yml]
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Align Expo dependency patches and lockfile
+        run: CI=1 npx expo install --fix
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx expo-doctor
+      - name: Commit only validated dependency changes
+        run: |
+          if ! git diff --quiet -- package.json package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package.json package-lock.json
+            git commit -m "fix(deps): align Expo SDK 57 package patches"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
