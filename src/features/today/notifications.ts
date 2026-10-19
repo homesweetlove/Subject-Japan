@@ -73,16 +73,38 @@ export const notifier = {
         },
       });
   },
-  /** Calls back with the tapped notification's target section. */
+  /** Handles notification taps while running and after an iOS/Android cold start. */
   onOpen(listener: (target: PlannedNotification["target"]) => void) {
-    const sub = Notifications.addNotificationResponseReceivedListener((r) => {
-      const target = r.notification.request.content.data?.target;
+    let active = true;
+    let lastHandled: string | null = null;
+    const handle = (response: Notifications.NotificationResponse) => {
+      if (!active || response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER)
+        return;
+      const notification = response.notification;
+      const request = notification.request;
+      const target = request.content.data?.target;
       if (
-        r.notification.request.identifier.startsWith(PREFIX) &&
-        (target === "airport" || target === "itinerary")
+        !request.identifier.startsWith(PREFIX) ||
+        (target !== "airport" && target !== "itinerary")
       )
-        listener(target);
-    });
-    return () => sub.remove();
+        return;
+      // The native startup response can also arrive through the live listener.
+      const key = `${request.identifier}:${notification.date}:${response.actionIdentifier}`;
+      if (lastHandled === key) return;
+      lastHandled = key;
+      listener(target);
+      // Prevent yesterday's tap from opening the same page on the next launch.
+      void Notifications.clearLastNotificationResponseAsync().catch(() => {});
+    };
+    const sub = Notifications.addNotificationResponseReceivedListener(handle);
+    void Notifications.getLastNotificationResponseAsync()
+      .then((response) => {
+        if (response) handle(response);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+      sub.remove();
+    };
   },
 };
