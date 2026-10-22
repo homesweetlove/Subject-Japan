@@ -3,12 +3,16 @@ import MLKitTranslate
 import MLKitCommon
 
 public class SubjectTranslatorModule: Module {
+  private func modelsReady() -> Bool {
+    let models = ModelManager.modelManager().downloadedTranslateModels
+    return models.contains { $0.language == .korean } && models.contains { $0.language == .japanese }
+  }
+
   public func definition() -> ModuleDefinition {
     Name("SubjectTranslator")
 
     AsyncFunction("isReady") { () -> Bool in
-      let models = ModelManager.modelManager().downloadedTranslateModels
-      return models.contains { $0.language == .korean } && models.contains { $0.language == .japanese }
+      self.modelsReady()
     }
 
     AsyncFunction("prepare") { (promise: Promise) in
@@ -27,13 +31,19 @@ public class SubjectTranslatorModule: Module {
         promise.reject("INVALID_INPUT", "번역 언어 또는 입력을 확인해 주세요.")
         return
       }
+      // The bridge itself must enforce offline readiness, including direct
+      // native calls that bypass the JavaScript provider's readiness check.
+      guard self.modelsReady() else {
+        promise.reject("MODEL_MISSING", "먼저 한국어·일본어 번역팩을 다운로드해 주세요.")
+        return
+      }
       let options = TranslatorOptions(sourceLanguage: source == "ko" ? .korean : .japanese,
                                       targetLanguage: target == "ko" ? .korean : .japanese)
       let translator = Translator.translator(options: options)
       translator.translate(text) { [translator] translated, error in
         _ = translator
         if error != nil { promise.reject("TRANSLATION", "번역팩 설치 상태를 확인해 주세요.") }
-        else if let translated = translated { promise.resolve(translated) }
+        else if let translated = translated, !translated.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { promise.resolve(translated) }
         else { promise.reject("TRANSLATION", "번역 결과가 없어요.") }
       }
     }

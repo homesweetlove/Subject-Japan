@@ -210,11 +210,18 @@ test("native feature fallback, authored formal phrases and no automatic network 
   await page
     .getByRole("button", { name: "카드로 결제할 수 있나요?", exact: true })
     .click();
+  await page
+    .getByRole("button", { name: "선택한 문장 크게 보기", exact: true })
+    .click();
   await expect(
     page
-      .getByText("カードでお支払いすることは可能でしょうか？", { exact: true })
-      .first(),
+      .getByRole("dialog")
+      .getByText("カードでお支払いすることは可能でしょうか？", { exact: true }),
   ).toBeVisible();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "닫기", exact: true })
+    .click();
   await page.getByRole("button", { name: "카메라 번역", exact: true }).click();
   await page
     .getByRole("button", { name: "카메라로 촬영", exact: true })

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Keyboard, Pressable, TextInput, View } from "react-native";
 import {
   initialState,
   type LocalState,
@@ -40,25 +40,45 @@ export function ProfileScreen({
   const [confirmReset, setConfirmReset] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const save = async () => {
+  const pending = useRef(false);
+  const alive = useRef(true);
+  const inputs = useRef<(TextInput | null)[]>([]);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+  const run = async (action: () => Promise<void>, message: string) => {
+    // A ref closes the gap before React renders disabled controls.
+    if (pending.current) return;
+    pending.current = true;
+    Keyboard.dismiss();
     setSaving(true);
     setError("");
     try {
-      await onSave(
-        {
-          nickname: profile.nickname.trim(),
-          sizes: Object.fromEntries(
-            Object.entries(profile.sizes).map(([k, v]) => [k, v.trim()]),
-          ) as Profile["sizes"],
-        },
-        theme,
-      );
+      await action();
     } catch {
-      setError("저장하지 못했어요. 저장 공간을 확인한 뒤 다시 시도해 주세요.");
+      if (alive.current) setError(message);
     } finally {
-      setSaving(false);
+      pending.current = false;
+      if (alive.current) setSaving(false);
     }
   };
+  const save = () =>
+    run(
+      () =>
+        onSave(
+          {
+            nickname: profile.nickname.trim(),
+            sizes: Object.fromEntries(
+              Object.entries(profile.sizes).map(([k, v]) => [k, v.trim()]),
+            ) as Profile["sizes"],
+          },
+          theme,
+        ),
+      "저장하지 못했어요. 저장 공간을 확인한 뒤 다시 시도해 주세요.",
+    );
   return (
     <View style={{ gap: 24 }}>
       <ScreenHeader
@@ -69,13 +89,27 @@ export function ProfileScreen({
         subtitle="사이즈를 한 번 저장하면, 쇼핑할 때 일본어 문장에 바로 담아 드려요."
         trailing={
           state.onboarded ? (
-            <IconButton name="close" label="닫기" onPress={onClose} />
+            <IconButton
+              name="close"
+              label="닫기"
+              disabled={saving}
+              onPress={() => {
+                if (!pending.current) onClose();
+              }}
+            />
           ) : undefined
         }
       />
       <Card>
         <Label weight="600">어떻게 불러 드릴까요?</Label>
         <TextInput
+          ref={(input) => {
+            inputs.current[0] = input;
+          }}
+          editable={!saving}
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => inputs.current[1]?.focus()}
           accessibilityLabel="닉네임"
           value={profile.nickname}
           onChangeText={(nickname) => setProfile((p) => ({ ...p, nickname }))}
@@ -101,12 +135,24 @@ export function ProfileScreen({
         <Label muted size={13}>
           모두 선택 사항이에요. 평소 쓰는 표기와 단위를 함께 적어 주세요.
         </Label>
-        {fields.map((field) => (
+        {fields.map((field, index) => (
           <View key={field.key} style={{ gap: 8 }}>
             <Label size={14} weight="600">
               {field.title}
             </Label>
             <TextInput
+              ref={(input) => {
+                inputs.current[index + 1] = input;
+              }}
+              editable={!saving}
+              autoCorrect={false}
+              autoCapitalize="none"
+              accessibilityHint={field.hint}
+              returnKeyType={index === fields.length - 1 ? "done" : "next"}
+              submitBehavior={
+                index === fields.length - 1 ? "blurAndSubmit" : "submit"
+              }
+              onSubmitEditing={() => inputs.current[index + 2]?.focus()}
               accessibilityLabel={`${field.title} 사이즈`}
               placeholder={field.hint}
               placeholderTextColor={c.muted}
@@ -148,17 +194,23 @@ export function ProfileScreen({
           {(["system", "light", "dark"] as const).map((value, i) => (
             <Pressable
               key={value}
+              disabled={saving}
               onPress={() => setTheme(value)}
               accessibilityRole="radio"
               accessibilityLabel={["시스템", "라이트", "다크"][i]}
-              accessibilityState={{ checked: theme === value }}
+              accessibilityState={{
+                checked: theme === value,
+                disabled: saving,
+              }}
               style={{
                 flex: 1,
                 flexDirection: "row",
                 gap: 6,
                 alignItems: "center",
                 justifyContent: "center",
-                minHeight: 42,
+                minHeight: 44,
+                flexWrap: "wrap",
+                paddingVertical: 8,
                 borderRadius: 11,
                 backgroundColor: theme === value ? c.surface : "transparent",
               }}
@@ -196,7 +248,11 @@ export function ProfileScreen({
           </Label>
         </View>
       </View>
-      {!!error && <Label>{error}</Label>}
+      {!!error && (
+        <View accessibilityRole="alert" accessibilityLiveRegion="polite">
+          <Label>{error}</Label>
+        </View>
+      )}
       <Button
         label={state.onboarded ? "변경사항 저장" : "내 여행 시작하기"}
         primary
@@ -208,16 +264,12 @@ export function ProfileScreen({
           label="나중에 입력하기"
           variant="ghost"
           disabled={saving}
-          onPress={async () => {
-            setSaving(true);
-            try {
-              await onSave(initialState().profile, theme);
-            } catch {
-              setError("저장하지 못했어요. 다시 시도해 주세요.");
-            } finally {
-              setSaving(false);
-            }
-          }}
+          onPress={() =>
+            void run(
+              () => onSave(initialState().profile, theme),
+              "저장하지 못했어요. 다시 시도해 주세요.",
+            )
+          }
         />
       )}
       {state.onboarded && (
@@ -240,18 +292,18 @@ export function ProfileScreen({
                 label="모두 삭제"
                 variant="danger"
                 busy={saving}
-                onPress={async () => {
-                  setSaving(true);
-                  try {
-                    await onReset(initialState());
-                  } catch {
-                    setError("삭제하지 못했어요. 다시 시도해 주세요.");
-                  } finally {
-                    setSaving(false);
-                  }
-                }}
+                onPress={() =>
+                  void run(
+                    () => onReset(initialState()),
+                    "삭제하지 못했어요. 다시 시도해 주세요.",
+                  )
+                }
               />
-              <Button label="취소" onPress={() => setConfirmReset(false)} />
+              <Button
+                label="취소"
+                disabled={saving}
+                onPress={() => setConfirmReset(false)}
+              />
             </Card>
           )}
         </View>

@@ -1,17 +1,26 @@
 import { documentStore } from "./documentStore";
 import type { LocalState } from "../domain/models";
 import { decodeState } from "./state";
+import type { DocumentStore } from "./roomMigration";
 
-/** Serial writes prevent slower earlier saves from overwriting newer changes. */
-let pending: Promise<void> = Promise.resolve();
-export const localRepository = {
-  async load() {
-    return decodeState(await documentStore.read());
-  },
-  save(state: LocalState) {
-    const raw = JSON.stringify(state);
-    const write = pending.catch(() => {}).then(() => documentStore.write(raw));
-    pending = write;
-    return write;
-  },
-};
+/** Reads share the write queue: a load may migrate data and therefore write. */
+export function createLocalRepository(store: DocumentStore) {
+  let pending: Promise<unknown> = Promise.resolve();
+  const enqueue = <T>(operation: () => Promise<T>): Promise<T> => {
+    const next = pending.catch(() => {}).then(operation);
+    pending = next;
+    return next;
+  };
+  return {
+    load() {
+      return enqueue(async () => decodeState(await store.read()));
+    },
+    save(state: LocalState) {
+      // Snapshot now, before waiting on I/O; callers may reuse mutable objects.
+      const raw = JSON.stringify(state);
+      return enqueue(() => store.write(raw));
+    },
+  };
+}
+
+export const localRepository = createLocalRepository(documentStore);

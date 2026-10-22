@@ -119,7 +119,9 @@ function validTranslation(value: unknown): value is Translation {
   );
 }
 export function decodeState(raw: string | null): LocalState {
-  if (!raw) return initialState();
+  // Only an absent key is a new installation. Empty/truncated documents must
+  // surface as read failures so the caller cannot silently overwrite them.
+  if (raw === null) return initialState();
   const value = JSON.parse(raw);
   if (!value || value.version !== 1)
     throw new Error("저장 데이터 버전을 확인할 수 없어요.");

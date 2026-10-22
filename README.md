@@ -2,6 +2,14 @@
 
 # SUBJECT:JAPAN
 
+## User problem and motivation
+
+Finding a shopping phrase and typing the same clothing sizes repeatedly is difficult during a conversation in a Japanese store. This app keeps sizes and authored phrases available locally, including when connectivity is poor. The central flow is **save sizes → choose a shopping phrase → show Japanese → favorite it for reuse after restart**. Free-text translation requires a dedicated native build and downloaded on-device models.
+
+The architecture keeps shared React Native screens/domain logic behind provider interfaces with local Swift/Kotlin modules. Android Room and iOS AsyncStorage share the existing v1 JSON contract. Local phrase packs favor predictable offline behavior; general translation adds model downloads and device-specific constraints. This pass stays on Expo SDK 57 compatible patches rather than introducing a major SDK migration.
+
+**2026-10-22 reliability audit:** storage/restore ordering, native operation lifecycles, shopping usability, notifications and dependency alignment were improved. See the [verification record (Korean)](docs/quality-audit.md) for actual results, failed attempts and release blockers. GitHub runners are blocked by account billing/spending limits; new Android/iOS native compilation and device validation are still unverified. JS bundle export is not native compilation.
+
 A Japan travel utility app for Korean travelers, targeting both Android and iPhone. Its first feature is **shopping phrases that remember your translations and personal sizes**.
 
 ## Implementation and verification status
@@ -19,7 +27,7 @@ The feature list below describes **implemented source code and supported UI path
 - Voice conversation: on-device speech recognition → original-text confirmation → translation → system TTS, with bidirectional conversation history
 - Read physical Suica/PASMO/ICOCA cards by NFC, keep the latest balance and up to 20 transaction records, manage names for up to 20 cards, and show KRW conversion
 - PAY & finance helpers:
-  - Optional reference exchange-rate auto refresh (off by default, every 6 hours when enabled), manual exchange rate, quick JPY↔KRW conversion table
+  - Optional reference exchange-rate refresh (off by default; refreshes rates older than 6 hours when PAY opens), manual exchange rate, JPY↔KRW conversions from entered/fetched rates
   - Sequential discount / tax-free / later-refund / fee / cashback calculator
   - Tax-free & customs-limit tracker: Japan ¥5,000 tax-free threshold and Korea's $800 duty-free entry allowance, with separate tracking for alcohol (2 bottles / 2 L / $400), tobacco (200 cigarettes), and perfume (100 ml)
   - Coin-wallet optimizer: calculates a smart cash payment combination that minimizes received coins
@@ -165,7 +173,7 @@ The build tool `xcode` indirectly depends on `uuid`; the project pins CommonJS-c
 
 ## Next Steps / External Dependencies
 
-Real features are connected across all five tabs. Hardware/external-data dependencies include:
+Existing features are connected across six tabs. Hardware/external-data dependencies include:
 
 - NFC: read-only physical FeliCa cards. Reading/recharging/paying with the same phone's Wallet card is not supported. iPhone distribution signing requires the NFC Tag Reading capability. A station-name database is not included.
 - Photos: Android uses bundled ML Kit Japanese/Korean OCR; iOS uses Vision. Handwriting, vertical text, and tiny receipt text can be recognized incorrectly, so users can edit before translation.

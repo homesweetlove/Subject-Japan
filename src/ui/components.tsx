@@ -24,7 +24,16 @@ export function Icon({
   color?: string;
 }) {
   const c = useTheme();
-  return <Ionicons name={name} size={size} color={color ?? c.ink} />;
+  return (
+    <Ionicons
+      accessible={false}
+      aria-hidden
+      importantForAccessibility="no"
+      name={name}
+      size={size}
+      color={color ?? c.ink}
+    />
+  );
 }
 /** Tighter leading for display sizes; relaxed leading for Korean body copy. */
 const leading = (size: number) =>
@@ -140,22 +149,29 @@ export function IconButton({
   label,
   onPress,
   color,
+  disabled = false,
+  selected,
 }: {
   name: IconName;
   label: string;
   onPress: () => void;
   color?: string;
+  disabled?: boolean;
+  selected?: boolean;
 }) {
   const c = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled, selected }}
+      disabled={disabled}
       onPress={onPress}
       hitSlop={4}
       style={({ pressed }) => ({
         width: 44,
         height: 44,
+        opacity: disabled ? 0.5 : 1,
         alignItems: "center",
         justifyContent: "center",
         borderRadius: 22,
@@ -283,10 +299,12 @@ export function SubNav<K extends string>({
               style={[
                 {
                   flex: 1,
-                  minHeight: 42,
+                  minHeight: 44,
                   borderRadius: radius.sm + 1,
                   paddingHorizontal: 6,
+                  paddingVertical: 8,
                   flexDirection: "row",
+                  flexWrap: "wrap",
                   gap: 6,
                   alignItems: "center",
                   justifyContent: "center",
@@ -299,7 +317,6 @@ export function SubNav<K extends string>({
                 <Icon name={item.icon} size={16} color={on ? c.ink : c.muted} />
               )}
               <Text
-                numberOfLines={1}
                 style={{
                   color: on ? c.ink : c.muted,
                   fontSize: 14,
@@ -332,7 +349,8 @@ export function SubNav<K extends string>({
             accessibilityState={{ selected: on }}
             onPress={() => onChange(item.key)}
             style={({ pressed }) => ({
-              minHeight: 40,
+              minHeight: 44,
+              paddingVertical: 8,
               paddingHorizontal: 14,
               borderRadius: radius.pill,
               flexDirection: "row",

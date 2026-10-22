@@ -9,6 +9,6 @@ Pod::Spec.new do |s|
   s.source = { git: 'https://github.com/homesweetlove/Subject-Japan.git' }
   s.static_framework = true
   s.dependency 'ExpoModulesCore'
-  s.frameworks = 'Vision', 'Speech', 'AVFoundation', 'CoreNFC'
+  s.frameworks = 'Vision', 'Speech', 'AVFoundation', 'CoreNFC', 'ImageIO'
   s.source_files = '**/*.swift'
 end
