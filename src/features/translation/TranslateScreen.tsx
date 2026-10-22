@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import {
-  Modal,
+  Keyboard,
+  AccessibilityInfo,
+  Platform,
   Pressable,
   ScrollView,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import * as Clipboard from "expo-clipboard";
 import {
   languageNames,
@@ -36,6 +37,10 @@ import { elevation, useTheme } from "../../ui/theme";
 import { detectLanguage, opposite, translateText } from "./service";
 import { translationProvider } from "./provider";
 import { Choice } from "../../ui/Choice";
+import {
+  TranslationDisplay,
+  translationLanguage,
+} from "../../ui/TranslationDisplay";
 import type { Register } from "../phrases/register";
 
 export function TranslateScreen({
@@ -66,6 +71,11 @@ export function TranslateScreen({
   const [notice, setNotice] = useState("");
   const [fullscreen, setFullscreen] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [savingFavorite, setSavingFavorite] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const favoritePending = useRef(false);
+  const clearPending = useRef(false);
+  const translating = useRef(false);
   const request = useRef(0);
   const alive = useRef(true);
   useEffect(() => {
@@ -83,11 +93,15 @@ export function TranslateScreen({
   }, []);
   const invalidate = () => {
     request.current++;
+    translating.current = false;
     setBusy(false);
     setResult(null);
     setNotice("");
   };
   const translate = async () => {
+    if (translating.current) return;
+    translating.current = true;
+    Keyboard.dismiss();
     const sequence = ++request.current;
     setBusy(true);
     setNotice("");
@@ -101,7 +115,12 @@ export function TranslateScreen({
       });
       if (sequence !== request.current) return;
       setResult(value);
-      await onRecord(value);
+      try {
+        await onRecord(value);
+      } catch {
+        if (alive.current && sequence === request.current)
+          setNotice("번역은 준비했지만 기록을 저장하지 못했어요.");
+      }
     } catch (error) {
       if (sequence === request.current)
         setNotice(
@@ -110,30 +129,45 @@ export function TranslateScreen({
             : "번역을 완료하지 못했어요. 다시 시도해 주세요.",
         );
     } finally {
-      if (sequence === request.current) setBusy(false);
+      if (alive.current && sequence === request.current) {
+        translating.current = false;
+        setBusy(false);
+      }
     }
   };
   const copy = async (value: string) => {
+    const sequence = request.current;
     try {
       const copied = await Clipboard.setStringAsync(value);
+      if (!alive.current || sequence !== request.current) return;
       setNotice(
         copied
           ? "번역문을 복사했어요."
           : "복사하지 못했어요. 번역문을 길게 눌러 복사해 주세요.",
       );
     } catch {
-      setNotice("복사하지 못했어요. 번역문을 길게 눌러 복사해 주세요.");
+      if (alive.current && sequence === request.current)
+        setNotice("복사하지 못했어요. 번역문을 길게 눌러 복사해 주세요.");
     }
   };
   const favorite = async (value: Translation) => {
+    if (favoritePending.current) return;
+    favoritePending.current = true;
+    setSavingFavorite(true);
+    const sequence = request.current;
+    setNotice("");
     try {
       await onFavorite(value);
     } catch (error) {
-      setNotice(
-        error instanceof Error
-          ? error.message
-          : "즐겨찾기를 저장하지 못했어요.",
-      );
+      if (alive.current && sequence === request.current)
+        setNotice(
+          error instanceof Error
+            ? error.message
+            : "즐겨찾기를 저장하지 못했어요.",
+        );
+    } finally {
+      favoritePending.current = false;
+      if (alive.current) setSavingFavorite(false);
     }
   };
   const choosePhrase = async (phrase: Phrase) => {
@@ -143,6 +177,8 @@ export function TranslateScreen({
       return;
     }
     invalidate();
+    Keyboard.dismiss();
+    const sequence = request.current;
     const from = source === "ja" ? "ja" : "ko";
     const to = opposite(from);
     const value: Translation = {
@@ -157,10 +193,15 @@ export function TranslateScreen({
     setText(pair[from]);
     setSource(from);
     setResult(value);
+    if (Platform.OS === "ios")
+      AccessibilityInfo.announceForAccessibility(
+        `${languageNames[to]} 문장을 준비했어요. 선택한 문장 크게 보기 버튼으로 보여 주세요.`,
+      );
     try {
       await onRecord(value);
     } catch {
-      setNotice("문장은 준비했지만 기록을 저장하지 못했어요.");
+      if (alive.current && sequence === request.current)
+        setNotice("문장은 준비했지만 기록을 저장하지 못했어요.");
     }
   };
   const detected = source === "auto" ? detectLanguage(text) : source;
@@ -273,6 +314,8 @@ export function TranslateScreen({
                     setSource(value);
                   }}
                   style={{
+                    minHeight: 44,
+                    justifyContent: "center",
                     borderRadius: 999,
                     paddingVertical: 8,
                     paddingHorizontal: 13,
@@ -376,7 +419,10 @@ export function TranslateScreen({
             <Label
               size={12}
               weight="700"
-              style={{ color: result ? c.accent : c.muted, letterSpacing: 1 }}
+              style={{
+                color: result ? c.onSelected : c.muted,
+                letterSpacing: 1,
+              }}
             >
               {result
                 ? languageNames[result.target]
@@ -394,6 +440,8 @@ export function TranslateScreen({
           </View>
           <Text
             selectable
+            accessibilityLiveRegion="polite"
+            {...translationLanguage(result?.target ?? "ja")}
             style={{
               color: result ? c.onSelected : c.muted,
               fontSize: result ? 25 : 17,
@@ -413,6 +461,8 @@ export function TranslateScreen({
                   name={starred ? "bookmark" : "bookmark-outline"}
                   label={starred ? "즐겨찾기 해제" : "즐겨찾기 저장"}
                   color={c.onSelected}
+                  disabled={savingFavorite}
+                  selected={!!starred}
                   onPress={() => void favorite(result)}
                 />
                 <IconButton
@@ -476,16 +526,24 @@ export function TranslateScreen({
             borderBottomWidth: 1,
             borderColor: c.line,
             gap: 23,
+            flexWrap: "wrap",
           }}
         >
           {(["phrases", "history", "favorites"] as const).map((tab, i) => (
             <Pressable
               key={tab}
               accessibilityRole="tab"
+              accessibilityLabel={["빠른 문장", "최근 기록", "즐겨찾기"][i]}
               accessibilityState={{ selected: library === tab }}
-              onPress={() => setLibrary(tab)}
+              onPress={() => {
+                setLibrary(tab);
+                setConfirmClear(false);
+              }}
               style={{
                 paddingBottom: 13,
+                paddingTop: 8,
+                minHeight: 44,
+                justifyContent: "center",
                 borderBottomWidth: library === tab ? 2 : 0,
                 borderColor: c.accent,
               }}
@@ -529,6 +587,8 @@ export function TranslateScreen({
                   accessibilityState={{ selected: category === value }}
                   onPress={() => setCategory(value)}
                   style={{
+                    minHeight: 44,
+                    justifyContent: "center",
                     paddingHorizontal: 15,
                     paddingVertical: 10,
                     backgroundColor:
@@ -556,43 +616,68 @@ export function TranslateScreen({
                 .map((phrase) => {
                   const pair = resolvePhrase(phrase, state.profile, register);
                   return (
-                    <Pressable
-                      key={phrase.id}
-                      accessibilityRole="button"
-                      accessibilityLabel={
-                        pair?.ko ??
-                        `${phrase.sizeKey === "top" ? "상의" : phrase.sizeKey === "bottom" ? "하의" : "신발"} 사이즈 등록하기`
-                      }
-                      onPress={() => void choosePhrase(phrase)}
-                      style={({ pressed }) => ({
-                        padding: 19,
-                        borderRadius: 18,
-                        backgroundColor: pressed ? c.soft : c.surface,
-                        borderWidth: 1,
-                        borderColor: c.line,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 12,
-                      })}
-                    >
-                      <View style={{ flex: 1, gap: 5 }}>
-                        <Label size={14} weight="500">
-                          {pair?.ko ?? "내 사이즈를 등록하면 바로 쓸 수 있어요"}
-                        </Label>
-                        <Label size={12} muted>
-                          {pair?.ja ??
-                            (phrase.sizeKey === "top"
-                              ? "상의 사이즈 등록"
-                              : phrase.sizeKey === "bottom"
-                                ? "하의 사이즈 등록"
-                                : "신발 사이즈 등록")}
-                        </Label>
-                      </View>
-                      <Icon
-                        name={pair ? "arrow-up-outline" : "add-outline"}
-                        size={19}
-                      />
-                    </Pressable>
+                    <Fragment key={phrase.id}>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                          pair?.ko ??
+                          `${phrase.sizeKey === "top" ? "상의" : phrase.sizeKey === "bottom" ? "하의" : "신발"} 사이즈 등록하기`
+                        }
+                        onPress={() => void choosePhrase(phrase)}
+                        style={({ pressed }) => ({
+                          padding: 19,
+                          borderRadius: 18,
+                          backgroundColor: pressed ? c.soft : c.surface,
+                          borderWidth: 1,
+                          borderColor: c.line,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 12,
+                        })}
+                      >
+                        <View style={{ flex: 1, gap: 5 }}>
+                          <Label size={14} weight="500">
+                            {pair?.ko ??
+                              "내 사이즈를 등록하면 바로 쓸 수 있어요"}
+                          </Label>
+                          <Label size={12} muted>
+                            {pair?.ja ??
+                              (phrase.sizeKey === "top"
+                                ? "상의 사이즈 등록"
+                                : phrase.sizeKey === "bottom"
+                                  ? "하의 사이즈 등록"
+                                  : "신발 사이즈 등록")}
+                          </Label>
+                        </View>
+                        <Icon
+                          name={pair ? "arrow-up-outline" : "add-outline"}
+                          size={19}
+                        />
+                      </Pressable>
+                      {pair &&
+                        result &&
+                        result.original === pair[result.source] &&
+                        result.translated === pair[result.target] && (
+                          <Card tone="muted">
+                            <Text
+                              selectable
+                              {...translationLanguage(result.target)}
+                              style={{
+                                color: c.ink,
+                                fontSize: 24,
+                                lineHeight: 38,
+                              }}
+                            >
+                              {result.translated}
+                            </Text>
+                            <Button
+                              label="선택한 문장 크게 보기"
+                              primary
+                              onPress={() => setFullscreen(true)}
+                            />
+                          </Card>
+                        )}
+                    </Fragment>
                   );
                 })}
             </View>
@@ -601,19 +686,27 @@ export function TranslateScreen({
           <>
             {library === "history" && state.history.length > 0 && (
               <Button
+                busy={clearing}
                 label={
                   confirmClear ? "최근 기록 삭제 확인" : "최근 기록 지우기"
                 }
                 onPress={async () => {
+                  if (clearPending.current) return;
                   if (!confirmClear) {
                     setConfirmClear(true);
                     return;
                   }
+                  clearPending.current = true;
+                  setClearing(true);
+                  setNotice("");
                   try {
                     await onClearHistory();
-                    setConfirmClear(false);
+                    if (alive.current) setConfirmClear(false);
                   } catch {
-                    setNotice("기록을 삭제하지 못했어요.");
+                    if (alive.current) setNotice("기록을 삭제하지 못했어요.");
+                  } finally {
+                    clearPending.current = false;
+                    if (alive.current) setClearing(false);
                   }
                 }}
               />
@@ -649,6 +742,7 @@ export function TranslateScreen({
                       setSource(value.source);
                       setText(value.original);
                       setResult(value);
+                      Keyboard.dismiss();
                     }}
                   >
                     <Label muted size={13}>
@@ -670,6 +764,7 @@ export function TranslateScreen({
                             : "bookmark-outline"
                         }
                         label={`${value.original} 즐겨찾기 변경`}
+                        disabled={savingFavorite}
                         onPress={() => void favorite(value)}
                       />
                       <IconButton
@@ -685,38 +780,30 @@ export function TranslateScreen({
           </>
         )}
       </View>
-      <Modal
-        visible={fullscreen && !!result}
-        animationType="fade"
-        onRequestClose={() => setFullscreen(false)}
+      <TranslationDisplay
+        closeLabel="닫기"
+        value={fullscreen ? result : null}
+        onClose={() => setFullscreen(false)}
       >
-        <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
-          <View style={{ flex: 1, padding: 28, gap: 30 }}>
-            <View style={styles.between}>
-              <Label size={12} weight="700">
-                SUBJECT:JAPAN
-              </Label>
-              <Button label="닫기" onPress={() => setFullscreen(false)} />
-            </View>
-            <ScrollView
-              contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
-            >
-              <Text
-                selectable
-                style={{
-                  color: c.ink,
-                  fontSize: 38,
-                  lineHeight: 60,
-                  fontWeight: "500",
-                }}
-              >
-                {result?.translated}
-              </Text>
-            </ScrollView>
-            <Label muted>{result?.original}</Label>
+        {!!notice && (
+          <View accessibilityRole="alert" accessibilityLiveRegion="polite">
+            <Label>{notice}</Label>
           </View>
-        </SafeAreaView>
-      </Modal>
+        )}
+        {result && (
+          <>
+            <Button
+              label={starred ? "즐겨찾기 해제" : "즐겨찾기 저장"}
+              busy={savingFavorite}
+              onPress={() => void favorite(result)}
+            />
+            <Button
+              label="번역 결과 복사"
+              onPress={() => void copy(result.translated)}
+            />
+          </>
+        )}
+      </TranslationDisplay>
     </View>
   );
 }

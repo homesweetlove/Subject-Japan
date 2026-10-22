@@ -40,9 +40,9 @@ describe("backup", () => {
       parseBackup(" ".repeat(10) + "x".repeat(BACKUP_MAX_CHARS + 1)),
     ).toThrow("너무 커요");
   });
-  it("drops tampered records instead of trusting them", () => {
+  it("rejects tampered backups instead of offering a lossy replacement", () => {
     const raw = JSON.stringify({
-      version: 1,
+      ...initialState(),
       profile: { nickname: "x".repeat(500) },
       theme: "neon",
       history: [
@@ -53,10 +53,78 @@ describe("backup", () => {
       ],
       savedCouponIds: ["ok-id", "<script>", 42],
     });
-    const restored = parseBackup(raw);
-    expect(restored.profile.nickname).toHaveLength(24);
-    expect(restored.theme).toBe("system");
-    expect(restored.history.map((t) => t.id)).toEqual(["t1"]);
-    expect(restored.savedCouponIds).toEqual(["ok-id"]);
+    expect(() => parseBackup(raw)).toThrow("백업 형식이 아니에요");
+  });
+  it("rejects unrelated v1 JSON and unsupported additive fields", () => {
+    for (const value of [
+      { version: 1 },
+      { version: 1, onboarded: true },
+      { ...initialState(), nextVersionNotes: ["must not disappear"] },
+      { ...initialState(), theme: "neon" },
+      {
+        ...initialState(),
+        profile: { ...initialState().profile, nickname: "x".repeat(25) },
+      },
+      {
+        ...initialState(),
+        history: [{ ...translation, translated: "x".repeat(4001) }],
+      },
+      { ...initialState(), savedCouponIds: ["one", "one"] },
+      { ...initialState(), tripItems: [{}] },
+    ])
+      expect(() => parseBackup(JSON.stringify(value))).toThrow();
+  });
+  it("continues to restore backups from before additive v1 fields", () => {
+    const restored = parseBackup(
+      JSON.stringify({
+        version: 1,
+        onboarded: true,
+        profile: {
+          nickname: "old user",
+          sizes: { top: "M", bottom: "30", shoe: "250" },
+        },
+        theme: "dark",
+        history: [translation],
+        favorites: [translation],
+      }),
+    );
+    expect(restored.profile.nickname).toBe("old user");
+    expect(restored.history).toEqual([translation]);
+    expect(restored.savedCouponIds).toEqual([]);
+    expect(restored.dutyFreeReceipts).toEqual([]);
+    expect(restored.notifications.enabled).toBe(false);
+  });
+  it("exports restorable full histories, favorites and itinerary notes", () => {
+    const state = initialState();
+    state.history = Array.from({ length: 100 }, (_, i) => ({
+      ...translation,
+      id: `history-${i}`,
+      original: "\u0000".repeat(2000),
+      translated: "\u0001".repeat(4000),
+    }));
+    state.favorites = state.history.map((t) => ({ ...t, id: `fav-${t.id}` }));
+    state.tripItems = Array.from({ length: 200 }, (_, i) => ({
+      id: `trip-${i}`,
+      title: "trip",
+      when: "2026-10-22 12:00",
+      place: "",
+      reservation: "",
+      note: "\u0000".repeat(2000),
+      done: false,
+    }));
+    const raw = encodeBackup(state);
+    expect(raw.length).toBeGreaterThan(1_000_000);
+    expect(raw.length).toBeLessThan(BACKUP_MAX_CHARS);
+    expect(parseBackup(raw)).toEqual({ ...state, onboarded: true });
+  });
+  it("refuses exports that would be truncated or rejected on restore", () => {
+    const state = {
+      ...initialState(),
+      history: [{ ...translation, original: "x".repeat(2001) }],
+    };
+    expect(() => encodeBackup(state)).toThrow();
+    expect(() => parseBackup(" ".repeat(BACKUP_MAX_CHARS + 1))).toThrow(
+      "너무 커요",
+    );
   });
 });

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Pressable, Text, View } from "react-native";
+import { AppState, Pressable, Text, View } from "react-native";
 import type { LocalState } from "../../domain/models";
 import {
   Badge,
@@ -56,7 +56,13 @@ export function TodayScreen({
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30000);
-    return () => clearInterval(timer);
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") setNow(Date.now());
+    });
+    return () => {
+      clearInterval(timer);
+      sub.remove();
+    };
   }, []);
   const trip = nextTripItem(state.tripItems, now);
   const reminder = nextReminder(state.airportReminders, now);
@@ -243,9 +249,19 @@ function WeatherCard({
   };
   // Fetch only after the user has chosen a city, and only when the cache is old.
   useEffect(() => {
-    if (city && isWeatherStale(weather, city)) void load(city);
-    return () => inflight.current?.abort();
-  }, [city]);
+    const refresh = () => {
+      if (city && isWeatherStale(weather, city)) void load(city);
+    };
+    refresh();
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") refresh();
+    });
+    return () => {
+      sub.remove();
+      inflight.current?.abort();
+      inflight.current = null;
+    };
+  }, [city, weather?.fetchedAt]);
   const cityName = weatherCities.find((x) => x.id === city)?.name;
   const current = weather && weather.cityId === city ? weather : null;
   const picker = (
@@ -257,7 +273,9 @@ function WeatherCard({
           selected={x.id === city}
           onPress={() => {
             setPicking(false);
-            void onCity(x.id);
+            void onCity(x.id).catch(() =>
+              setError("선택한 도시를 저장하지 못했어요. 다시 시도해 주세요."),
+            );
           }}
         />
       ))}
@@ -339,7 +357,12 @@ function WeatherCard({
                   }}
                 >
                   <Label size={12} weight="700">
-                    {["오늘", "내일", "모레"][i] ?? d.date.slice(5)}
+                    {d.date ===
+                    new Date(Date.now() + (i * 24 + 9) * 3600000)
+                      .toISOString()
+                      .slice(0, 10)
+                      ? ["오늘", "내일", "모레"][i]
+                      : d.date.slice(5)}
                   </Label>
                   <Icon name={info.icon} size={20} />
                   <Label size={12}>

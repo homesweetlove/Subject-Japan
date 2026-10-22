@@ -13,6 +13,10 @@
       "infoPlist": {
         "RCTAsyncStorageExcludeFromBackup": true,
         "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSAllowsLocalNetworking": true
+        },
         "NFCReaderUsageDescription": "실물 일본 교통카드 잔액과 최근 기록을 읽습니다.",
         "NSSpeechRecognitionUsageDescription": "한국어와 일본어 음성 대화를 기기에서 인식합니다.",
         "NSMicrophoneUsageDescription": "번역할 음성을 인식할 때 마이크를 사용합니다.",

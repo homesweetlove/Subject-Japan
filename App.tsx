@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  AppState,
+  BackHandler,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -65,6 +67,28 @@ function Application() {
   const [loadError, setLoadError] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [tab, setTab] = useState<AppTab>("today");
+  const [resumeTick, setResumeTick] = useState(0);
+  const [notificationError, setNotificationError] = useState("");
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (next) => {
+      if (next === "active") setResumeTick((value) => value + 1);
+    });
+    return () => sub.remove();
+  }, []);
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (profileOpen) {
+        setProfileOpen(false);
+        return true;
+      }
+      if (tab !== "today") {
+        setTab("today");
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, [profileOpen, tab]);
   // Remount key lets Today (or a tapped notification) open a TRIP section.
   const [tripTarget, setTripTarget] = useState<{
     section: TripSection;
@@ -80,6 +104,7 @@ function Application() {
   // Keep the OS schedule in step with saved timers, trips and settings.
   useEffect(() => {
     if (!loaded || !notifier.available) return;
+    let active = true;
     const timer = setTimeout(() => {
       void notifier
         .sync(
@@ -89,10 +114,27 @@ function Application() {
             settings: state.notifications,
           }),
         )
-        .catch(() => {});
+        .then(() => {
+          if (active) setNotificationError("");
+        })
+        .catch(() => {
+          if (active)
+            setNotificationError(
+              "알림 예약을 갱신하지 못했어요. 기기 설정에서 알림 권한을 확인하고 앱을 다시 열어 주세요.",
+            );
+        });
     }, 800);
-    return () => clearTimeout(timer);
-  }, [loaded, state.tripItems, state.airportReminders, state.notifications]);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [
+    loaded,
+    state.tripItems,
+    state.airportReminders,
+    state.notifications,
+    resumeTick,
+  ]);
   useEffect(
     () =>
       notifier.onOpen((target) =>
@@ -165,14 +207,21 @@ function Application() {
           <View
             style={{
               paddingHorizontal: 20,
-              height: 64,
+              minHeight: 64,
+              paddingVertical: 10,
+              gap: 8,
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "center",
             }}
           >
             <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+                flexShrink: 1,
+              }}
               accessibilityRole="header"
               accessibilityLabel="Subject Japan"
             >
@@ -201,6 +250,7 @@ function Application() {
                   fontWeight: "800",
                   fontSize: 17,
                   letterSpacing: 0.4,
+                  flexShrink: 1,
                 }}
               >
                 SUBJECT JAPAN
@@ -213,8 +263,8 @@ function Application() {
                 onPress={openProfile}
                 hitSlop={6}
                 style={({ pressed }) => ({
-                  width: 38,
-                  height: 38,
+                  width: 44,
+                  height: 44,
                   borderRadius: 19,
                   alignItems: "center",
                   justifyContent: "center",
@@ -292,6 +342,11 @@ function Application() {
                   paddingBottom: 40,
                 }}
               >
+                {!!notificationError && (
+                  <Label style={{ color: colors.error }}>
+                    {notificationError}
+                  </Label>
+                )}
                 {!state.onboarded || profileOpen ? (
                   <ProfileScreen
                     key={state.onboarded ? "profile" : "onboarding"}
@@ -470,6 +525,7 @@ function Application() {
               accessibilityRole="tablist"
               style={{
                 flexDirection: "row",
+                flexWrap: "wrap",
                 borderTopWidth: 1,
                 borderColor: colors.line,
                 paddingTop: 8,
@@ -491,7 +547,9 @@ function Application() {
                       scroll.current?.scrollTo({ y: 0, animated: false });
                     }}
                     style={{
-                      flex: 1,
+                      flexGrow: 1,
+                      flexBasis: "16.666%",
+                      minWidth: 48,
                       alignItems: "center",
                       gap: 4,
                       paddingVertical: 4,
@@ -500,7 +558,7 @@ function Application() {
                   >
                     <View
                       style={{
-                        width: 56,
+                        width: 44,
                         height: 30,
                         borderRadius: 15,
                         alignItems: "center",

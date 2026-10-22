@@ -84,6 +84,8 @@ export function PayScreen({
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const controller = useRef<AbortController | null>(null);
+  const alive = useRef(true);
+  const rateEdited = useRef(false);
 
   // Duty Free Receipt Form states
   const [storeName, setStoreName] = useState("");
@@ -95,7 +97,13 @@ export function PayScreen({
   const [itemVolume, setItemVolume] = useState("700");
   const [receiptError, setReceiptError] = useState("");
 
-  useEffect(() => () => controller.current?.abort(), []);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+      controller.current?.abort();
+    };
+  }, []);
 
   // Auto-refresh rate on load if stale
   useEffect(() => {
@@ -105,36 +113,49 @@ export function PayScreen({
   }, []);
 
   const refresh = async (silent = false) => {
-    if (!silent) {
-      setBusy(true);
-      setNotice("");
-    }
+    if (controller.current) return;
+    setBusy(true);
+    if (!silent) setNotice("");
     const current = new AbortController();
     controller.current = current;
     const timeout = setTimeout(() => current.abort(), 12000);
     try {
       const value = await fetchRate(current.signal);
-      if (current.signal.aborted) return;
+      if (current.signal.aborted || !alive.current) return;
       await onRate(value);
+      if (current.signal.aborted || !alive.current) return;
+      rateEdited.current = false;
       setRateText(String(Math.round(value.krwPer100Jpy * 100) / 100));
-      if (!silent) {
+      if (!silent && alive.current && !current.signal.aborted) {
         setNotice(
           "참고 환율을 자동 갱신했어요. 카드사 실제 적용 환율은 다를 수 있어요.",
         );
       }
     } catch {
-      if (!silent) {
+      if (
+        !silent &&
+        alive.current &&
+        controller.current === current &&
+        !current.signal.aborted
+      ) {
         setNotice(
           "환율을 가져오지 못했어요. 저장된 환율이나 직접 입력을 이용해 주세요.",
         );
       }
     } finally {
       clearTimeout(timeout);
-      if (!silent) setBusy(false);
+      if (controller.current === current) {
+        controller.current = null;
+        if (alive.current) setBusy(false);
+      }
     }
   };
 
   const saveManual = async () => {
+    // A response requested before manual editing must not replace that edit.
+    controller.current?.abort();
+    controller.current = null;
+    setBusy(false);
     try {
       const n = Number(rateText);
       if (!Number.isFinite(n) || n <= 0 || n > 100000)
@@ -218,12 +239,15 @@ export function PayScreen({
   };
 
   const customs = analyzeCustoms(dutyFreeReceipts, rate);
-  const conversionList = quickConversions(Number(rateText) || 900);
+  const enteredRate = Number(rateText);
+  const hasRate =
+    Number.isFinite(enteredRate) && enteredRate > 0 && enteredRate <= 100000;
+  const conversionList = hasRate ? quickConversions(enteredRate) : [];
   const smartPayment = calculateSmartPayment(Number(coinPrice) || 0);
   const warikan = calculateWarikan(
     Number(warikanTotal) || 0,
     Number(warikanPeople) || 1,
-    Number(rateText) || 900,
+    hasRate ? enteredRate : 0,
   );
   const filteredSizes = sizeChartData.filter(
     (s) => s.category === sizeCategory,
@@ -291,7 +315,13 @@ export function PayScreen({
             <Field
               label="현재 환율 (100 JPY → KRW)"
               value={rateText}
-              onChange={setRateText}
+              onChange={(value) => {
+                rateEdited.current = true;
+                controller.current?.abort();
+                controller.current = null;
+                setBusy(false);
+                setRateText(value);
+              }}
               numeric
             />
 
@@ -308,9 +338,16 @@ export function PayScreen({
                   selected={autoRefreshRate}
                   onPress={() => {
                     const next = !autoRefreshRate;
-                    void onToggleAutoRefresh(next).then(() => {
-                      if (next && isRateStale(rate)) void refresh(true);
-                    });
+                    void onToggleAutoRefresh(next)
+                      .then(() => {
+                        if (next && isRateStale(rate) && !rateEdited.current)
+                          void refresh(true);
+                      })
+                      .catch(() =>
+                        setNotice(
+                          "자동 최신화 설정을 저장하지 못했어요. 다시 시도해 주세요.",
+                        ),
+                      );
                   }}
                 />
               ) : null}
@@ -344,6 +381,11 @@ export function PayScreen({
             <Label weight="700" size={16}>
               ⚡ 빠른 엔화-원화 환산표
             </Label>
+            {!hasRate && (
+              <Label muted>
+                원화 환산을 보려면 환율을 입력하거나 가져와 주세요.
+              </Label>
+            )}
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               {conversionList.map((item) => (
                 <View
@@ -887,7 +929,9 @@ export function PayScreen({
                 </Text>
               </View>
               <Label muted size={12}>
-                원화 환산: 약 ₩{warikan.exactPerPersonKrw.toLocaleString()}
+                {hasRate
+                  ? `원화 환산: 약 ₩${warikan.exactPerPersonKrw.toLocaleString()}`
+                  : "원화 환산을 보려면 결제·할인에서 환율을 입력해 주세요."}
               </Label>
 
               <View

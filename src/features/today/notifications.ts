@@ -9,6 +9,9 @@ const CHANNEL = "trip-alerts";
 export type PermissionState = "granted" | "denied" | "undetermined";
 
 let configured = false;
+// OS scheduling is asynchronous: a slow older sync must not restore reminders
+// after a newer save, restore or reset has removed them.
+let syncQueue: Promise<void> = Promise.resolve();
 function configure() {
   if (configured) return;
   configured = true;
@@ -41,48 +44,73 @@ export const notifier = {
     return p.granted ? "granted" : p.canAskAgain ? "undetermined" : "denied";
   },
   /** Replaces this app's pending notifications with the given plan. */
-  async sync(plan: PlannedNotification[]) {
-    configure();
-    const pending = await Notifications.getAllScheduledNotificationsAsync();
-    await Promise.all(
-      pending
-        .filter((n) => n.identifier.startsWith(PREFIX))
-        .map((n) =>
-          Notifications.cancelScheduledNotificationAsync(n.identifier),
-        ),
-    );
-    if (!plan.length) return;
-    if (!(await Notifications.getPermissionsAsync()).granted) return;
-    if (Platform.OS === "android")
-      await Notifications.setNotificationChannelAsync(CHANNEL, {
-        name: "막차·일정 알림",
-        importance: Notifications.AndroidImportance.HIGH,
-      });
-    for (const n of plan)
-      await Notifications.scheduleNotificationAsync({
-        identifier: `${PREFIX}${n.key}`,
-        content: {
-          title: n.title,
-          body: n.body,
-          data: { target: n.target },
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DATE,
-          date: n.at,
-          channelId: CHANNEL,
-        },
-      });
+  sync(plan: PlannedNotification[]): Promise<void> {
+    const next = syncQueue.catch(() => {}).then(() => syncPlan(plan));
+    syncQueue = next;
+    return next;
   },
-  /** Calls back with the tapped notification's target section. */
+  /** Handles both an already-running app and a notification that launched it. */
   onOpen(listener: (target: PlannedNotification["target"]) => void) {
-    const sub = Notifications.addNotificationResponseReceivedListener((r) => {
-      const target = r.notification.request.content.data?.target;
+    let active = true;
+    const seen = new Set<string>();
+    const receive = (r: Notifications.NotificationResponse | null) => {
+      if (!active || !r) return;
+      const request = r.notification.request;
+      const key = `${request.identifier}:${r.notification.date}`;
+      const target = request.content.data?.target;
       if (
-        r.notification.request.identifier.startsWith(PREFIX) &&
+        request.identifier.startsWith(PREFIX) &&
+        !seen.has(key) &&
         (target === "airport" || target === "itinerary")
-      )
+      ) {
+        seen.add(key);
         listener(target);
-    });
-    return () => sub.remove();
+      }
+    };
+    const sub = Notifications.addNotificationResponseReceivedListener(receive);
+    void Notifications.getLastNotificationResponseAsync()
+      .then(receive)
+      .catch(() => {});
+    return () => {
+      active = false;
+      sub.remove();
+    };
   },
 };
+
+async function syncPlan(plan: PlannedNotification[]) {
+  configure();
+  const pending = await Notifications.getAllScheduledNotificationsAsync();
+  const granted =
+    plan.length > 0 && (await Notifications.getPermissionsAsync()).granted;
+  const upcoming = granted ? plan.filter((n) => n.at > Date.now()) : [];
+  const wanted = new Set(upcoming.map((n) => `${PREFIX}${n.key}`));
+  if (Platform.OS === "android")
+    await Notifications.setNotificationChannelAsync(CHANNEL, {
+      name: "막차·일정 알림",
+      importance: Notifications.AndroidImportance.HIGH,
+    });
+  // Reuse stable identifiers. Do not erase the previous schedule before a
+  // replacement has been accepted by the OS.
+  for (const n of upcoming)
+    await Notifications.scheduleNotificationAsync({
+      identifier: `${PREFIX}${n.key}`,
+      content: {
+        title: n.title,
+        body: n.body,
+        data: { target: n.target },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: n.at,
+        channelId: CHANNEL,
+      },
+    });
+  await Promise.all(
+    pending
+      .filter(
+        (n) => n.identifier.startsWith(PREFIX) && !wanted.has(n.identifier),
+      )
+      .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
+  );
+}

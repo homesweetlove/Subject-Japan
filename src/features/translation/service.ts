@@ -35,7 +35,7 @@ export async function translateText(input: {
   if (text.length > 2000)
     throw new Error("한 번에 2,000자까지 번역할 수 있어요.");
   const source = input.source === "auto" ? detectLanguage(text) : input.source;
-  if (!source)
+  if (source !== "ko" && source !== "ja")
     throw new Error(
       "언어를 확실히 구분하기 어려워요. 한국어 또는 일본어를 직접 선택해 주세요.",
     );
@@ -58,6 +58,8 @@ export async function translateText(input: {
     translated = await input.provider.translate(text, source, target);
     provider = input.provider.id;
   }
+  if (typeof translated !== "string" || !translated.trim())
+    throw new Error("번역 결과가 없어요. 다시 시도해 주세요.");
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
     source,
