@@ -29,7 +29,6 @@ import {
   categoryLabels,
   type DutyFreeCategory,
   type DutyFreeReceipt,
-  TAX_FREE_MIN_JPY,
 } from "./taxFreeTracker";
 import {
   atmGuides,
