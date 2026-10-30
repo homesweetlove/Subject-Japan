@@ -29,6 +29,7 @@ import {
   categoryLabels,
   type DutyFreeCategory,
   type DutyFreeReceipt,
+  TAX_FREE_MIN_JPY,
 } from "./taxFreeTracker";
 import {
   atmGuides,
@@ -95,7 +96,7 @@ export function PayScreen({
   const [receiptJpy, setReceiptJpy] = useState("");
   const [receiptCategory, setReceiptCategory] =
     useState<DutyFreeCategory>("consumable");
-  const [receiptTaxFree, setReceiptTaxFree] = useState(false);
+  const [receiptTaxFree, setReceiptTaxFree] = useState(Platform.OS !== "android");
   const [itemCount, setItemCount] = useState("1");
   const [itemVolume, setItemVolume] = useState("700");
   const [receiptError, setReceiptError] = useState("");
@@ -786,7 +787,12 @@ export function PayScreen({
               label="구매 금액 (엔 JPY)"
               placeholder="예: 8500"
               value={receiptJpy}
-              onChange={setReceiptJpy}
+              onChange={(val) => {
+                setReceiptJpy(val);
+                // Preserve the existing iOS behavior; Galaxy requires explicit confirmation.
+                if (Platform.OS !== "android" && Number(val) >= TAX_FREE_MIN_JPY)
+                  setReceiptTaxFree(true);
+              }}
               numeric
             />
 
@@ -831,7 +837,9 @@ export function PayScreen({
             ) : null}
 
             <Choice
-              label="실제 영수증에서 Tax-Free 적용을 확인했어요"
+              label={Platform.OS === "android"
+                ? "실제 영수증에서 Tax-Free 적용을 확인했어요"
+                : "5,000엔 이상 면세(Tax-Free) 적용됨"}
               checkbox
               selected={receiptTaxFree}
               onPress={() => setReceiptTaxFree(!receiptTaxFree)}
