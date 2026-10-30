@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Linking, Platform, Pressable, Text, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { File, Paths } from "expo-file-system";
+import { travelTools } from "../tools/native";
+import { extractYenCandidates, type ScanPurpose, type YenCandidate } from "./yenOcr";
 import {
   Button,
   Card,
@@ -92,15 +96,26 @@ export function PayScreen({
   const [receiptJpy, setReceiptJpy] = useState("");
   const [receiptCategory, setReceiptCategory] =
     useState<DutyFreeCategory>("consumable");
-  const [receiptTaxFree, setReceiptTaxFree] = useState(true);
+  const [receiptTaxFree, setReceiptTaxFree] = useState(false);
   const [itemCount, setItemCount] = useState("1");
   const [itemVolume, setItemVolume] = useState("700");
   const [receiptError, setReceiptError] = useState("");
+  const [shoppingScan, setShoppingScan] = useState<{
+    purpose: ScanPurpose;
+    candidates: YenCandidate[];
+    recognized: string;
+  } | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [scanNotice, setScanNotice] = useState("");
+  const scanSequence = useRef(0);
+  const scanPending = useRef(false);
 
   useEffect(() => {
     alive.current = true;
     return () => {
       alive.current = false;
+      scanSequence.current += 1;
+      if (scanPending.current) void travelTools.cancel().catch(() => {});
       controller.current?.abort();
     };
   }, []);
@@ -193,6 +208,88 @@ export function PayScreen({
   } catch (e) {
     error = (e as Error).message;
   }
+
+  // Android-only on-device OCR. Never save or spend an OCR suggestion automatically.
+  const scanYen = async (purpose: ScanPurpose, camera: boolean) => {
+    if (scanPending.current) return;
+    if (Platform.OS !== "android" || !travelTools.available) {
+      setScanNotice("사진 금액 읽기는 전용 Android 앱에서 사용할 수 있어요.");
+      return;
+    }
+    const token = ++scanSequence.current;
+    scanPending.current = true;
+    setScanning(true);
+    setScanNotice("");
+    setShoppingScan(null);
+    let temporaryUri: string | null = null;
+    try {
+      if (camera) {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted)
+          throw new Error("설정에서 카메라 권한을 허용해 주세요.");
+      }
+      if (!alive.current || token !== scanSequence.current) return;
+      const options: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ["images"], quality: 0.85, exif: false, base64: false,
+      };
+      const photo = camera
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
+      if (photo.canceled || !photo.assets?.length) return;
+      temporaryUri = photo.assets[0].uri;
+      if (!alive.current || token !== scanSequence.current) return;
+      const recognized = await travelTools.recognizeImage(temporaryUri, "ja");
+      if (!alive.current || token !== scanSequence.current) return;
+      const candidates = extractYenCandidates(recognized, purpose);
+      setShoppingScan({ purpose, candidates, recognized: recognized.slice(0, 250) });
+      setScanNotice(candidates.length
+        ? "OCR 금액 후보를 확인하고 선택해 주세요. 세금·할인·면세 여부는 직접 확인해야 해요."
+        : "금액을 확실히 찾지 못했어요. 인식한 문장을 참고해 직접 입력해 주세요.");
+    } catch (e) {
+      if (alive.current && token === scanSequence.current)
+        setScanNotice(e instanceof Error ? e.message : "사진에서 금액을 읽지 못했어요.");
+    } finally {
+      // Delete only Expo's disposable cache copy, never a gallery original.
+      if (temporaryUri && temporaryUri.startsWith(Paths.cache.uri)) {
+        try { new File(temporaryUri).delete(); } catch {}
+      }
+      scanPending.current = false;
+      if (alive.current && token === scanSequence.current) setScanning(false);
+    }
+  };
+
+  const setPriceFromScan = (amount: number) => setPrice(String(amount));
+  const setReceiptFromScan = (amount: number) => setReceiptJpy(String(amount));
+  const scanActions = (purpose: ScanPurpose, onChoose: (amount: number) => void) => (
+    <View style={{ gap: 8 }}>
+      <View style={{ gap: 8 }}>
+        <Button label={purpose === "price" ? "갤럭시 카메라로 가격표 읽기" : "갤럭시 카메라로 영수증 읽기"}
+          icon="camera-outline" disabled={scanning} busy={scanning && shoppingScan?.purpose !== purpose}
+          onPress={() => void scanYen(purpose, true)} />
+        <Button label="갤러리 사진에서 금액 읽기" disabled={scanning}
+          onPress={() => void scanYen(purpose, false)} />
+      </View>
+      {shoppingScan?.purpose === purpose && (
+        <View style={{ gap: 8 }}>
+          {shoppingScan.candidates.map((candidate) => (
+            <Button key={candidate.amount}
+              label={`¥${candidate.amount.toLocaleString()} 선택 · ${candidate.line.slice(0, 24)}`}
+              onPress={() => {
+                onChoose(candidate.amount);
+                setScanNotice("선택한 금액을 입력했어요. 영수증 원본과 다시 대조해 주세요.");
+              }} />
+          ))}
+          {!shoppingScan.candidates.length && !!shoppingScan.recognized && (
+            <Label size={12} muted>{shoppingScan.recognized}</Label>
+          )}
+        </View>
+      )}
+      {!!scanNotice && <Label size={12} muted>{scanNotice}</Label>}
+      <Label size={12} muted>
+        사진은 서버로 업로드하지 않아요. OCR은 참고용이며 자동 결제·자동 등록하지 않아요.
+      </Label>
+    </View>
+  );
 
   // Duty Free addition
   const handleAddReceipt = async () => {
@@ -419,6 +516,7 @@ export function PayScreen({
 
           {/* Price & Discounts Card */}
           <Card>
+            {Platform.OS === "android" && scanActions("price", setPriceFromScan)}
             <Field
               label="상품 금액 (엔)"
               value={price}
@@ -678,6 +776,7 @@ export function PayScreen({
             <Label weight="700" size={17}>
               영수증 / 구매 내역 추가
             </Label>
+            {Platform.OS === "android" && scanActions("receipt", setReceiptFromScan)}
             <Field
               label="구매처 (매장명)"
               placeholder="예: 돈키호테 신주쿠점, 빅카메라"
@@ -688,13 +787,7 @@ export function PayScreen({
               label="구매 금액 (엔 JPY)"
               placeholder="예: 8500"
               value={receiptJpy}
-              onChange={(val) => {
-                setReceiptJpy(val);
-                // Auto recommend tax-free if >= 5000 JPY
-                if (Number(val) >= TAX_FREE_MIN_JPY) {
-                  setReceiptTaxFree(true);
-                }
-              }}
+              onChange={setReceiptJpy}
               numeric
             />
 
@@ -739,7 +832,7 @@ export function PayScreen({
             ) : null}
 
             <Choice
-              label="5,000엔 이상 면세(Tax-Free) 적용됨"
+              label="실제 영수증에서 Tax-Free 적용을 확인했어요"
               checkbox
               selected={receiptTaxFree}
               onPress={() => setReceiptTaxFree(!receiptTaxFree)}
