@@ -52,8 +52,15 @@ class SubjectTravelModule : Module() {
     AsyncFunction("capabilities") { promise: Promise -> main.post {
       val context = appContext.reactContext
       if (context == null) { promise.reject("UNAVAILABLE", "앱을 다시 열어 주세요.", null); return@post }
+      val adapter = runCatching { NfcAdapter.getDefaultAdapter(context) }.getOrNull()
+      val nfcState = when {
+        adapter == null -> "unsupported"
+        !runCatching { adapter.isEnabled }.getOrDefault(false) -> "disabled"
+        else -> "ready"
+      }
       promise.resolve(mapOf("ocr" to !destroyed,
-        "nfc" to (!destroyed && runCatching { NfcAdapter.getDefaultAdapter(context)?.isEnabled == true }.getOrDefault(false)),
+        "nfc" to (!destroyed && nfcState == "ready"),
+        "nfcState" to nfcState,
         "voice" to (!destroyed && Build.VERSION.SDK_INT >= 31 &&
           runCatching { SpeechRecognizer.isOnDeviceRecognitionAvailable(context) }.getOrDefault(false))))
     }; Unit }
@@ -161,8 +168,11 @@ class SubjectTravelModule : Module() {
           promise.reject("PERMISSION", "앱의 NFC 권한 설정을 확인해 주세요.", null); return@post
         }
         val adapter = NfcAdapter.getDefaultAdapter(activity)
-        if (adapter?.isEnabled != true) {
-          promise.reject("NFC", "NFC를 켜고 실물 교통카드를 준비해 주세요.", null); return@post
+        if (adapter == null) {
+          promise.reject("NFC_UNSUPPORTED", "이 갤럭시는 NFC 기능을 지원하지 않아요.", null); return@post
+        }
+        if (!adapter.isEnabled) {
+          promise.reject("NFC_DISABLED", "갤럭시 설정에서 NFC를 켜고 실물 교통카드를 준비해 주세요.", null); return@post
         }
         val current = CardSession(promise, activity, adapter)
         session = current
@@ -258,7 +268,7 @@ class SubjectTravelModule : Module() {
     var tech: NfcF? = null
     try {
       if (session.cancelled.get()) return
-      val current = NfcF.get(tag) ?: throw IOException("Unsupported tag")
+      val current = NfcF.get(tag) ?: throw IOException("NFC_F_UNSUPPORTED")
       tech = current
       session.tech = current
       checkCardActive(session)
@@ -279,8 +289,11 @@ class SubjectTravelModule : Module() {
       }
       checkCardActive(session)
       result = mapOf("id" to id.joinToString("") { "%02x".format(it.toInt() and 255) }, "blocks" to blocks)
-    } catch (_: Exception) {
-      error = "카드를 움직이지 말고 다시 시도해 주세요. FeliCa 실물 교통카드만 지원해요."
+    } catch (e: Exception) {
+      error = if (e.message == "NFC_F_UNSUPPORTED")
+        "인식된 카드가 FeliCa(NFC-F)가 아니에요. 실물 Suica·PASMO·ICOCA를 사용해 주세요."
+      else
+        "카드 기록을 완전히 읽지 못했어요. 카드를 움직이지 말고 다시 시도해 주세요. 일부 카드의 기록 조회 방식은 지원되지 않을 수 있어요."
     } finally {
       // Close before posting success; never hand a new session a still-connected transport.
       try { tech?.close() } catch (_: Exception) {}
