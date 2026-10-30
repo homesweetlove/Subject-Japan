@@ -5,8 +5,16 @@ export interface CardRead {
   id: string;
   blocks: number[][];
 }
+export type NfcState = "ready" | "disabled" | "unsupported";
+export interface TravelCapabilities {
+  ocr: boolean;
+  nfc: boolean;
+  voice: boolean;
+  /** Android NFC adapter status, not proof that every FeliCa card is readable. */
+  nfcState?: NfcState;
+}
 interface NativeTravel {
-  capabilities(): Promise<{ ocr: boolean; nfc: boolean; voice: boolean }>;
+  capabilities(): Promise<TravelCapabilities>;
   recognizeImage(uri: string, language: Language): Promise<string>;
   listen(language: Language): Promise<string>;
   stopListening(): Promise<void>;
