@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { ScreenHeader, Button, Card, Label } from "../../ui/components";
 import { Field } from "../../ui/Field";
-import { travelTools } from "../tools/native";
+import { travelTools, type NfcState } from "../tools/native";
 import { decodeCard, type TransitCard } from "./model";
 import type { ExchangeRate } from "../pay/calculator";
 export function CardScreen({
@@ -22,8 +22,18 @@ export function CardScreen({
     [name, setName] = useState(""),
     [confirm, setConfirm] = useState("");
   const alive = useRef(true);
+  const [nfcState, setNfcState] = useState<NfcState | "unknown">("unknown");
+  const refreshNfc = async () => {
+    try {
+      const capabilities = await travelTools.capabilities();
+      if (alive.current) setNfcState(capabilities.nfcState ?? "unknown");
+    } catch {
+      if (alive.current) setNfcState("unknown");
+    }
+  };
   useEffect(() => {
     alive.current = true;
+    void refreshNfc();
     return () => {
       alive.current = false;
       void travelTools.cancel();
@@ -33,6 +43,13 @@ export function CardScreen({
     setBusy(true);
     setNotice("카드 한 장을 휴대폰 NFC 위치에 대고 움직이지 마세요.");
     try {
+      const capabilities = await travelTools.capabilities();
+      if (!alive.current) return;
+      setNfcState(capabilities.nfcState ?? "unknown");
+      if (capabilities.nfcState === "unsupported")
+        throw new Error("이 갤럭시는 NFC를 지원하지 않아요.");
+      if (capabilities.nfcState === "disabled")
+        throw new Error("설정에서 NFC를 켜고 다시 시도해 주세요.");
       const value = decodeCard(await travelTools.scanCard());
       if (!alive.current) return;
       const existing = cards.find((c) => c.id === value.id);
@@ -75,11 +92,16 @@ export function CardScreen({
             onPress={() => void travelTools.cancel()}
           />
         )}
+        <Button label="갤럭시 NFC 상태 새로고침" disabled={busy} onPress={() => void refreshNfc()} />
         <Label size={12} muted>
-          {travelTools.available
-            ? "NFC 지원 기기와 실물 카드가 필요해요."
-            : "NFC 읽기는 전용 Android·iPhone 앱에서 지원해요."}{" "}
-          같은 휴대폰의 Apple Wallet·모바일 교통카드는 읽을 수 없어요.
+          {nfcState === "ready"
+            ? "기기 NFC가 켜져 있어요. NFC-F 교통카드 인식은 실물 카드로 확인해야 해요."
+            : nfcState === "disabled"
+              ? "NFC가 꺼져 있어요. 갤럭시 설정에서 NFC 및 비접촉 결제를 켜 주세요."
+              : nfcState === "unsupported"
+                ? "이 기기는 NFC 어댑터가 없어 실물 카드를 읽을 수 없어요."
+                : "NFC 상태를 확인하지 못했어요. Android 전용 빌드에서 다시 확인해 주세요."}
+          {" "}같은 휴대폰 안의 모바일 교통카드는 읽을 수 없어요.
           충전·결제·카드 복제 기능은 제공하지 않아요.
         </Label>
       </Card>
