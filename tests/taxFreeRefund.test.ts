@@ -159,3 +159,82 @@ describe("airport tax-free planning", () => {
     }
   });
 });
+
+import { fetchRate, validRate } from "../src/features/pay/calculator";
+
+describe("dollar rate for the Korea $800 limit", () => {
+  const base = {
+    krwPer100Jpy: 900,
+    date: "2026-11-05",
+    fetchedAt: 1,
+    source: "Frankfurter" as const,
+  };
+
+  it("uses the fetched dollar rate and flags the fallback", () => {
+    const item = {
+      id: "u",
+      storeName: "빅카메라",
+      category: "general" as const,
+      jpyAmount: 150000,
+      taxFreeApplied: true,
+      createdAt: 1,
+    };
+    const guess = analyzeCustoms([item], base);
+    expect(guess.usdIsEstimate).toBe(true);
+    expect(guess.totalUsd).toBe(1013.5);
+    // At 160 yen per dollar the same purchase is still over $800.
+    const real = analyzeCustoms([item], {
+      ...base,
+      usdPerJpy: 1 / 160,
+      usdDate: "2026-11-05",
+    });
+    expect(real.usdIsEstimate).toBe(false);
+    expect(real.totalUsd).toBe(937.5);
+    // At 200 yen per dollar it is under.
+    const cheap = analyzeCustoms([item], {
+      ...base,
+      usdPerJpy: 1 / 200,
+      usdDate: "2026-11-05",
+    });
+    expect(cheap.isOverLimit).toBe(false);
+  });
+
+  it("validates stored dollar rates", () => {
+    expect(validRate(base)).toBe(true);
+    expect(validRate({ ...base, usdPerJpy: 1 / 150, usdDate: "2026-11-05" })).toBe(
+      true,
+    );
+    expect(validRate({ ...base, usdPerJpy: 1 / 150 })).toBe(false);
+    expect(validRate({ ...base, usdPerJpy: 0.5, usdDate: "2026-11-05" })).toBe(
+      false,
+    );
+  });
+
+  it("reads USD next to KRW but never fails because of it", async () => {
+    const original = globalThis.fetch;
+    const respond = (body: unknown) =>
+      (globalThis.fetch = (async () => ({
+        ok: true,
+        json: async () => body,
+      })) as unknown as typeof fetch);
+    try {
+      respond([
+        { base: "JPY", quote: "KRW", date: "2026-11-05", rate: 9.1 },
+        { base: "JPY", quote: "USD", date: "2026-11-05", rate: 0.0065 },
+      ]);
+      const both = await fetchRate();
+      expect(both.krwPer100Jpy).toBeCloseTo(910);
+      expect(both.usdPerJpy).toBe(0.0065);
+      expect(both.usdDate).toBe("2026-11-05");
+      respond([
+        { base: "JPY", quote: "KRW", date: "2026-11-05", rate: 9.1 },
+        { base: "JPY", quote: "USD", date: "2026-11-05", rate: 5 },
+      ]);
+      const odd = await fetchRate();
+      expect(odd.usdPerJpy).toBeUndefined();
+      expect(validRate(odd)).toBe(true);
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
+});

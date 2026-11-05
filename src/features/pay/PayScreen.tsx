@@ -184,6 +184,10 @@ export function PayScreen({
         date: new Date().toISOString().slice(0, 10),
         fetchedAt: Date.now(),
         source: "manual",
+        // A manual won rate keeps the last fetched dollar rate (with its date).
+        ...(rate?.usdPerJpy !== undefined && rate.usdDate
+          ? { usdPerJpy: rate.usdPerJpy, usdDate: rate.usdDate }
+          : {}),
       });
       setNotice("환율을 기기에 저장했어요.");
     } catch (e) {
@@ -400,7 +404,7 @@ export function PayScreen({
             {onToggleAutoRefresh && (
               <Label size={12} muted>
                 {autoRefreshRate
-                  ? "PAY 화면을 열 때 환율이 6시간보다 오래됐으면 Frankfurter에 JPY/KRW 환율만 조회해요."
+                  ? "PAY 화면을 열 때 환율이 6시간보다 오래됐으면 Frankfurter에 엔화의 원화·달러 환율만 조회해요."
                   : "자동 최신화를 켜면 PAY 화면을 열 때 오래된 환율을 알아서 갱신해요. 꺼져 있으면 버튼을 누를 때만 조회해요."}
               </Label>
             )}
@@ -649,9 +653,14 @@ export function PayScreen({
                   ? ` (약 ₩${customs.totalKrw.toLocaleString()})`
                   : ""}
               </Label>
-              <Label muted size={12}>
-                달러는 1달러=148엔으로 어림한 값이에요. 한도에 가까우면 실제
-                환율로 다시 확인하세요.
+              <Label
+                muted={!customs.usdIsEstimate}
+                size={12}
+                style={customs.usdIsEstimate ? { color: c.accentInk } : undefined}
+              >
+                {customs.usdIsEstimate
+                  ? "달러는 1달러=148엔으로 어림한 값이에요. 결제·할인에서 '최신 환율 새로고침'을 누르면 실제 달러 환율로 계산해요."
+                  : `1달러 = ${(1 / customs.usdPerJpy).toFixed(2)}엔 (${rate?.usdDate} 환율)으로 계산했어요. 세관은 입국 때 고시 환율을 써서 조금 다를 수 있어요.`}
               </Label>
             </View>
 

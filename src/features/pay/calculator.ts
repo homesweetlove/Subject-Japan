@@ -3,7 +3,18 @@ export interface ExchangeRate {
   date: string;
   fetchedAt: number;
   source: "manual" | "Frankfurter";
+  /** US dollars per yen from the same rate server, for Korea's $800 limit. */
+  usdPerJpy?: number;
+  /** Day of the dollar rate (it may be older than a later manual won rate). */
+  usdDate?: string;
 }
+/** Plausible USD per JPY (about 50 to 400 yen per dollar). */
+export const USD_PER_JPY_RANGE = [1 / 400, 1 / 50] as const;
+const validUsd = (v: unknown) =>
+  typeof v === "number" &&
+  Number.isFinite(v) &&
+  v >= USD_PER_JPY_RANGE[0] &&
+  v <= USD_PER_JPY_RANGE[1];
 export interface PaymentInput {
   price: number;
   includesTax: boolean;
@@ -89,14 +100,18 @@ export function validRate(v: unknown): v is ExchangeRate {
     typeof r.date === "string" &&
     /^\d{4}-\d{2}-\d{2}$/.test(r.date) &&
     Number.isFinite(r.fetchedAt) &&
-    ["manual", "Frankfurter"].includes(r.source)
+    ["manual", "Frankfurter"].includes(r.source) &&
+    (r.usdPerJpy === undefined ||
+      (validUsd(r.usdPerJpy) &&
+        typeof r.usdDate === "string" &&
+        /^\d{4}-\d{2}-\d{2}$/.test(r.usdDate)))
   );
 }
 /** Plausible KRW per 100 JPY for server responses; manual input stays wide. */
 export const FETCHED_RATE_RANGE = [200, 5000] as const;
 export async function fetchRate(signal?: AbortSignal): Promise<ExchangeRate> {
   const response = await fetch(
-    "https://api.frankfurter.dev/v2/rates?base=JPY&quotes=KRW",
+    "https://api.frankfurter.dev/v2/rates?base=JPY&quotes=KRW,USD",
     { signal },
   );
   if (!response.ok)
@@ -107,11 +122,20 @@ export async function fetchRate(signal?: AbortSignal): Promise<ExchangeRate> {
   const rate = Array.isArray(json)
     ? json.find((r) => r.base === "JPY" && r.quote === "KRW")
     : null;
+  const usd = Array.isArray(json)
+    ? json.find((r) => r.base === "JPY" && r.quote === "USD")
+    : null;
   const value: ExchangeRate = {
     krwPer100Jpy: rate?.rate * 100,
     date: rate?.date,
     fetchedAt: Date.now(),
     source: "Frankfurter",
+    // The dollar rate is optional: a missing or odd value never blocks KRW.
+    ...(validUsd(usd?.rate) &&
+    typeof usd.date === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(usd.date)
+      ? { usdPerJpy: usd.rate, usdDate: usd.date }
+      : {}),
   };
   // A compromised or buggy upstream must not silently skew every price.
   if (

@@ -152,7 +152,7 @@ export const LIQUOR_USD_LIMIT = 400;
 export const TOBACCO_LIMIT_CIGARETTES = 200;
 export const PERFUME_LIMIT_ML = 100;
 
-// Reference default conversion if external FX not yet available: 1 USD ≈ 148 JPY, 100 JPY ≈ 900 KRW
+/** Rough fallback only until a real dollar rate has been fetched. */
 export const DEFAULT_USD_PER_JPY = 1 / 148;
 
 export function validReceipt(value: unknown): value is DutyFreeReceipt {
@@ -181,6 +181,10 @@ export function validReceipt(value: unknown): value is DutyFreeReceipt {
 }
 
 export interface CustomsAnalysis {
+  /** Dollars per yen actually used for the $800 check. */
+  usdPerJpy: number;
+  /** true while no fetched dollar rate exists and the fallback is used. */
+  usdIsEstimate: boolean;
   totalJpy: number;
   /** null until the user enters or fetches a real rate. */
   totalKrw: number | null;
@@ -235,8 +239,9 @@ export function analyzeCustoms(
     ? Math.round((totalJpy * rate.krwPer100Jpy) / 100)
     : null;
 
-  // Conversion from JPY to USD (approximate: 1 USD ≈ 148 JPY or derived from KRW/USD ~1400)
-  const usdRate = DEFAULT_USD_PER_JPY;
+  // The fetched dollar rate when there is one, otherwise a labelled guess.
+  const usdIsEstimate = rate?.usdPerJpy === undefined;
+  const usdRate = rate?.usdPerJpy ?? DEFAULT_USD_PER_JPY;
   const totalUsd = Math.round(totalJpy * usdRate * 10) / 10;
   const liquorUsd = Math.round(liquorJpy * usdRate * 10) / 10;
 
@@ -252,6 +257,8 @@ export function analyzeCustoms(
   const isPerfumeOver = perfumeVolumeMl > PERFUME_LIMIT_ML;
 
   return {
+    usdPerJpy: usdRate,
+    usdIsEstimate,
     totalJpy,
     totalKrw,
     totalUsd,
