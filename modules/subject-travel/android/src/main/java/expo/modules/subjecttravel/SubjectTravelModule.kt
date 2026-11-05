@@ -272,11 +272,23 @@ class SubjectTravelModule : Module() {
       for (index in 0 until 20) {
         val command = byteArrayOf(16, 6) + id + byteArrayOf(1, 0x0f, 0x09, 1, 0x80.toByte(), index.toByte())
         val response = transceive(session, current, command)
-        require(response.size == 29 && (response[0].toInt() and 255) == response.size &&
-          response[1].toInt() == 7 && response.copyOfRange(2, 10).contentEquals(id) &&
-          response[10].toInt() == 0 && response[11].toInt() == 0 && response[12].toInt() == 1)
+        // Every Read Without Encryption response starts with the same envelope:
+        // length, response code 0x07, the card IDm, then two status-flag bytes.
+        // An error response ends there (12 bytes); a success response adds the
+        // block count and one 16-byte block (29 bytes).
+        require(response.size >= 12 && (response[0].toInt() and 255) == response.size &&
+          response[1].toInt() == 7 && response.copyOfRange(2, 10).contentEquals(id))
+        // A non-zero status flag means this block could not be read. On transit
+        // cards with fewer than 20 history records that is simply the end of the
+        // history, so stop here and keep the blocks read so far rather than
+        // failing the whole read.
+        if (response[10].toInt() != 0 || response[11].toInt() != 0) break
+        require(response.size == 29 && response[12].toInt() == 1)
         blocks.add(response.copyOfRange(13, 29).map { it.toInt() and 255 })
       }
+      // A card that yields no readable history block is treated as a real
+      // failure so the user is asked to re-tap, not handed an empty record.
+      require(blocks.isNotEmpty())
       checkCardActive(session)
       result = mapOf("id" to id.joinToString("") { "%02x".format(it.toInt() and 255) }, "blocks" to blocks)
     } catch (_: Exception) {

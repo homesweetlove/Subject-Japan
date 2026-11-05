@@ -278,8 +278,20 @@ private final class LocalCards: NSObject, NFCTagReaderSessionDelegate {
       DispatchQueue.main.async {
         guard self.session === session else { return }
         guard error == nil, flag1 == 0, flag2 == 0, data.count == 1, data[0].count == 16 else {
-          self.finish(nil, "FeliCa 실물 교통카드를 움직이지 말고 다시 시도해 주세요.")
-          session.invalidate(errorMessage: "이 카드의 기록을 읽지 못했어요."); return
+          // A status-flag error means this block could not be read. On transit
+          // cards with fewer than 20 history records that is the end of the
+          // history, so keep the blocks already read instead of failing. Only a
+          // card that yields no block at all is treated as a real failure.
+          if blocks.isEmpty {
+            self.finish(nil, "FeliCa 실물 교통카드를 움직이지 말고 다시 시도해 주세요.")
+            session.invalidate(errorMessage: "이 카드의 기록을 읽지 못했어요.")
+          } else {
+            let id = card.currentIDm.map { String(format: "%02x", $0) }.joined()
+            session.alertMessage = "교통카드 기록을 읽었어요."
+            self.finish(["id": id, "blocks": blocks], nil)
+            session.invalidate()
+          }
+          return
         }
         self.read(card, session, index + 1, blocks + [data[0].map { Int($0) }])
       }
