@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { AppState, Pressable, Text, View } from "react-native";
+import { AppState, Text, View } from "react-native";
 import type { LocalState } from "../../domain/models";
 import {
   Badge,
@@ -36,6 +36,7 @@ import {
   type WeatherCityId,
   type WeatherSnapshot,
 } from "./weather";
+import { Press } from "../../ui/Press";
 
 export type AppTab = "today" | "card" | "coupon" | "translate" | "pay" | "trip";
 
@@ -71,7 +72,7 @@ export function TodayScreen({
   return (
     <View style={{ gap: 18 }}>
       <ScreenHeader
-        eyebrow="TODAY IN JAPAN"
+        seal="今"
         title={
           state.profile.nickname
             ? `${state.profile.nickname}님의 오늘`
@@ -88,7 +89,7 @@ export function TodayScreen({
       <Card>
         <SectionTitle icon="calendar-outline" title="다음 일정" />
         {trip ? (
-          <Pressable
+          <Press
             accessibilityRole="button"
             accessibilityLabel={`${trip.title} 일정 보기`}
             onPress={() => onNavigate("trip", "itinerary")}
@@ -106,7 +107,7 @@ export function TodayScreen({
             <Label muted size={14}>
               {trip.when} (일본 시각){trip.place ? ` · ${trip.place}` : ""}
             </Label>
-          </Pressable>
+          </Press>
         ) : (
           <>
             <Label muted size={14}>
@@ -241,7 +242,9 @@ function WeatherCard({
         );
     } finally {
       clearTimeout(timeout);
-      if (inflight.current === controller) {
+      // Saving the result re-runs the effect below, whose cleanup clears
+      // inflight first; without the null case the spinner could stay on.
+      if (inflight.current === controller || inflight.current === null) {
         inflight.current = null;
         setBusy(false);
       }
@@ -300,16 +303,17 @@ function WeatherCard({
         icon="partly-sunny-outline"
         title={`${cityName} 날씨`}
         trailing={
-          <Pressable
+          <Press
             accessibilityRole="button"
             accessibilityLabel="날씨 도시 변경"
             onPress={() => setPicking((v) => !v)}
             hitSlop={8}
+            style={{ minHeight: 44, justifyContent: "center" }}
           >
             <Label size={13} weight="700" style={{ color: c.accent }}>
               {picking ? "닫기" : "도시 변경"}
             </Label>
-          </Pressable>
+          </Press>
         }
       />
       {picking && picker}
@@ -441,7 +445,7 @@ function LastTrainCard({
           />
         }
       />
-      <Pressable
+      <Press
         accessibilityRole="button"
         accessibilityLabel="막차 타이머 보기"
         onPress={onOpen}
@@ -459,7 +463,7 @@ function LastTrainCard({
             저장한 지 하루가 지났어요. 공식 시간표를 다시 확인하세요.
           </Label>
         )}
-      </Pressable>
+      </Press>
     </Card>
   );
 }
@@ -479,18 +483,17 @@ function Tile({
 }) {
   const c = useTheme();
   return (
-    <Pressable
+    <Press
       accessibilityRole="button"
       accessibilityLabel={`${label} ${value}`}
       onPress={onPress}
-      style={({ pressed }) => [
+      style={({ pressed, hovered }) => [
         {
           flex: 1,
-          backgroundColor: c.surface,
+          backgroundColor: pressed || hovered ? c.surfacePressed : c.surface,
           borderRadius: radius.lg,
           padding: 16,
           gap: 6,
-          opacity: pressed ? 0.8 : 1,
         },
         elevation(c),
       ]}
@@ -507,7 +510,7 @@ function Tile({
       <Label size={11} muted>
         {hint}
       </Label>
-    </Pressable>
+    </Press>
   );
 }
 
@@ -522,7 +525,7 @@ function Shortcut({
 }) {
   const c = useTheme();
   return (
-    <Pressable
+    <Press
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
@@ -535,15 +538,14 @@ function Shortcut({
         gap: 10,
         paddingHorizontal: 14,
         borderRadius: radius.md,
-        backgroundColor: c.soft,
-        opacity: pressed ? 0.8 : 1,
+        backgroundColor: pressed ? c.softPressed : c.soft,
       })}
     >
       <Icon name={icon} size={20} color={c.accent} />
       <Label size={14} weight="700">
         {label}
       </Label>
-    </Pressable>
+    </Press>
   );
 }
 

@@ -50,6 +50,7 @@ export function ItineraryScreen({
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
+        seal="程"
         title="나만의 여행 노트"
         subtitle="일정·예약번호·메모를 기기에만 저장해요. 모든 일정은 일본 시각(JST) 기준이에요."
       />

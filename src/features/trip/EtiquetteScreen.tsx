@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Modal, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Text, View } from "react-native";
 import { ScreenHeader, Button, Card, Label, styles } from "../../ui/components";
 import { Choice } from "../../ui/Choice";
+import { ShowCard } from "../../ui/ShowCard";
 import { useTheme } from "../../ui/theme";
 import { etiquetteGuides, type EtiquetteGuide } from "./etiquette";
 
@@ -22,7 +22,7 @@ export function EtiquetteScreen() {
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
-        eyebrow="CULTURE & ETIQUETTE"
+        seal="礼"
         title="일본 문화 & 여행 매너"
         subtitle="쓰레기 분리배출, 온천·타투 규정, 신사 참배 순서와 료칸 유카타 착용법 안내예요."
       />
@@ -134,70 +134,19 @@ export function EtiquetteScreen() {
         </View>
       </Card>
 
-      {/* Phrase presentation modal */}
-      <Modal
-        visible={!!modalPhrase}
-        animationType="slide"
-        onRequestClose={() => setModalPhrase(null)}
-      >
-        <SafeAreaView
-          style={{
-            flex: 1,
-            backgroundColor: c.surface,
-            padding: 24,
-            justifyContent: "space-between",
-          }}
-        >
-          <View style={styles.between}>
-            <Label weight="700" size={15}>
-              현지 직원에게 보여주세요
-            </Label>
-            <Button label="닫기" onPress={() => setModalPhrase(null)} />
-          </View>
-
-          <View
-            style={{
-              backgroundColor: c.soft,
-              padding: 28,
-              borderRadius: 24,
-              gap: 16,
-              alignItems: "center",
-            }}
-          >
-            <Text
-              style={{
-                color: c.ink,
-                fontSize: 24,
-                fontWeight: "800",
-                lineHeight: 38,
-                textAlign: "center",
-              }}
-            >
-              {modalPhrase?.ja}
-            </Text>
-            <Text
-              style={{
-                color: c.muted,
-                fontSize: 15,
-                textAlign: "center",
-              }}
-            >
-              {modalPhrase?.reading}
-            </Text>
-          </View>
-
-          <View style={{ gap: 8 }}>
-            <Label muted size={13} style={{ textAlign: "center" }}>
-              {modalPhrase?.ko}
-            </Label>
-            <Button
-              label="확인 완료"
-              primary
-              onPress={() => setModalPhrase(null)}
-            />
-          </View>
-        </SafeAreaView>
-      </Modal>
+      <ShowCard
+        heading="현지 직원에게 보여주세요"
+        content={
+          modalPhrase
+            ? {
+                japanese: modalPhrase.ja,
+                reading: modalPhrase.reading,
+                korean: modalPhrase.ko,
+              }
+            : null
+        }
+        onClose={() => setModalPhrase(null)}
+      />
     </View>
   );
 }

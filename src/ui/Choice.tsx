@@ -1,6 +1,44 @@
-import { Pressable, Text } from "react-native";
+import { useEffect, useRef } from "react";
+import { Animated, Text } from "react-native";
 import { Icon } from "./components";
+import { motion, useReducedMotion } from "./motion";
+import { Press } from "./Press";
 import { radius, useTheme } from "./theme";
+
+/** The check mark settles into place when ticked, so the change is seen. */
+function CheckMark({ selected }: { selected: boolean }) {
+  const c = useTheme();
+  const reduced = useReducedMotion();
+  const pop = useRef(new Animated.Value(1)).current;
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    if (reduced || !selected) {
+      pop.setValue(1);
+      return;
+    }
+    pop.setValue(0.55);
+    Animated.spring(pop, {
+      toValue: 1,
+      useNativeDriver: motion.native,
+      speed: 20,
+      bounciness: 12,
+    }).start();
+  }, [selected]);
+  return (
+    <Animated.View style={{ transform: [{ scale: pop }] }}>
+      <Icon
+        name={selected ? "checkmark-circle" : "ellipse-outline"}
+        size={20}
+        color={selected ? c.success : c.muted}
+      />
+    </Animated.View>
+  );
+}
+
 export function Choice({
   label,
   selected,
@@ -15,7 +53,7 @@ export function Choice({
   disabled?: boolean;
 }) {
   const c = useTheme();
-  const bg = checkbox
+  const rest = checkbox
     ? selected
       ? c.successSoft
       : c.soft
@@ -24,7 +62,7 @@ export function Choice({
       : c.soft;
   const fg = !checkbox && selected ? c.onSelected : c.ink;
   return (
-    <Pressable
+    <Press
       accessibilityRole={checkbox ? "checkbox" : "button"}
       accessibilityLabel={label}
       aria-checked={checkbox ? selected : undefined}
@@ -33,7 +71,8 @@ export function Choice({
       }
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => ({
+      pressScale={0.96}
+      style={({ pressed, hovered }) => ({
         minHeight: 44,
         flexDirection: "row",
         alignItems: "center",
@@ -41,17 +80,15 @@ export function Choice({
         paddingHorizontal: checkbox ? 12 : 15,
         paddingVertical: 10,
         borderRadius: checkbox ? radius.md : radius.pill,
-        backgroundColor: bg,
-        opacity: disabled ? 0.5 : pressed ? 0.8 : 1,
+        // Selected pills keep their ink fill; only resting pills deepen.
+        backgroundColor:
+          !selected && !disabled && (pressed || hovered)
+            ? c.softPressed
+            : rest,
+        opacity: disabled ? 0.5 : 1,
       })}
     >
-      {checkbox && (
-        <Icon
-          name={selected ? "checkmark-circle" : "ellipse-outline"}
-          size={20}
-          color={selected ? c.success : c.muted}
-        />
-      )}
+      {checkbox && <CheckMark selected={selected} />}
       <Text
         style={{
           color: fg,
@@ -63,6 +100,6 @@ export function Choice({
       >
         {label}
       </Text>
-    </Pressable>
+    </Press>
   );
 }

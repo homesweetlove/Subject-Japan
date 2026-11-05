@@ -256,7 +256,7 @@ export function PayScreen({
   return (
     <View style={{ gap: 22 }}>
       <ScreenHeader
-        eyebrow="PAY & DUTY-FREE"
+        seal="払"
         title="계산은 똑똑하게"
         subtitle="환율 자동 최신화부터 5,000엔 면세, 동전 최소화 및 와리캉 정산까지."
       />

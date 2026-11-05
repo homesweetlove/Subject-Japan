@@ -24,6 +24,11 @@ export const light = {
   onSelected: "#FFFFFF",
   overlay: "rgba(16,18,22,0.55)",
   shadow: "#3A2A1A",
+  /** Held-down shades: one step deeper than the resting fill. */
+  accentPressed: "#A8341A",
+  softPressed: "#E3DCD1",
+  surfacePressed: "#F3EFE8",
+  accentSoftPressed: "#F6D7CC",
 };
 export type Palette = typeof light;
 export const dark: Palette = {
@@ -44,6 +49,10 @@ export const dark: Palette = {
   onSelected: "#101216",
   overlay: "rgba(0,0,0,0.7)",
   shadow: "#000000",
+  accentPressed: "#F26C4C",
+  softPressed: "#313642",
+  surfacePressed: "#22262E",
+  accentSoftPressed: "#4A271E",
 };
 
 export const radius = { sm: 10, md: 14, lg: 20, xl: 28, pill: 999 };

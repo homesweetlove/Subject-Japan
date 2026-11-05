@@ -3,13 +3,12 @@ import {
   Linking,
   Modal,
   Pressable,
-  ScrollView,
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader, Button, Card, Label, styles } from "../../ui/components";
 import { Choice } from "../../ui/Choice";
+import { ShowCard } from "../../ui/ShowCard";
 import { useTheme } from "../../ui/theme";
 import {
   disasterGuidelines,
@@ -33,15 +32,14 @@ export function EmergencyScreen() {
     setCallError("");
     const cleaned = phone.replace(/[^0-9+#]/g, "");
     const url = `tel:${cleaned}`;
+    // canOpenURL("tel:") needs an iOS query-scheme declaration and returns
+    // false without it, which would block real calls. Open directly instead.
     try {
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        setCallError(`전화 연결을 지원하지 않는 기기예요 (${phone})`);
-      }
+      await Linking.openURL(url);
     } catch {
-      setCallError(`전화 앱을 열 수 없어요 (${phone})`);
+      setCallError(
+        `이 기기에서 전화를 걸 수 없어요. ${phone} 번호로 직접 걸어 주세요.`,
+      );
     } finally {
       setCallTarget(null);
     }
@@ -50,7 +48,7 @@ export function EmergencyScreen() {
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
-        eyebrow="EMERGENCY & SOS"
+        seal="急"
         title="긴급 상황 & 재난 대응"
         subtitle="일본 현지 긴급 전화, 대사관 연락망, 응급 일본어 카드와 지진 대피 가이드예요."
       />
@@ -252,7 +250,7 @@ export function EmergencyScreen() {
         <Pressable
           style={{
             flex: 1,
-            backgroundColor: "rgba(0,0,0,0.5)",
+            backgroundColor: c.overlay,
             justifyContent: "center",
             padding: 24,
           }}
@@ -275,11 +273,16 @@ export function EmergencyScreen() {
               연결하시겠습니까?
             </Label>
             <View style={{ flexDirection: "row", gap: 10 }}>
-              <Button label="취소" onPress={() => setCallTarget(null)} />
+              <Button
+                label="취소"
+                style={{ flex: 1 }}
+                onPress={() => setCallTarget(null)}
+              />
               <Button
                 label="통화 연결"
                 primary
                 icon="call"
+                style={{ flex: 1 }}
                 onPress={() => callTarget && void triggerCall(callTarget.phone)}
               />
             </View>
@@ -287,81 +290,20 @@ export function EmergencyScreen() {
         </Pressable>
       </Modal>
 
-      {/* Fullscreen phrase presentation modal */}
-      <Modal
-        visible={!!selectedPhrase}
-        animationType="slide"
-        onRequestClose={() => setSelectedPhrase(null)}
-      >
-        <SafeAreaView
-          style={{
-            flex: 1,
-            backgroundColor: c.surface,
-            padding: 24,
-            justifyContent: "space-between",
-          }}
-        >
-          <View style={{ gap: 12 }}>
-            <View style={styles.between}>
-              <Label muted size={14} weight="700">
-                상대방에게 보여주세요
-              </Label>
-              <Button
-                label="닫기"
-                icon="close"
-                onPress={() => setSelectedPhrase(null)}
-              />
-            </View>
-            <Label muted size={14}>
-              한국어 원문: {selectedPhrase?.titleKo}
-            </Label>
-          </View>
-
-          <View
-            style={{
-              backgroundColor: c.soft,
-              padding: 24,
-              borderRadius: 24,
-              gap: 16,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text
-              style={{
-                color: c.ink,
-                fontSize: 26,
-                fontWeight: "800",
-                lineHeight: 40,
-                textAlign: "center",
-              }}
-            >
-              {selectedPhrase?.japanese}
-            </Text>
-            <Text
-              style={{
-                color: c.muted,
-                fontSize: 16,
-                textAlign: "center",
-                lineHeight: 24,
-              }}
-            >
-              {selectedPhrase?.reading}
-            </Text>
-          </View>
-
-          <View style={{ gap: 8 }}>
-            <Label muted size={13} style={{ textAlign: "center" }}>
-              {selectedPhrase?.detail}
-            </Label>
-            <Button
-              label="화면 닫기"
-              primary
-              onPress={() => setSelectedPhrase(null)}
-            />
-          </View>
-        </SafeAreaView>
-      </Modal>
+      <ShowCard
+        heading="상대방에게 보여주세요"
+        doneLabel="화면 닫기"
+        content={
+          selectedPhrase
+            ? {
+                japanese: selectedPhrase.japanese,
+                reading: selectedPhrase.reading,
+                korean: `${selectedPhrase.titleKo}\n${selectedPhrase.detail}`,
+              }
+            : null
+        }
+        onClose={() => setSelectedPhrase(null)}
+      />
     </View>
   );
 }

@@ -1,7 +1,14 @@
-import type { ComponentProps, ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from "react";
 import {
   ActivityIndicator,
-  Pressable,
+  Animated,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,6 +18,8 @@ import {
   type ViewStyle,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { motion, useReducedMotion } from "./motion";
+import { Press } from "./Press";
 import { elevation, radius, useTheme } from "./theme";
 
 export type IconName = ComponentProps<typeof Ionicons>["name"];
@@ -70,6 +79,11 @@ export function Label({
   );
 }
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+/**
+ * One button family. Every variant has a resting fill and a deeper held
+ * fill, so a press is visible even with reduced motion. Busy keeps the
+ * label and the variant colour (the action is still the same action).
+ */
 export function Button({
   label,
   onPress,
@@ -78,6 +92,8 @@ export function Button({
   variant,
   disabled = false,
   busy = false,
+  size = "md",
+  style,
 }: {
   label: string;
   onPress: () => void;
@@ -86,54 +102,52 @@ export function Button({
   variant?: ButtonVariant;
   disabled?: boolean;
   busy?: boolean;
+  size?: "md" | "sm";
+  style?: StyleProp<ViewStyle>;
 }) {
   const c = useTheme();
   const kind: ButtonVariant = variant ?? (primary ? "primary" : "secondary");
   const off = disabled || busy;
-  const bg = off
-    ? c.soft
-    : kind === "primary"
-      ? c.accent
-      : kind === "danger"
-        ? c.accentSoft
-        : kind === "ghost"
-          ? "transparent"
-          : c.soft;
-  const fg = disabled
-    ? c.muted
-    : kind === "primary"
-      ? busy
-        ? c.accent
-        : c.inverse
-      : kind === "danger"
-        ? c.error
-        : c.ink;
+  const tones: Record<ButtonVariant, [string, string, string]> = {
+    primary: [c.accent, c.accentPressed, c.inverse],
+    secondary: [c.soft, c.softPressed, c.ink],
+    ghost: ["transparent", c.soft, c.ink],
+    danger: [c.accentSoft, c.accentSoftPressed, c.error],
+  };
+  const [rest, held, ink] = tones[kind];
+  const bg = disabled ? c.soft : rest;
+  const fg = disabled ? c.muted : ink;
+  const small = size === "sm";
   return (
-    <Pressable
+    <Press
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: off, busy }}
       disabled={off}
       onPress={onPress}
-      style={({ pressed }) => [
+      style={({ pressed, hovered }) => [
         styles.button,
-        kind === "ghost" && !off && { borderWidth: 1, borderColor: c.line },
-        {
-          backgroundColor: bg,
-          opacity: pressed ? 0.78 : 1,
-          transform: [{ scale: pressed ? 0.985 : 1 }],
+        small && styles.buttonSmall,
+        kind === "ghost" && {
+          borderWidth: 1,
+          borderColor: disabled ? "transparent" : c.line,
         },
+        {
+          backgroundColor: !off && (pressed || hovered) ? held : bg,
+          opacity: busy ? 0.72 : 1,
+        },
+        style,
       ]}
     >
       {busy ? (
-        <ActivityIndicator color={fg} />
+        <ActivityIndicator size="small" color={fg} />
       ) : icon ? (
-        <Icon name={icon} size={18} color={fg} />
+        <Icon name={icon} size={small ? 16 : 18} color={fg} />
       ) : null}
       <Text
         style={{
           color: fg,
-          fontSize: 15,
+          fontSize: small ? 14 : 15,
           fontWeight: kind === "primary" ? "700" : "600",
           flexShrink: 1,
           textAlign: "center",
@@ -141,7 +155,7 @@ export function Button({
       >
         {label}
       </Text>
-    </Pressable>
+    </Press>
   );
 }
 export function IconButton({
@@ -161,25 +175,32 @@ export function IconButton({
 }) {
   const c = useTheme();
   return (
-    <Pressable
+    <Press
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled, selected }}
       disabled={disabled}
       onPress={onPress}
       hitSlop={4}
-      style={({ pressed }) => ({
+      pressScale={0.88}
+      style={({ pressed, hovered }) => ({
         width: 44,
         height: 44,
-        opacity: disabled ? 0.5 : 1,
+        opacity: disabled ? 0.45 : 1,
         alignItems: "center",
         justifyContent: "center",
         borderRadius: 22,
-        backgroundColor: pressed ? c.line : "transparent",
+        backgroundColor: pressed
+          ? c.softPressed
+          : selected
+            ? c.accentSoft
+            : hovered
+              ? c.soft
+              : "transparent",
       })}
     >
-      <Icon name={name} color={color} />
-    </Pressable>
+      <Icon name={name} color={color ?? (selected ? c.accent : c.ink)} />
+    </Press>
   );
 }
 export type CardTone = "default" | "accent" | "muted" | "success";
@@ -218,33 +239,56 @@ export function Card({
     </View>
   );
 }
-/** Consistent page title block: small accent eyebrow, display title, lede. */
+/**
+ * A single kanji pressed like a name seal (印). It tells a Korean traveller
+ * which part of the trip a screen is about without any English label.
+ */
+export function Seal({ glyph }: { glyph: string }) {
+  const c = useTheme();
+  return (
+    <View
+      accessible={false}
+      importantForAccessibility="no-hide-descendants"
+      aria-hidden
+      style={{
+        width: 38,
+        height: 38,
+        borderRadius: 9,
+        borderWidth: 2,
+        borderColor: c.accent,
+        alignItems: "center",
+        justifyContent: "center",
+        transform: [{ rotate: "-4deg" }],
+      }}
+    >
+      <Text
+        style={{
+          color: c.accent,
+          fontSize: 20,
+          lineHeight: 24,
+          fontWeight: "800",
+        }}
+      >
+        {glyph}
+      </Text>
+    </View>
+  );
+}
+/** Consistent page title block: seal, display title, lede. */
 export function ScreenHeader({
-  eyebrow,
+  seal,
   title,
   subtitle,
   trailing,
 }: {
-  eyebrow?: string;
+  seal?: string;
   title: string;
   subtitle?: string;
   trailing?: ReactNode;
 }) {
-  const c = useTheme();
   return (
-    <View style={{ gap: 8 }}>
-      {!!eyebrow && (
-        <Text
-          style={{
-            color: c.accent,
-            fontSize: 12,
-            fontWeight: "700",
-            letterSpacing: 1.2,
-          }}
-        >
-          {eyebrow}
-        </Text>
-      )}
+    <View style={{ gap: 10 }}>
+      {!!seal && <Seal glyph={seal} />}
       <View style={[styles.row, { alignItems: "flex-start" }]}>
         <View style={{ flex: 1 }}>
           <Label size={28} weight="800">
@@ -263,10 +307,24 @@ export interface NavItem<K extends string> {
   icon?: IconName;
 }
 /**
- * Section switcher. Up to three short items render as a segmented control;
- * longer lists scroll horizontally instead of wrapping into a wall of pills.
+ * Section switcher. Up to three short items render as a segmented control
+ * whose white thumb slides to the chosen segment; longer lists scroll
+ * horizontally and keep the chosen pill in view.
  */
-export function SubNav<K extends string>({
+export function SubNav<K extends string>(props: {
+  items: NavItem<K>[];
+  value: K;
+  onChange: (key: K) => void;
+}) {
+  return props.items.length <= 3 ? (
+    <Segmented {...props} />
+  ) : (
+    <PillRail {...props} />
+  );
+}
+const SEG_PAD = 4;
+const SEG_GAP = 4;
+function Segmented<K extends string>({
   items,
   value,
   onChange,
@@ -276,64 +334,138 @@ export function SubNav<K extends string>({
   onChange: (key: K) => void;
 }) {
   const c = useTheme();
-  if (items.length <= 3) {
-    return (
-      <View
-        style={{
-          flexDirection: "row",
-          backgroundColor: c.soft,
-          borderRadius: radius.md,
-          padding: 4,
-          gap: 4,
-        }}
-      >
-        {items.map((item) => {
-          const on = item.key === value;
-          return (
-            <Pressable
-              key={item.key}
-              accessibilityRole="button"
-              accessibilityLabel={item.label}
-              accessibilityState={{ selected: on }}
-              onPress={() => onChange(item.key)}
-              style={[
+  const reduced = useReducedMotion();
+  const [width, setWidth] = useState(0);
+  const index = Math.max(
+    0,
+    items.findIndex((item) => item.key === value),
+  );
+  const position = useRef(new Animated.Value(index)).current;
+  useEffect(() => {
+    if (reduced) {
+      position.setValue(index);
+      return;
+    }
+    Animated.spring(position, {
+      toValue: index,
+      useNativeDriver: motion.native,
+      ...motion.settle,
+    }).start();
+  }, [index, reduced]);
+  const count = items.length;
+  const segment =
+    width > 0 ? (width - SEG_PAD * 2 - SEG_GAP * (count - 1)) / count : 0;
+  const last = Math.max(1, count - 1);
+  return (
+    <View
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+      style={{
+        flexDirection: "row",
+        backgroundColor: c.soft,
+        borderRadius: radius.md,
+        padding: SEG_PAD,
+        gap: SEG_GAP,
+      }}
+    >
+      {segment > 0 && (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            {
+              position: "absolute",
+              top: SEG_PAD,
+              bottom: SEG_PAD,
+              left: SEG_PAD,
+              width: segment,
+              borderRadius: radius.sm + 1,
+              backgroundColor: c.surface,
+            },
+            // Android draws elevated views above their siblings; use a hairline.
+            Platform.OS === "android"
+              ? { borderWidth: 1, borderColor: c.line }
+              : elevation(c),
+            {
+              transform: [
                 {
-                  flex: 1,
-                  minHeight: 44,
-                  borderRadius: radius.sm + 1,
-                  paddingHorizontal: 6,
-                  paddingVertical: 8,
-                  flexDirection: "row",
-                  flexWrap: "wrap",
-                  gap: 6,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: on ? c.surface : "transparent",
+                  translateX: position.interpolate({
+                    inputRange: [0, last],
+                    outputRange: [0, last * (segment + SEG_GAP)],
+                  }),
                 },
-                on && elevation(c),
-              ]}
+              ],
+            },
+          ]}
+        />
+      )}
+      {items.map((item) => {
+        const on = item.key === value;
+        return (
+          <Press
+            key={item.key}
+            accessibilityRole="button"
+            accessibilityLabel={item.label}
+            accessibilityState={{ selected: on }}
+            onPress={() => onChange(item.key)}
+            pressScale={0.96}
+            style={{
+              flex: 1,
+              minHeight: 44,
+              borderRadius: radius.sm + 1,
+              paddingHorizontal: 6,
+              paddingVertical: 8,
+              flexDirection: "row",
+              flexWrap: "wrap",
+              gap: 6,
+              alignItems: "center",
+              justifyContent: "center",
+              // Before the first layout there is no thumb yet.
+              backgroundColor: segment > 0 || !on ? "transparent" : c.surface,
+            }}
+          >
+            {item.icon && (
+              <Icon name={item.icon} size={16} color={on ? c.ink : c.muted} />
+            )}
+            <Text
+              style={{
+                color: on ? c.ink : c.muted,
+                fontSize: 14,
+                fontWeight: on ? "700" : "600",
+                flexShrink: 1,
+              }}
             >
-              {item.icon && (
-                <Icon name={item.icon} size={16} color={on ? c.ink : c.muted} />
-              )}
-              <Text
-                style={{
-                  color: on ? c.ink : c.muted,
-                  fontSize: 14,
-                  fontWeight: on ? "700" : "600",
-                  flexShrink: 1,
-                }}
-              >
-                {item.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    );
-  }
+              {item.label}
+            </Text>
+          </Press>
+        );
+      })}
+    </View>
+  );
+}
+function PillRail<K extends string>({
+  items,
+  value,
+  onChange,
+}: {
+  items: NavItem<K>[];
+  value: K;
+  onChange: (key: K) => void;
+}) {
+  const c = useTheme();
+  const reduced = useReducedMotion();
+  const rail = useRef<ScrollView>(null);
+  const offsets = useRef<Partial<Record<K, number>>>({});
+  const reveal = (key: K, animated: boolean) => {
+    const x = offsets.current[key];
+    if (x === undefined) return;
+    rail.current?.scrollTo({ x: Math.max(0, x - 28), animated });
+  };
+  // A section opened from elsewhere (Today, a notification) can sit off-screen.
+  useEffect(() => {
+    reveal(value, !reduced);
+  }, [value]);
   return (
     <ScrollView
+      ref={rail}
       horizontal
       showsHorizontalScrollIndicator={false}
       style={{ marginHorizontal: -20, flexGrow: 0 }}
@@ -342,13 +474,17 @@ export function SubNav<K extends string>({
       {items.map((item) => {
         const on = item.key === value;
         return (
-          <Pressable
+          <Press
             key={item.key}
             accessibilityRole="button"
             accessibilityLabel={item.label}
             accessibilityState={{ selected: on }}
             onPress={() => onChange(item.key)}
-            style={({ pressed }) => ({
+            onLayout={(e) => {
+              offsets.current[item.key] = e.nativeEvent.layout.x;
+              if (on) reveal(item.key, false);
+            }}
+            style={({ pressed, hovered }) => ({
               minHeight: 44,
               paddingVertical: 8,
               paddingHorizontal: 14,
@@ -356,10 +492,15 @@ export function SubNav<K extends string>({
               flexDirection: "row",
               alignItems: "center",
               gap: 6,
-              backgroundColor: on ? c.selected : c.surface,
+              backgroundColor: on
+                ? c.selected
+                : pressed
+                  ? c.softPressed
+                  : hovered
+                    ? c.soft
+                    : c.surface,
               borderWidth: 1,
               borderColor: on ? c.selected : c.line,
-              opacity: pressed ? 0.8 : 1,
             })}
           >
             {item.icon && (
@@ -378,7 +519,7 @@ export function SubNav<K extends string>({
             >
               {item.label}
             </Text>
-          </Pressable>
+          </Press>
         );
       })}
     </ScrollView>
@@ -432,6 +573,12 @@ export const styles = StyleSheet.create({
     gap: 8,
     alignItems: "center",
     justifyContent: "center",
+  },
+  buttonSmall: {
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: radius.sm + 2,
   },
   section: { gap: 16 },
 });

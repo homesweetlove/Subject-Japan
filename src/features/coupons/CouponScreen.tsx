@@ -3,13 +3,12 @@ import {
   AppState,
   Linking,
   Modal,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import {
   ScreenHeader,
   Button,
@@ -31,6 +30,7 @@ import {
   type CouponAudience,
   type CouponCategory,
 } from "./model";
+import { Press } from "../../ui/Press";
 
 function Chip({
   label,
@@ -43,18 +43,23 @@ function Chip({
 }) {
   const c = useTheme();
   return (
-    <Pressable
+    <Press
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={{
+      pressScale={0.96}
+      style={({ pressed }) => ({
         minHeight: 44,
         justifyContent: "center",
         paddingHorizontal: 15,
         borderRadius: 22,
-        backgroundColor: selected ? c.selected : c.soft,
-      }}
+        backgroundColor: selected
+          ? c.selected
+          : pressed
+            ? c.softPressed
+            : c.soft,
+      })}
     >
       <Text
         style={{
@@ -65,7 +70,7 @@ function Chip({
       >
         {label}
       </Text>
-    </Pressable>
+    </Press>
   );
 }
 function DetailSection({
@@ -156,7 +161,7 @@ export function CouponScreen({
   return (
     <View style={{ gap: 22 }}>
       <ScreenHeader
-        eyebrow="COUPON & BENEFITS"
+        seal="券"
         title="같은 여행, 더 좋은 혜택"
         subtitle="방문객 전용 쿠폰부터 일본 고객이 쓰는 일상 혜택까지."
       />
@@ -340,125 +345,131 @@ export function CouponScreen({
         presentationStyle="pageSheet"
       >
         {selected ? (
-          <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
-            <View
-              style={{
-                flex: 1,
-                width: "100%",
-                maxWidth: 620,
-                alignSelf: "center",
-              }}
+          // A native modal is its own root; give it insets of its own.
+          <SafeAreaProvider>
+            <SafeAreaView
+              accessibilityViewIsModal
+              style={{ flex: 1, backgroundColor: c.bg }}
             >
               <View
-                style={[
-                  styles.between,
-                  { paddingHorizontal: 24, paddingVertical: 10 },
-                ]}
-              >
-                <Label weight="700">혜택 사용 안내</Label>
-                <IconButton
-                  name="close"
-                  label="혜택 상세 닫기"
-                  onPress={() => setSelected(null)}
-                />
-              </View>
-              <ScrollView
-                contentContainerStyle={{
-                  padding: 24,
-                  paddingBottom: 40,
-                  gap: 24,
+                style={{
+                  flex: 1,
+                  width: "100%",
+                  maxWidth: 620,
+                  alignSelf: "center",
                 }}
               >
-                <View style={{ gap: 8 }}>
-                  <Label muted size={12}>
-                    {audienceLabels[selected.audience]} · {selected.category}
-                  </Label>
-                  <Label weight="700" size={28}>
-                    {selected.merchant}
-                  </Label>
-                  <Label size={21} weight="600">
-                    {selected.benefit}
-                  </Label>
-                  <Label muted>{selected.title}</Label>
+                <View
+                  style={[
+                    styles.between,
+                    { paddingHorizontal: 24, paddingVertical: 10 },
+                  ]}
+                >
+                  <Label weight="700">혜택 사용 안내</Label>
+                  <IconButton
+                    name="close"
+                    label="혜택 상세 닫기"
+                    onPress={() => setSelected(null)}
+                  />
                 </View>
-                <Card>
-                  <Label weight="600">
-                    {statusLabels[couponStatus(selected, now)]}
-                  </Label>
-                  <Label muted size={13}>
-                    공식 안내 확인일 {selected.checkedOn}
-                    {"\n"}확인일은 사용 보장일이 아니에요. 결제 전 최신 조건을
-                    확인해 주세요.
-                  </Label>
-                </Card>
-                <DetailSection title="누가 사용할 수 있나요?">
-                  {selected.eligibility}
-                </DetailSection>
-                <DetailSection title="최소 구매 조건">
-                  {selected.minimumSpend}
-                </DetailSection>
-                <DetailSection title="유효기간">
-                  {selected.validity}
-                </DetailSection>
-                {selected.expiresOn ? (
-                  <Label muted>
-                    게시된 종료일: {selected.expiresOn} (일본 시간)
-                  </Label>
-                ) : null}
-                <DetailSection title="대상 매장">
-                  {selected.stores}
-                </DetailSection>
-                <DetailSection title="사용 방법">
-                  {selected.steps
-                    .map((step, index) => `${index + 1}. ${step}`)
-                    .join("\n\n")}
-                </DetailSection>
-                <DetailSection title="제외·주의 조건">
-                  {selected.exclusions.join("\n\n")}
-                </DetailSection>
-                <DetailSection title="다른 할인과 함께 쓰기">
-                  {selected.stacking}
-                </DetailSection>
-                <View style={{ gap: 8 }}>
+                <ScrollView
+                  contentContainerStyle={{
+                    padding: 24,
+                    paddingBottom: 40,
+                    gap: 24,
+                  }}
+                >
+                  <View style={{ gap: 8 }}>
+                    <Label muted size={12}>
+                      {audienceLabels[selected.audience]} · {selected.category}
+                    </Label>
+                    <Label weight="700" size={28}>
+                      {selected.merchant}
+                    </Label>
+                    <Label size={21} weight="600">
+                      {selected.benefit}
+                    </Label>
+                    <Label muted>{selected.title}</Label>
+                  </View>
+                  <Card>
+                    <Label weight="600">
+                      {statusLabels[couponStatus(selected, now)]}
+                    </Label>
+                    <Label muted size={13}>
+                      공식 안내 확인일 {selected.checkedOn}
+                      {"\n"}확인일은 사용 보장일이 아니에요. 결제 전 최신 조건을
+                      확인해 주세요.
+                    </Label>
+                  </Card>
+                  <DetailSection title="누가 사용할 수 있나요?">
+                    {selected.eligibility}
+                  </DetailSection>
+                  <DetailSection title="최소 구매 조건">
+                    {selected.minimumSpend}
+                  </DetailSection>
+                  <DetailSection title="유효기간">
+                    {selected.validity}
+                  </DetailSection>
+                  {selected.expiresOn ? (
+                    <Label muted>
+                      게시된 종료일: {selected.expiresOn} (일본 시간)
+                    </Label>
+                  ) : null}
+                  <DetailSection title="대상 매장">
+                    {selected.stores}
+                  </DetailSection>
+                  <DetailSection title="사용 방법">
+                    {selected.steps
+                      .map((step, index) => `${index + 1}. ${step}`)
+                      .join("\n\n")}
+                  </DetailSection>
+                  <DetailSection title="제외·주의 조건">
+                    {selected.exclusions.join("\n\n")}
+                  </DetailSection>
+                  <DetailSection title="다른 할인과 함께 쓰기">
+                    {selected.stacking}
+                  </DetailSection>
+                  <View style={{ gap: 8 }}>
+                    <Label muted size={12}>
+                      {selected.sourceLabel ?? "공식 출처"} · 외부 브라우저로
+                      열립니다
+                    </Label>
+                    <Text
+                      selectable
+                      style={{ color: c.muted, fontSize: 12, lineHeight: 18 }}
+                    >
+                      {selected.officialUrl}
+                    </Text>
+                  </View>
+                  {error ? (
+                    <Text accessibilityRole="alert" style={{ color: c.error }}>
+                      {error}
+                    </Text>
+                  ) : null}
+                  <Button
+                    label="공식 안내·쿠폰 열기"
+                    icon="open-outline"
+                    primary
+                    onPress={() => void openOfficial(selected)}
+                  />
+                  <Button
+                    label={
+                      savedIds.includes(selected.id)
+                        ? "이 혜택 저장 해제"
+                        : "이 혜택 저장"
+                    }
+                    icon="bookmark-outline"
+                    busy={busy}
+                    onPress={() => void save(selected.id)}
+                  />
                   <Label muted size={12}>
-                    {selected.sourceLabel ?? "공식 출처"} · 외부 브라우저로
-                    열립니다
+                    Subject Japan은 쿠폰 발급처가 아니에요. 여권·매장 계정 정보를
+                    수집하지 않으며, 저장 목록만 이 기기에 보관합니다.
                   </Label>
-                  <Text
-                    selectable
-                    style={{ color: c.muted, fontSize: 12, lineHeight: 18 }}
-                  >
-                    {selected.officialUrl}
-                  </Text>
-                </View>
-                {error ? (
-                  <Text accessibilityRole="alert" style={{ color: c.error }}>
-                    {error}
-                  </Text>
-                ) : null}
-                <Button
-                  label="공식 안내·쿠폰 열기"
-                  icon="open-outline"
-                  primary
-                  onPress={() => void openOfficial(selected)}
-                />
-                <Button
-                  label={
-                    savedIds.includes(selected.id)
-                      ? "이 혜택 저장 해제"
-                      : "이 혜택 저장"
-                  }
-                  icon="bookmark-outline"
-                  busy={busy}
-                  onPress={() => void save(selected.id)}
-                />
-                <Label muted size={12}>
-                  Subject Japan은 쿠폰 발급처가 아니에요. 여권·매장 계정 정보를
-                  수집하지 않으며, 저장 목록만 이 기기에 보관합니다.
-                </Label>
-              </ScrollView>
-            </View>
-          </SafeAreaView>
+                </ScrollView>
+              </View>
+            </SafeAreaView>
+          </SafeAreaProvider>
         ) : null}
       </Modal>
     </View>

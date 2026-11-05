@@ -5,7 +5,6 @@ import {
   BackHandler,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   Text,
   useColorScheme,
@@ -33,15 +32,13 @@ import {
   toggleFavorite,
   toggleSavedCoupon,
 } from "./src/storage/state";
-import { Button, Icon, Label, type IconName } from "./src/ui/components";
+import { Button, Icon, Label } from "./src/ui/components";
+import { Enter } from "./src/ui/Enter";
+import { Press } from "./src/ui/Press";
+import { TabBar, type TabItem } from "./src/ui/TabBar";
 import { dark, light, ThemeContext } from "./src/ui/theme";
 
-const tabs: {
-  key: AppTab;
-  label: string;
-  icon: IconName;
-  activeIcon: IconName;
-}[] = [
+const tabs: TabItem<AppTab>[] = [
   { key: "today", label: "오늘", icon: "today-outline", activeIcon: "today" },
   { key: "card", label: "교통카드", icon: "card-outline", activeIcon: "card" },
   {
@@ -257,18 +254,19 @@ function Application() {
               </Text>
             </View>
             {loaded && state.onboarded && !profileOpen && (
-              <Pressable
+              <Press
                 accessibilityRole="button"
                 accessibilityLabel="사용자 페이지"
                 onPress={openProfile}
                 hitSlop={6}
+                pressScale={0.9}
                 style={({ pressed }) => ({
                   width: 44,
                   height: 44,
-                  borderRadius: 19,
+                  borderRadius: 22,
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: pressed ? colors.line : colors.soft,
+                  backgroundColor: pressed ? colors.softPressed : colors.soft,
                 })}
               >
                 {state.profile.nickname ? (
@@ -284,7 +282,7 @@ function Application() {
                 ) : (
                   <Icon name="person" size={18} color={colors.muted} />
                 )}
-              </Pressable>
+              </Press>
             )}
           </View>
           {!loaded ? (
@@ -347,6 +345,9 @@ function Application() {
                     {notificationError}
                   </Label>
                 )}
+                <Enter
+                  key={!state.onboarded || profileOpen ? "profile" : tab}
+                >
                 {!state.onboarded || profileOpen ? (
                   <ProfileScreen
                     key={state.onboarded ? "profile" : "onboarding"}
@@ -517,74 +518,19 @@ function Application() {
                     }
                   />
                 ) : null}
+                </Enter>
               </ScrollView>
             </KeyboardAvoidingView>
           )}
           {loaded && state.onboarded && !profileOpen && (
-            <View
-              accessibilityRole="tablist"
-              style={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                borderTopWidth: 1,
-                borderColor: colors.line,
-                paddingTop: 8,
-                paddingBottom: 6,
-                paddingHorizontal: 6,
-                backgroundColor: colors.surface,
+            <TabBar
+              tabs={tabs}
+              value={tab}
+              onChange={(next) => {
+                setTab(next);
+                scroll.current?.scrollTo({ y: 0, animated: false });
               }}
-            >
-              {tabs.map((t) => {
-                const on = tab === t.key;
-                return (
-                  <Pressable
-                    key={t.key}
-                    accessibilityRole="tab"
-                    accessibilityLabel={t.label}
-                    accessibilityState={{ selected: on }}
-                    onPress={() => {
-                      setTab(t.key);
-                      scroll.current?.scrollTo({ y: 0, animated: false });
-                    }}
-                    style={{
-                      flexGrow: 1,
-                      flexBasis: "16.666%",
-                      minWidth: 48,
-                      alignItems: "center",
-                      gap: 4,
-                      paddingVertical: 4,
-                      minHeight: 52,
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 44,
-                        height: 30,
-                        borderRadius: 15,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: on ? colors.accentSoft : "transparent",
-                      }}
-                    >
-                      <Icon
-                        name={on ? t.activeIcon : t.icon}
-                        size={21}
-                        color={on ? colors.accent : colors.muted}
-                      />
-                    </View>
-                    <Text
-                      style={{
-                        fontSize: 11,
-                        fontWeight: on ? "800" : "600",
-                        color: on ? colors.ink : colors.muted,
-                      }}
-                    >
-                      {t.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+            />
           )}
         </View>
       </SafeAreaView>

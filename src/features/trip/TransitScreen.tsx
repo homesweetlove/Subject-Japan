@@ -13,11 +13,8 @@ import {
   type TransitPassOption,
 } from "./transit";
 
-export function TransitScreen({
-  krwPer100Jpy = 900,
-}: {
-  krwPer100Jpy?: number;
-}) {
+/** Without a saved rate the taxi estimate shows yen only. */
+export function TransitScreen({ krwPer100Jpy }: { krwPer100Jpy?: number }) {
   const c = useTheme();
   const [subTab, setSubTab] = useState<
     "passes" | "shinkansen" | "subway" | "taxi"
@@ -46,14 +43,14 @@ export function TransitScreen({
     Number(taxiKm) || 1,
     taxiCity,
     isNight,
-    krwPer100Jpy,
+    krwPer100Jpy ?? 0,
   );
   const filteredSubways = subwayLineCodes.filter((s) => s.city === subwayCity);
 
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
-        eyebrow="TRANSIT & PASSES"
+        seal="駅"
         title="교통 & 패스 유틸리티"
         subtitle="패스 vs Suica 본전 계산, 신칸센 대형 수하물 예약 규칙, 지하철 노선 색상표와 택시 요금 계산기예요."
       />
@@ -360,8 +357,10 @@ export function TransitScreen({
               >
                 약 ¥{taxi.estimatedFareYen.toLocaleString()}
               </Text>
-              <Label size={13}>
-                원화 약 ₩{taxi.estimatedKrw.toLocaleString()}
+              <Label size={13} muted={!krwPer100Jpy}>
+                {krwPer100Jpy
+                  ? `원화 약 ₩${taxi.estimatedKrw.toLocaleString()}`
+                  : "원화 환산을 보려면 결제·할인에서 환율을 입력해 주세요."}
               </Label>
               <Label muted size={12}>
                 기본요금 ¥{taxi.baseFareYen} 포함

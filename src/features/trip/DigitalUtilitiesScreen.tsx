@@ -13,6 +13,22 @@ import {
 } from "../../storage/backup";
 import { applianceChecks, esimTroubles, vjwSteps } from "./digitalUtilities";
 
+// Module scope so the wipe still runs after the user leaves this screen.
+let clipboardWipe: ReturnType<typeof setTimeout> | undefined;
+/** Wipe the backup from the shared clipboard unless something else was copied. */
+function scheduleClipboardWipe(json: string, onDone: () => void) {
+  clearTimeout(clipboardWipe);
+  clipboardWipe = setTimeout(() => {
+    clipboardWipe = undefined;
+    onDone();
+    void Clipboard.getStringAsync()
+      .then((current) =>
+        current === json ? Clipboard.setStringAsync("") : undefined,
+      )
+      .catch(() => {});
+  }, BACKUP_CLIPBOARD_TTL_MS);
+}
+
 export function DigitalUtilitiesScreen({
   state,
   onRestore,
@@ -28,10 +44,14 @@ export function DigitalUtilitiesScreen({
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState<LocalState | null>(null);
   const [busy, setBusy] = useState(false);
-  const clearTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
+  const alive = useRef(true);
+  useEffect(
+    () => () => {
+      // Leaving the screen must not cancel the clipboard wipe below.
+      alive.current = false;
+    },
+    [],
   );
-  useEffect(() => () => clearTimeout(clearTimer.current), []);
 
   const exportData = async () => {
     setNotice("");
@@ -39,17 +59,9 @@ export function DigitalUtilitiesScreen({
       const json = encodeBackup(state);
       await Clipboard.setStringAsync(json);
       setCopied(true);
-      clearTimeout(clearTimer.current);
-      // Wipe the backup from the shared clipboard unless the user copied
-      // something else in the meantime.
-      clearTimer.current = setTimeout(() => {
-        setCopied(false);
-        void Clipboard.getStringAsync()
-          .then((current) =>
-            current === json ? Clipboard.setStringAsync("") : undefined,
-          )
-          .catch(() => {});
-      }, BACKUP_CLIPBOARD_TTL_MS);
+      scheduleClipboardWipe(json, () => {
+        if (alive.current) setCopied(false);
+      });
     } catch {
       setNotice("데이터를 클립보드에 복사하지 못했어요.");
     }
@@ -81,7 +93,7 @@ export function DigitalUtilitiesScreen({
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
-        eyebrow="DIGITAL & UTILITIES"
+        seal="電"
         title="여행 디지털 & 필수 도우미"
         subtitle="100V 전압 호환성, VJW 등록 요령, eSIM 장애 해결 및 여행 데이터 백업이에요."
       />

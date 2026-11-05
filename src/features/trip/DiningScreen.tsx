@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Text, View } from "react-native";
 import { ScreenHeader, Button, Card, Label, styles } from "../../ui/components";
 import { Choice } from "../../ui/Choice";
 import { Field } from "../../ui/Field";
+import { ShowCard } from "../../ui/ShowCard";
 import { useTheme } from "../../ui/theme";
 import {
   allergenItems,
@@ -16,11 +16,8 @@ import {
   type RamenCustomization,
 } from "./dining";
 
-export function DiningScreen({
-  krwPer100Jpy = 900,
-}: {
-  krwPer100Jpy?: number;
-}) {
+/** Without a saved rate the screen shows yen only (no guessed 900 KRW). */
+export function DiningScreen({ krwPer100Jpy }: { krwPer100Jpy?: number }) {
   const c = useTheme();
   const [subTab, setSubTab] = useState<
     "phrases" | "allergen" | "otoshi" | "ramen"
@@ -50,10 +47,12 @@ export function DiningScreen({
   const allergenSentence = buildAllergenSentence(
     allergenItems.filter((i) => selectedAllergens.includes(i.id)),
   );
+  // An empty field means "use the usual 450 yen"; a typed 0 stays 0 (refused).
+  const otoshiPerPerson = otoshiYen.trim() === "" ? 450 : Number(otoshiYen);
   const otoshi = calculateOtoshi(
     Number(otoshiCount) || 1,
-    Number(otoshiYen) || 450,
-    krwPer100Jpy,
+    Number.isFinite(otoshiPerPerson) ? otoshiPerPerson : 450,
+    krwPer100Jpy ?? 0,
   );
   const ramenReq = buildRamenRequest(ramen);
 
@@ -66,7 +65,7 @@ export function DiningScreen({
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
-        eyebrow="DINING & FOOD"
+        seal="食"
         title="식당 주문 & 미식 도우미"
         subtitle="와사비 빼기, 오토오시(자릿세) 계산, 알레르기 카드와 라멘 주문 맞춤 설정이에요."
       />
@@ -262,9 +261,13 @@ export function DiningScreen({
                   fontVariant: ["tabular-nums"],
                 }}
               >
-                ¥{otoshi.totalYen.toLocaleString()} (약 ₩
-                {otoshi.totalKrw.toLocaleString()})
+                ¥{otoshi.totalYen.toLocaleString()}
               </Text>
+              <Label size={13} muted={!krwPer100Jpy}>
+                {krwPer100Jpy
+                  ? `약 ₩${otoshi.totalKrw.toLocaleString()}`
+                  : "원화 환산을 보려면 결제·할인에서 환율을 입력해 주세요."}
+              </Label>
               <Label muted size={12}>
                 소비세 10%가 포함되거나 별도로 붙을 수 있습니다.
               </Label>
@@ -381,169 +384,28 @@ export function DiningScreen({
         </View>
       )}
 
-      {/* Phrase Modal */}
-      <Modal
-        visible={!!fullscreenPhrase}
-        animationType="slide"
-        onRequestClose={() => setFullscreenPhrase(null)}
-      >
-        <SafeAreaView
-          style={{
-            flex: 1,
-            backgroundColor: c.surface,
-            padding: 24,
-            justifyContent: "space-between",
-          }}
-        >
-          <View style={styles.between}>
-            <Label weight="700" size={15}>
-              식당 점원에게 보여주세요
-            </Label>
-            <Button label="닫기" onPress={() => setFullscreenPhrase(null)} />
-          </View>
-          <View
-            style={{
-              backgroundColor: c.soft,
-              padding: 28,
-              borderRadius: 24,
-              alignItems: "center",
-              gap: 16,
-            }}
-          >
-            <Text
-              style={{
-                color: c.ink,
-                fontSize: 26,
-                fontWeight: "800",
-                lineHeight: 40,
-                textAlign: "center",
-              }}
-            >
-              {fullscreenPhrase?.japanese}
-            </Text>
-            <Text
-              style={{
-                color: c.muted,
-                fontSize: 16,
-                textAlign: "center",
-              }}
-            >
-              {fullscreenPhrase?.reading}
-            </Text>
-          </View>
-          <Button
-            label="확인 완료"
-            primary
-            onPress={() => setFullscreenPhrase(null)}
-          />
-        </SafeAreaView>
-      </Modal>
-
-      {/* Allergen Modal */}
-      <Modal
-        visible={showAllergenModal}
-        animationType="slide"
-        onRequestClose={() => setShowAllergenModal(false)}
-      >
-        <SafeAreaView
-          style={{
-            flex: 1,
-            backgroundColor: c.surface,
-            padding: 24,
-            justifyContent: "space-between",
-          }}
-        >
-          <View style={styles.between}>
-            <Label weight="700" size={15}>
-              식당 점원에게 보여주세요 (알레르기 확인)
-            </Label>
-            <Button label="닫기" onPress={() => setShowAllergenModal(false)} />
-          </View>
-          <View
-            style={{
-              backgroundColor: c.soft,
-              padding: 24,
-              borderRadius: 24,
-              gap: 16,
-            }}
-          >
-            <Text
-              style={{
-                color: c.ink,
-                fontSize: 22,
-                fontWeight: "800",
-                lineHeight: 34,
-                textAlign: "center",
-              }}
-            >
-              {allergenSentence.japanese}
-            </Text>
-            <Text
-              style={{
-                color: c.muted,
-                fontSize: 14,
-                textAlign: "center",
-              }}
-            >
-              {allergenSentence.reading}
-            </Text>
-          </View>
-          <Button
-            label="확인 완료"
-            primary
-            onPress={() => setShowAllergenModal(false)}
-          />
-        </SafeAreaView>
-      </Modal>
-
-      {/* Ramen Modal */}
-      <Modal
-        visible={showRamenModal}
-        animationType="slide"
-        onRequestClose={() => setShowRamenModal(false)}
-      >
-        <SafeAreaView
-          style={{
-            flex: 1,
-            backgroundColor: c.surface,
-            padding: 24,
-            justifyContent: "space-between",
-          }}
-        >
-          <View style={styles.between}>
-            <Label weight="700" size={15}>
-              라멘 가게 점원에게 보여주세요
-            </Label>
-            <Button label="닫기" onPress={() => setShowRamenModal(false)} />
-          </View>
-          <View
-            style={{
-              backgroundColor: c.soft,
-              padding: 28,
-              borderRadius: 24,
-              gap: 14,
-              alignItems: "center",
-            }}
-          >
-            <Text
-              style={{
-                color: c.ink,
-                fontSize: 26,
-                fontWeight: "800",
-                lineHeight: 38,
-                textAlign: "center",
-              }}
-            >
-              {ramenReq.japanese}
-            </Text>
-          </View>
-          <Button
-            label="확인 완료"
-            primary
-            onPress={() => setShowRamenModal(false)}
-          />
-        </SafeAreaView>
-      </Modal>
+      <ShowCard
+        heading="식당 직원에게 보여주세요"
+        content={
+          fullscreenPhrase
+            ? {
+                japanese: fullscreenPhrase.japanese,
+                reading: fullscreenPhrase.reading,
+                korean: fullscreenPhrase.titleKo,
+              }
+            : showAllergenModal
+              ? allergenSentence
+              : showRamenModal
+                ? // The ramen builder's second line is a Korean gloss.
+                  { japanese: ramenReq.japanese, korean: ramenReq.reading }
+                : null
+        }
+        onClose={() => {
+          setFullscreenPhrase(null);
+          setShowAllergenModal(false);
+          setShowRamenModal(false);
+        }}
+      />
     </View>
   );
 }

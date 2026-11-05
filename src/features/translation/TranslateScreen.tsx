@@ -3,7 +3,6 @@ import {
   Keyboard,
   AccessibilityInfo,
   Platform,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -42,6 +41,7 @@ import {
   translationLanguage,
 } from "../../ui/TranslationDisplay";
 import type { Register } from "../phrases/register";
+import { Press } from "../../ui/Press";
 
 export function TranslateScreen({
   state,
@@ -210,7 +210,7 @@ export function TranslateScreen({
   return (
     <View style={{ gap: 24 }}>
       <ScreenHeader
-        eyebrow="YOUR WORDS, A LITTLE CLOSER"
+        seal="訳"
         title="말이 통하는 여행"
         trailing={
           <View
@@ -300,7 +300,7 @@ export function TranslateScreen({
           <View style={styles.between}>
             <View style={[styles.row, { flexWrap: "wrap", flex: 1, gap: 6 }]}>
               {(["auto", "ko", "ja"] as const).map((value) => (
-                <Pressable
+                <Press
                   key={value}
                   accessibilityRole="radio"
                   accessibilityLabel={
@@ -331,7 +331,7 @@ export function TranslateScreen({
                   >
                     {value === "auto" ? "자동 감지" : languageNames[value]}
                   </Label>
-                </Pressable>
+                </Press>
               ))}
             </View>
             <IconButton
@@ -487,7 +487,7 @@ export function TranslateScreen({
           <Label size={13}>{notice}</Label>
         </View>
       )}
-      <Pressable
+      <Press
         accessibilityRole="button"
         accessibilityLabel="내 사이즈 프로필 열기"
         onPress={onProfile}
@@ -518,7 +518,7 @@ export function TranslateScreen({
           </Label>
         </View>
         <Icon name="chevron-forward" size={17} />
-      </Pressable>
+      </Press>
       <View style={{ gap: 18 }}>
         <View
           style={{
@@ -530,7 +530,7 @@ export function TranslateScreen({
           }}
         >
           {(["phrases", "history", "favorites"] as const).map((tab, i) => (
-            <Pressable
+            <Press
               key={tab}
               accessibilityRole="tab"
               accessibilityLabel={["빠른 문장", "최근 기록", "즐겨찾기"][i]}
@@ -551,7 +551,7 @@ export function TranslateScreen({
               <Label size={15} muted={library !== tab} weight="600">
                 {["빠른 문장", "최근 기록", "즐겨찾기"][i]}
               </Label>
-            </Pressable>
+            </Press>
           ))}
         </View>
         {library === "phrases" ? (
@@ -581,7 +581,7 @@ export function TranslateScreen({
               contentContainerStyle={{ gap: 8 }}
             >
               {categories.map((value) => (
-                <Pressable
+                <Press
                   key={value}
                   accessibilityRole="button"
                   accessibilityState={{ selected: category === value }}
@@ -607,7 +607,7 @@ export function TranslateScreen({
                   >
                     {value}
                   </Text>
-                </Pressable>
+                </Press>
               ))}
             </ScrollView>
             <View style={{ gap: 10 }}>
@@ -617,7 +617,7 @@ export function TranslateScreen({
                   const pair = resolvePhrase(phrase, state.profile, register);
                   return (
                     <Fragment key={phrase.id}>
-                      <Pressable
+                      <Press
                         accessibilityRole="button"
                         accessibilityLabel={
                           pair?.ko ??
@@ -653,7 +653,7 @@ export function TranslateScreen({
                           name={pair ? "arrow-up-outline" : "add-outline"}
                           size={19}
                         />
-                      </Pressable>
+                      </Press>
                       {pair &&
                         result &&
                         result.original === pair[result.source] &&
@@ -734,7 +734,7 @@ export function TranslateScreen({
             {(library === "history" ? state.history : state.favorites).map(
               (value) => (
                 <Card key={value.id}>
-                  <Pressable
+                  <Press
                     accessibilityRole="button"
                     accessibilityLabel={`${value.original} 다시 열기`}
                     onPress={() => {
@@ -749,7 +749,7 @@ export function TranslateScreen({
                       {value.original}
                     </Label>
                     <Label size={18}>{value.translated}</Label>
-                  </Pressable>
+                  </Press>
                   <View style={styles.between}>
                     <Label muted size={11}>
                       {new Date(value.createdAt).toLocaleDateString("ko-KR")} ·{" "}

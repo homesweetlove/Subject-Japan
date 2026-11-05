@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Keyboard, Pressable, TextInput, View } from "react-native";
+import { Keyboard, TextInput, View } from "react-native";
 import {
   initialState,
   type LocalState,
@@ -17,6 +17,7 @@ import {
   styles,
 } from "../../ui/components";
 import { useTheme } from "../../ui/theme";
+import { Press } from "../../ui/Press";
 
 const fields: { key: SizeKey; title: string; hint: string }[] = [
   { key: "top", title: "상의", hint: "예: 44, M, 95" },
@@ -82,7 +83,7 @@ export function ProfileScreen({
   return (
     <View style={{ gap: 24 }}>
       <ScreenHeader
-        eyebrow={state.onboarded ? "MY PROFILE" : "WELCOME TO JAPAN"}
+        seal={state.onboarded ? "私" : "旅"}
         title={
           state.onboarded ? "나에게 맞춘 여행" : "여행의 시작,\n나에게 맞게."
         }
@@ -192,7 +193,7 @@ export function ProfileScreen({
           }}
         >
           {(["system", "light", "dark"] as const).map((value, i) => (
-            <Pressable
+            <Press
               key={value}
               disabled={saving}
               onPress={() => setTheme(value)}
@@ -235,7 +236,7 @@ export function ProfileScreen({
               >
                 {["시스템", "라이트", "다크"][i]}
               </Label>
-            </Pressable>
+            </Press>
           ))}
         </View>
       </Card>

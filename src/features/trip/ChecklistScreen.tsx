@@ -44,7 +44,7 @@ export function ChecklistScreen({
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
-        eyebrow="TRAVEL SHOPPING & PACKING"
+        seal="買"
         title="쇼핑 & 필수 준비물 체크"
         subtitle="드럭스토어, 돈키호테 인기템, 110V 전압 주의사항과 내 사이즈를 한눈에 확인하세요."
       />

@@ -58,7 +58,8 @@ export function TripScreen({
 }) {
   const [section, setSection] = useState<TripSection>(initialSection);
 
-  const krwRate = state.exchangeRate?.krwPer100Jpy ?? 900;
+  // No guessed fallback: screens hide won amounts until a real rate exists.
+  const krwRate = state.exchangeRate?.krwPer100Jpy;
 
   return (
     <View style={{ gap: 22 }}>

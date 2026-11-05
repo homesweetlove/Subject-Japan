@@ -59,6 +59,7 @@ export function CardScreen({
   return (
     <View style={{ gap: 22 }}>
       <ScreenHeader
+        seal="札"
         title="이동을 더 가볍게"
         subtitle="Suica · PASMO · ICOCA 실물 카드의 마지막 기록을 확인해요."
       />
