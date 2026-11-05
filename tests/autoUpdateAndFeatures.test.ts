@@ -456,15 +456,16 @@ describe("Cash, Coin Minimizer & Warikan Utilities", () => {
 describe("Transit Pass & Taxi Utilities", () => {
   it("compares transit pass vs Suica fares accurately", () => {
     const tokyo24 = transitPasses.find((p) => p.id === "tokyo-subway-24")!;
-    // 2 rides @ 220 = 440 JPY < 800 JPY -> Suica is cheaper
+    expect(tokyo24.priceYen).toBe(1000);
+    // 2 rides @ 220 = 440 JPY < 1,000 JPY -> Suica is cheaper
     const lowRides = comparePassVsSuica(tokyo24, 2, 220);
     expect(lowRides.recommendation).toBe("suica");
-    expect(lowRides.savingYen).toBe(360);
+    expect(lowRides.savingYen).toBe(560);
 
-    // 5 rides @ 220 = 1100 JPY > 800 JPY -> Pass is cheaper
-    const highRides = comparePassVsSuica(tokyo24, 5, 220);
+    // 6 rides @ 220 = 1,320 JPY > 1,000 JPY -> Pass is cheaper
+    const highRides = comparePassVsSuica(tokyo24, 6, 220);
     expect(highRides.recommendation).toBe("pass");
-    expect(highRides.savingYen).toBe(300);
+    expect(highRides.savingYen).toBe(320);
   });
 
   it("calculates taxi fares with base fare and night surcharge", () => {
@@ -473,7 +474,15 @@ describe("Transit Pass & Taxi Utilities", () => {
     expect(dayTaxi.nightSurchargeYen).toBe(0);
     expect(dayTaxi.estimatedFareYen).toBeGreaterThan(dayTaxi.baseFareYen);
 
+    // Tokyo 2026-04-20 tariff: 500 yen for 1.0 km, then 100 yen per 232 m.
+    // 2,000 m extra -> ceil(2000/232) = 9 steps -> 1,400 yen.
+    expect(dayTaxi.estimatedFareYen).toBe(1400);
+    expect(calculateTaxiFare(1.0, "tokyo", false).estimatedFareYen).toBe(500);
+    // Osaka: 600 yen for 1.2 km, 100 yen per 231 m.
+    expect(calculateTaxiFare(1.2, "osaka", false).estimatedFareYen).toBe(600);
+
     const nightTaxi = calculateTaxiFare(3.0, "tokyo", true, 900);
+    expect(nightTaxi.estimatedFareYen).toBe(1680);
     expect(nightTaxi.nightSurchargeYen).toBeGreaterThan(0);
     expect(nightTaxi.estimatedFareYen).toBeGreaterThan(
       dayTaxi.estimatedFareYen,

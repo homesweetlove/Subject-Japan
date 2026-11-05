@@ -132,34 +132,45 @@ export interface AtmGuide {
   cardTips: string;
 }
 
+/** Card and ATM fee facts re-checked on this date. Card terms change often. */
+export const ATM_CHECKED_ON = "2026-11-05";
+
 export const atmGuides: AtmGuide[] = [
   {
     bank: "세븐뱅크 (Seven Bank)",
-    location: "전국 세븐일레븐 편의점 및 공항·역사",
+    location: "전국 세븐일레븐 편의점 및 공항·역",
     feeInfo:
-      "트래블로그·트래블월렛·토스 체크카드 이용 시 출금 수수료 무료 (기기 기본 출금)",
+      "트래블로그(하나)는 세븐뱅크 출금 수수료 면제 대상. 단, 일본 기계 이용료(약 110엔)가 화면에 뜨면 그대로 붙을 수 있어요.",
     cardTips:
-      "한국어 화면 완벽 지원. 화면에서 '출금(Withdrawal)' 선택 후 '신용카드/Checking' 선택",
+      "한국어 화면 지원, 대부분 24시간. '출금' → 계좌 종류는 보통 '예금(Savings)'이나 '당좌(Checking)' 중 카드에 맞는 쪽 선택",
   },
   {
     bank: "이온뱅크 (AEON Bank)",
-    location: "미니스톱 편의점 및 이온몰",
-    feeInfo: "트래블로그(마스터) 및 주요 해외 트래블카드 출금 수수료 무료",
-    cardTips: "핑크색 AEON Bank 마크 확인. 주말·야간에도 수수료 무료 지원",
+    location: "이온몰·미니스톱 일부 편의점",
+    feeInfo:
+      "트래블월렛은 이온뱅크 기계 출금이 수수료 면제 대상(세븐뱅크가 아님에 주의).",
+    cardTips: "분홍색 AEON Bank 표시 확인. 기계마다 이용 시간이 달라 밤에는 꺼져 있을 수 있음",
   },
   {
     bank: "로손 은행 (Lawson Bank)",
     location: "로손(LAWSON) 편의점",
-    feeInfo: "카드사별로 110엔~220엔의 기기 이용 수수료가 부과될 수 있음",
-    cardTips: "세븐일레븐이나 미니스톱이 주변에 없을 때 비상용으로 활용 권장",
+    feeInfo: "카드에 따라 110엔~220엔의 기계 이용료가 붙을 수 있음",
+    cardTips: "세븐일레븐이나 이온뱅크 기계가 근처에 없을 때 비상용으로 활용",
   },
   {
-    bank: "JP Post (우초은행)",
-    location: "전국 우체국 및 패밀리마트 일부",
+    bank: "유초은행 (우체국 ATM)",
+    location: "전국 우체국",
     feeInfo:
-      "해외 카드 이용 가능하나 영업시간(09:00~17:00) 외에는 닫힐 수 있음",
-    cardTips: "녹색 우체국 ATM. 비자/마스터카드 국제현금카드 출금 가능",
+      "해외 카드 출금 가능하지만 우체국 영업시간 밖에는 기계가 닫혀 있을 수 있음",
+    cardTips: "초록색 우체국 기계. 비자·마스터 국제 현금카드 출금 가능",
   },
+];
+
+/** Things to check on Korean travel cards before relying on one. */
+export const travelCardNotes: string[] = [
+  "토스뱅크 외화통장 체크카드는 2026년 7월부터 해외 출금이 한 달 5회를 넘으면 수수료가 붙어요. 한 번에 넉넉히 뽑으세요.",
+  "카드 혜택(면제 기계, 횟수, 한도)은 자주 바뀌니 출국 전 카드 앱 공지를 꼭 확인하세요.",
+  "출금 화면에서 '원화로 결제(원화 환산)'를 고르면 환율이 나빠져요. 반드시 엔화로 진행하세요.",
 ];
 
 export interface SizeChartEntry {

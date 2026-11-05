@@ -139,6 +139,20 @@ export function EmergencyScreen() {
                 icon="call-outline"
                 onPress={() => setCallTarget(contact)}
               />
+              {contact.afterHoursPhone ? (
+                <Button
+                  label={`근무시간 외 긴급 (${contact.afterHoursPhone})`}
+                  icon="moon-outline"
+                  variant="danger"
+                  onPress={() =>
+                    setCallTarget({
+                      ...contact,
+                      name: `${contact.name} 근무시간 외 긴급`,
+                      phone: contact.afterHoursPhone!,
+                    })
+                  }
+                />
+              ) : null}
             </Card>
           ))}
         </View>

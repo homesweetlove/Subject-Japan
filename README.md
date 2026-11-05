@@ -10,6 +10,8 @@ The architecture keeps shared React Native screens/domain logic behind provider 
 
 **2026-10-22 reliability audit:** storage/restore ordering, native operation lifecycles, shopping usability, notifications and dependency alignment were improved. See the [verification record (Korean)](docs/quality-audit.md) for actual results, failed attempts and release blockers. GitHub runners are blocked by account billing/spending limits; new Android/iOS native compilation and device validation are still unverified. JS bundle export is not native compilation.
 
+**2026-11-05 fact refresh:** emergency numbers (JNTO hotline 050-3816-2787, Korean embassy and consulate after-hours lines, new Yokohama and Kobe consulates), transit pass prices (Tokyo Subway Ticket ¥1,000/¥1,500/¥2,000, Osaka Amazing Pass ¥3,500), taxi tariffs (Tokyo 2026-04-20, Osaka 2025-11-05, Fukuoka), ATM and travel-card notes, coupon end dates, the 2026 power-bank rule and the ¥3,000 departure tax were re-checked against official sources.
+
 A Japan travel utility app for Korean travelers, targeting both Android and iPhone. Its first feature is **shopping phrases that remember your translations and personal sizes**.
 
 ## Implementation and verification status

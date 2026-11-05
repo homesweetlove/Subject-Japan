@@ -46,6 +46,8 @@ import type { Expense } from "./expenses";
 import type { Departure } from "../trip/departure";
 import {
   atmGuides,
+  ATM_CHECKED_ON,
+  travelCardNotes,
   calculateSmartPayment,
   calculateWarikan,
   sizeChartData,
@@ -1106,8 +1108,13 @@ export function PayScreen({
             </Label>
             <Label muted size={13}>
               트래블로그, 트래블월렛, 토스 외화통장 카드로 현지 엔화 현금을
-              출금할 때 수수료 무료 ATM 안내예요.
+              뽑을 때 어느 기계가 유리한지 정리했어요. ({ATM_CHECKED_ON} 확인)
             </Label>
+            {travelCardNotes.map((note) => (
+              <Label key={note} muted size={12}>
+                • {note}
+              </Label>
+            ))}
           </Card>
 
           {atmGuides.map((guide, idx) => (

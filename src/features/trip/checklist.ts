@@ -12,16 +12,18 @@ export const travelChecklistItems: ChecklistItem[] = [
   {
     id: "prep-plug",
     category: "prep",
-    title: "110V 11자 돼지코 어댑터",
+    title: "11자 돼지코 어댑터",
     jpName: "変換プラグ",
-    description: "일본은 100V 전압을 사용합니다. 멀티탭이나 돼지코 필수 지참",
+    description:
+      "일본은 100V·11자 콘센트예요. 휴대폰·노트북 충전기는 대부분 그대로 되지만 드라이기·고데기는 전압 확인",
   },
   {
     id: "prep-battery",
     category: "prep",
     title: "보조배터리 (기내 수하물)",
     jpName: "モバイルバッテリー",
-    description: "위탁 수하물(부치는 짐) 금지, 반드시 기내에 들고 탑승",
+    description:
+      "부치는 짐 금지. 2026년 4월부터 1인 2개·개당 160Wh 이하만 기내 반입, 비행 중 사용·충전 금지. 단자에 테이프를 붙이거나 파우치에 넣고 선반 말고 몸 가까이 두세요",
   },
   {
     id: "prep-sim",
@@ -43,6 +45,14 @@ export const travelChecklistItems: ChecklistItem[] = [
     title: "Visit Japan Web 입국 QR 등록",
     jpName: "Visit Japan Web",
     description: "입국 심사 및 세관 신고 QR 사전 등록",
+  },
+  {
+    id: "prep-departure-tax",
+    category: "prep",
+    title: "일본 출국세 3,000엔 확인",
+    jpName: "国際観光旅客税",
+    description:
+      "2026년 7월 1일 출국분부터 1인 1,000엔에서 3,000엔으로 올랐어요. 보통 항공권 값에 포함되니 따로 낼 일은 없지만 총액 비교 때 참고",
   },
 
   // Drugstore

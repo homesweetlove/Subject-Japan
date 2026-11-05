@@ -9,6 +9,8 @@ import {
   comparePassVsSuica,
   shinkansenBaggageRules,
   subwayLineCodes,
+  taxiTariffs,
+  TRANSIT_CHECKED_ON,
   transitPasses,
   type TransitPassOption,
 } from "./transit";
@@ -91,6 +93,9 @@ export function TransitScreen({
             <Label muted size={13}>
               관심 있는 교통 패스와 하루 예상 승차 횟수를 입력하면 무엇이 더
               이득인지 계산해 드려요.
+            </Label>
+            <Label muted size={12}>
+              패스 가격은 {TRANSIT_CHECKED_ON} 운영사 안내 기준입니다.
             </Label>
 
             <Label size={13} weight="700">
@@ -178,6 +183,11 @@ export function TransitScreen({
             <Label muted size={13}>
               도카이도·산요·규슈 신칸센(도쿄-나고야-교토-신오사카-하카타 구간)
               탑승 시 큰 캐리어는 반드시 사전 예약이 필요합니다.
+            </Label>
+            <Label muted size={12}>
+              2025년 7월부터 도카이도·산요 신칸센 일부 열차는 객차 사이 공간의
+              '특대 짐 코너'를 예약 없이 시험 운영 중입니다. 자리가 없을 수
+              있으니 예약을 기본으로 생각하세요.
             </Label>
           </Card>
 
@@ -369,11 +379,14 @@ export function TransitScreen({
                   : "원화 환산을 보려면 결제·할인에서 환율을 입력해 주세요."}
               </Label>
               <Label muted size={12}>
-                기본요금 ¥{taxi.baseFareYen} 포함
+                기본요금 ¥{taxi.baseFareYen} (첫 {taxiTariffs[taxiCity].baseKm}
+                km), 이후 {taxiTariffs[taxiCity].stepM}m마다 ¥
+                {taxiTariffs[taxiCity].stepYen}
                 {isNight
-                  ? ` (심야할증 +¥${taxi.nightSurchargeYen.toLocaleString()} 반영)`
+                  ? ` · 심야할증 +¥${taxi.nightSurchargeYen.toLocaleString()} 반영`
                   : ""}
-                . 신호 대기 및 교통 체증에 따라 추가 요금이 발생할 수 있습니다.
+                . 막히는 길에서는 시간 요금이 더 붙고, 앱으로 부르면 호출료가 따로
+                나옵니다. 요금 기준 {taxiTariffs[taxiCity].since} 개정.
               </Label>
             </View>
           </Card>

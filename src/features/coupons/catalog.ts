@@ -16,7 +16,7 @@ export const couponCatalog: readonly Coupon[] = [
       "면세 구매 조건을 충족하는 방문객. 조건을 충족한 일시 귀국 일본인도 대상이며 외교관 면세는 제외됩니다.",
     minimumSpend: "대상 상품 합계 세전 10,000엔 이상 5%, 30,000엔 이상 7%",
     validity: "고정 종료일 미표기 · 결제 당일 공식 쿠폰에서 확인",
-    checkedOn: "2026-09-21",
+    checkedOn: "2026-11-05",
     stores: "일본 돈키호테·APITA·PIAGO 대상 점포 (일부 제외)",
     steps: [
       "공식 페이지에서 최신 쿠폰을 엽니다.",
@@ -45,13 +45,16 @@ export const couponCatalog: readonly Coupon[] = [
     minimumSpend: "세전 3,000엔 이상 구매",
     validity:
       "발급받은 카드의 유효기간 확인 · 안내 페이지에 고정 종료일 미표기",
-    checkedOn: "2026-09-21",
+    checkedOn: "2026-11-05",
     stores: "다카시마야 대상 점포 · JR 나고야 다카시마야 및 인접 쇼핑센터 제외",
     steps: [
       "쇼핑 전에 지정 카운터에 여권을 제시하고 카드를 발급받습니다.",
       "결제 시 카드를 제시합니다. 현금·신용카드·UnionPay·Alipay·WeChat Pay 결제가 안내되어 있습니다.",
     ],
-    exclusions: ["시계·보석·럭셔리 브랜드 등 일부 상품과 매장은 제외됩니다."],
+    exclusions: [
+      "시계·보석·럭셔리 브랜드 등 일부 상품과 매장은 제외됩니다.",
+      "상위 등급인 프리미엄 골드 카드는 현재 신규 발급이 중단되어 있습니다.",
+    ],
     stacking: "다른 행사·할인과의 중복 적용은 해당 점포에서 확인하세요.",
     officialUrl:
       "https://www.takashimaya.co.jp/store/special/shopperscard/index_en.html",
@@ -69,7 +72,7 @@ export const couponCatalog: readonly Coupon[] = [
       "일본 입국 후 6개월 미만인 외국 국적 고객. 여권 제시가 필요합니다.",
     minimumSpend: "공식 안내에 최소 구매금액 미표기 · 발급 시 확인",
     validity: "발급 쿠폰에서 확인 · 안내 페이지에 고정 종료일 미표기",
-    checkedOn: "2026-09-21",
+    checkedOn: "2026-11-05",
     stores: "다이마루 도쿄점만 해당 · 12층 면세 카운터에서 발급 안내",
     steps: [
       "여권을 지참해 지정 카운터에서 쿠폰을 발급받습니다.",
@@ -78,6 +81,7 @@ export const couponCatalog: readonly Coupon[] = [
     exclusions: [
       "2024년 3월 1일부터 대상 매장은 화장품으로 한정되며 일부 화장품도 제외됩니다.",
       "전 상품·전 지점 할인 쿠폰이 아닙니다. 식품·세일 상품·시계·럭셔리 브랜드 등은 제외됩니다.",
+      "2026년 11월 새 면세 방식(환급형)부터 환급 처리 수수료가 세전 금액의 최대 2.3%까지 붙을 수 있습니다. 환급액이 그만큼 줄어요.",
     ],
     stacking: "다른 혜택과의 중복 적용은 점포에서 확인하세요.",
     officialUrl: "https://www.daimaru.co.jp/tokyo/service/gaikoku.html",

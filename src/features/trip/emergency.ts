@@ -6,7 +6,16 @@ export interface EmergencyContact {
   phone: string;
   description: string;
   availableHours: string;
+  /** Duty phone outside office hours (consular emergencies, lost passports). */
+  afterHoursPhone?: string;
 }
+
+/**
+ * Consular numbers are copied from each mission's own page on
+ * overseas.mofa.go.kr and the embassy's list of consulates in Japan
+ * (checked 2026-11-05). JNTO's hotline from japan.travel / jnto.go.jp.
+ */
+export const EMERGENCY_CHECKED_ON = "2026-11-05";
 
 export const emergencyContacts: EmergencyContact[] = [
   {
@@ -34,37 +43,50 @@ export const emergencyContacts: EmergencyContact[] = [
     category: "medical",
     phone: "#7119",
     description:
-      "병원에 가야 할지, 구급차를 불러야 할지 망설여질 때 의사·간호사 상담 (도쿄·오사카·후쿠오카·삿포로 등 주요 지역)",
+      "병원에 가야 할지, 구급차를 불러야 할지 망설여질 때 의사·간호사 상담. 도쿄·오사카·후쿠오카·삿포로 등 실시 지역에서만 연결돼요. 안 되면 119로 거세요.",
     availableHours: "24시간 365일",
   },
   {
     id: "japan-visitor-hotline",
     name: "일본정부관광국 (JNTO) 핫라인",
-    jpName: "JNTO ビジターホットライン",
+    jpName: "Japan Visitor Hotline",
     category: "medical",
-    phone: "+81-50-3816-2720",
+    phone: "050-3816-2787",
     description:
-      "관광객을 위한 24시간 한국어 전화 안내 (사고·질병·자연재해 지원)",
-    availableHours: "24시간 한국어 지원",
+      "여행자를 위한 24시간 전화 안내. 한국어 가능 (사고·병·재해 때 도움, 일반 관광 안내)",
+    availableHours: "24시간 365일",
   },
   {
     id: "mofa-call-center",
     name: "외교부 영사콜센터 (한국)",
-    jpName: "韓国外交部領事コールセンター",
+    jpName: "韓国外交部 領事コールセンター",
     category: "consulate",
     phone: "+82-2-3210-0404",
     description:
-      "해외 위급상황 시 24시간 상담 및 무료 통역(한국어↔일본어) 연결",
+      "해외 사건사고 24시간 상담 (유료 국제전화). 스마트폰 '영사콜센터' 앱으로 무료 통화도 가능해요.",
     availableHours: "24시간 연중무휴",
   },
   {
     id: "embassy-tokyo",
-    name: "주일 대한민국 대사관 (도쿄)",
-    jpName: "駐日本国大韓民国大使館 (東京)",
+    name: "주일본 대한민국 대사관 (도쿄)",
+    jpName: "駐日本国大韓民国大使館 (東京・南麻布)",
     category: "consulate",
-    phone: "+81-3-3452-7401",
-    description: "도쿄 미나토구 소재. 야간·휴일 사건사고 당직: 070-1074-6876",
-    availableHours: "평일 09:00~17:00 (사건사고 24시간)",
+    phone: "+81-3-3452-7611",
+    description:
+      "영사과 +81-3-3455-2601 (도쿄·지바·이바라키·사이타마·도치기·군마). 휴일·평일 18시 이후 사건사고는 아래 긴급 전화로.",
+    availableHours: "평일 근무시간",
+    afterHoursPhone: "+81-70-2153-5454",
+  },
+  {
+    id: "consulate-yokohama",
+    name: "주요코하마 대한민국 총영사관",
+    jpName: "駐横浜大韓民国総領事館",
+    category: "consulate",
+    phone: "+81-45-621-4531",
+    description:
+      "가나가와 등 관할. 근무시간 외 사건사고는 영사콜센터(+82-2-3210-0404)로 연결돼요.",
+    availableHours: "평일 근무시간",
+    afterHoursPhone: "+82-2-3210-0404",
   },
   {
     id: "consulate-osaka",
@@ -72,8 +94,20 @@ export const emergencyContacts: EmergencyContact[] = [
     jpName: "駐大阪大韓民国総領事館",
     category: "consulate",
     phone: "+81-6-4256-2345",
-    description: "간사이(오사카·교토·고베·나라). 야간 긴급: 090-5050-2246",
-    availableHours: "평일 09:00~17:00 (사건사고 24시간)",
+    description:
+      "오사카·교토·나라 등 간사이 (효고현은 고베 총영사관). 민원 평일 09:00~16:00.",
+    availableHours: "평일 근무시간",
+    afterHoursPhone: "+81-90-3050-0746",
+  },
+  {
+    id: "consulate-kobe",
+    name: "주고베 대한민국 총영사관",
+    jpName: "駐神戸大韓民国総領事館",
+    category: "consulate",
+    phone: "+81-78-221-4853",
+    description: "고베 등 효고현 관할.",
+    availableHours: "평일 근무시간",
+    afterHoursPhone: "+81-90-5099-0414",
   },
   {
     id: "consulate-fukuoka",
@@ -81,8 +115,10 @@ export const emergencyContacts: EmergencyContact[] = [
     jpName: "駐福岡大韓民国総領事館",
     category: "consulate",
     phone: "+81-92-771-0461",
-    description: "규슈(후쿠오카·유후인·벳푸). 야간 긴급: 090-1367-3638",
-    availableHours: "평일 09:00~17:00 (사건사고 24시간)",
+    description:
+      "규슈·오키나와. 근무시간 외 여권 분실은 +81-80-2956-6736, 사건사고는 아래 긴급 전화.",
+    availableHours: "평일 09:00~12:00, 13:30~17:30",
+    afterHoursPhone: "+81-80-8588-2806",
   },
   {
     id: "consulate-sapporo",
@@ -90,8 +126,9 @@ export const emergencyContacts: EmergencyContact[] = [
     jpName: "駐札幌大韓民国総領事館",
     category: "consulate",
     phone: "+81-11-218-0288",
-    description: "홋카이도 전역. 야간 긴급: 090-7650-5154",
-    availableHours: "평일 09:00~17:00 (사건사고 24시간)",
+    description: "홋카이도 관할.",
+    availableHours: "평일 근무시간",
+    afterHoursPhone: "+81-80-1971-0288",
   },
   {
     id: "consulate-nagoya",
@@ -99,8 +136,9 @@ export const emergencyContacts: EmergencyContact[] = [
     jpName: "駐名古屋大韓民国総領事館",
     category: "consulate",
     phone: "+81-52-586-9221",
-    description: "아이치·기후·미에. 야간 긴급: 090-1623-6490",
-    availableHours: "평일 09:00~17:00 (사건사고 24시간)",
+    description: "아이치·기후·미에 등 관할.",
+    availableHours: "평일 근무시간",
+    afterHoursPhone: "+81-80-4221-9500",
   },
 ];
 
