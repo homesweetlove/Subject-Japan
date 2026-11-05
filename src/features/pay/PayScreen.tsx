@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import {
   Button,
   Card,
+  Icon,
   Label,
   ScreenHeader,
   SubNav,
@@ -46,7 +47,10 @@ import {
   sizeChartData,
 } from "./cashUtilities";
 
+export type PayTab = "calculator" | "taxfree" | "customs" | "coins" | "atm";
+
 export function PayScreen({
+  initialTab = "calculator",
   rate,
   onRate,
   dutyFreeReceipts = [],
@@ -55,6 +59,7 @@ export function PayScreen({
   onDeleteReceipt,
   onToggleAutoRefresh,
 }: {
+  initialTab?: PayTab;
   rate: ExchangeRate | null;
   onRate: (r: ExchangeRate) => Promise<void>;
   dutyFreeReceipts?: DutyFreeReceipt[];
@@ -64,9 +69,7 @@ export function PayScreen({
   onToggleAutoRefresh?: (enabled: boolean) => Promise<void>;
 }) {
   const c = useTheme();
-  const [tab, setTab] = useState<
-    "calculator" | "taxfree" | "customs" | "coins" | "atm"
-  >("calculator");
+  const [tab, setTab] = useState<PayTab>(initialTab);
 
   // Calculator states
   const [price, setPrice] = useState("");
@@ -594,7 +597,10 @@ export function PayScreen({
           {!!notice && <Label>{notice}</Label>}
         </>
       ) : tab === "taxfree" ? (
-        <TaxFreeGuide onOpenTracker={() => setTab("customs")} />
+        <TaxFreeGuide
+          onOpenTracker={() => setTab("customs")}
+          waitingReceipts={refunds.waitingCount}
+        />
       ) : tab === "customs" ? (
         <>
           {/* Duty Free & Customs Tracker Mode */}
@@ -1183,11 +1189,33 @@ function ReceiptRefund({
   const status = item.refundStatus ?? "waiting";
   const daysLeft = refundDaysLeft(item, now);
   const late = status === "waiting" && daysLeft < 0;
+  // Anything used up in Japan cannot pass the customs check.
+  const keepSealed =
+    status === "waiting" && !late && item.category !== "general";
   return (
     <View style={{ gap: 8 }}>
       <Label size={13} weight="600">
         돌려받을 세금 약 ¥{tax.toLocaleString()}
       </Label>
+      {keepSealed && (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            alignSelf: "flex-start",
+            backgroundColor: c.accentSoft,
+            borderRadius: 8,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+          }}
+        >
+          <Icon name="hand-left-outline" size={14} color={c.accentInk} />
+          <Text style={{ color: c.accentInk, fontSize: 12, fontWeight: "700" }}>
+            출국 전까지 일본에서 뜯거나 쓰지 마세요
+          </Text>
+        </View>
+      )}
       {status === "waiting" && (
         <Label size={12} style={{ color: late ? c.error : c.accentInk }}>
           {late

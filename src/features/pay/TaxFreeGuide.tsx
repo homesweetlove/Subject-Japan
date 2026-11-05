@@ -9,10 +9,19 @@ import {
   styles,
   type IconName,
 } from "../../ui/components";
+import { Choice } from "../../ui/Choice";
+import { Field } from "../../ui/Field";
 import { Press } from "../../ui/Press";
 import { ShowCard, type ShowCardContent } from "../../ui/ShowCard";
 import { radius, useTheme } from "../../ui/theme";
 import { openTravelLink } from "../guides/links";
+import { japanDateTime, parseJapanDateTime } from "../trip/countdown";
+import {
+  recommendedArrival,
+  shopRefundNotes,
+  taxFreeAirports,
+  type AirportId,
+} from "./airportTaxFree";
 import { REFUND_METHOD_START, REFUND_WINDOW_DAYS } from "./taxFreeTracker";
 
 /*
@@ -121,6 +130,10 @@ const phrases: (ShowCardContent & { key: string; korean: string })[] = [
 
 const links: { label: string; url: string }[] = [
   {
+    label: "일본 세관 한국어 안내 (PDF)",
+    url: "https://www.customs.go.jp/kaigairyoko/taxrefund/refund_korea.pdf",
+  },
+  {
     label: "일본정부관광국 한국어 안내",
     url: "https://www.japan.travel/ko/kr/topic/2026nyeon-11weol-1ilbuteo-sobise-myeonse-jedoga-byeongyeongdoebnida/",
   },
@@ -130,7 +143,14 @@ const links: { label: string; url: string }[] = [
   },
 ];
 
-export function TaxFreeGuide({ onOpenTracker }: { onOpenTracker: () => void }) {
+export function TaxFreeGuide({
+  onOpenTracker,
+  waitingReceipts = 0,
+}: {
+  onOpenTracker: () => void;
+  /** Receipts still waiting for the customs check, from the tracker. */
+  waitingReceipts?: number;
+}) {
   const c = useTheme();
   const [phrase, setPhrase] = useState<ShowCardContent | null>(null);
   const [linkError, setLinkError] = useState("");
@@ -161,6 +181,11 @@ export function TaxFreeGuide({ onOpenTracker }: { onOpenTracker: () => void }) {
       </View>
 
       <Journey />
+
+      <AirportPlanner
+        waitingReceipts={waitingReceipts}
+        onLinkError={setLinkError}
+      />
 
       <Card>
         <Label weight="700" size={17}>
@@ -280,6 +305,27 @@ export function TaxFreeGuide({ onOpenTracker }: { onOpenTracker: () => void }) {
           환급 방법(카드·앱·현금), 걸리는 시간, 수수료는 매장이나 환급 업체마다
           달라요. 결제할 때 물어보세요. 공항에서 현금으로 받으면 수수료가 붙는
           곳이 있어요.
+        </Label>
+      </Card>
+
+      <Card>
+        <Label weight="700" size={17}>
+          매장별 환급 방법
+        </Label>
+        {shopRefundNotes.map((item) => (
+          <View key={item.shop} style={{ gap: 2 }}>
+            <Label size={15} weight="700">
+              {item.shop}
+            </Label>
+            <Label size={14}>{item.note}</Label>
+            <Label muted size={12}>
+              {item.checkedOn} 확인
+            </Label>
+          </View>
+        ))}
+        <Label muted size={12}>
+          매장이 직접 발표한 내용만 적었어요. 계산할 때 "환급 방법, 걸리는 기간,
+          수수료" 세 가지를 물어보세요. 아래 일본어 문장을 보여줘도 돼요.
         </Label>
       </Card>
 
@@ -699,5 +745,204 @@ function RefundArt() {
         <Icon name="arrow-undo" size={22} color={c.success} />
       </View>
     </View>
+  );
+}
+
+/**
+ * Pick the departure airport: where its customs kiosks are, whether it
+ * has a cash refund machine, its official pages, and when to arrive.
+ */
+function AirportPlanner({
+  waitingReceipts,
+  onLinkError,
+}: {
+  waitingReceipts: number;
+  onLinkError: (message: string) => void;
+}) {
+  const c = useTheme();
+  const [airportId, setAirportId] = useState<AirportId>("kix");
+  const airport = taxFreeAirports.find((a) => a.id === airportId)!;
+  const [date, setDate] = useState(() =>
+    japanDateTime(Date.now()).slice(0, 10),
+  );
+  const [time, setTime] = useState("");
+  const [receipts, setReceipts] = useState(String(waitingReceipts));
+  const [holiday, setHoliday] = useState(false);
+  let plan: ReturnType<typeof recommendedArrival> | null = null;
+  let planError = "";
+  if (time.trim()) {
+    try {
+      plan = recommendedArrival({
+        departure: parseJapanDateTime(date.trim(), time.trim()),
+        receipts: Number(receipts) || 0,
+        holiday,
+      });
+    } catch (e) {
+      planError = e instanceof Error ? e.message : "시각을 확인해 주세요.";
+    }
+  }
+  const open = (url: string) => {
+    onLinkError("");
+    void openTravelLink(url).catch((e: Error) => onLinkError(e.message));
+  };
+  return (
+    <Card>
+      <Label weight="700" size={17}>
+        내가 떠나는 공항
+      </Label>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        {taxFreeAirports.map((a) => (
+          <Choice
+            key={a.id}
+            label={a.name}
+            selected={a.id === airportId}
+            onPress={() => setAirportId(a.id)}
+          />
+        ))}
+      </View>
+      <View style={{ gap: 8 }}>
+        <Label size={14} weight="700">
+          세관 면세 기계 위치
+        </Label>
+        {airport.kiosk.map((line) => (
+          <View
+            key={line}
+            style={[styles.row, { alignItems: "flex-start", gap: 10 }]}
+          >
+            <Icon name="location-outline" size={18} color={c.accent} />
+            <Label size={14} style={{ flex: 1 }}>
+              {line}
+            </Label>
+          </View>
+        ))}
+        {airport.cashRefund ? (
+          <View style={[styles.row, { alignItems: "flex-start", gap: 10 }]}>
+            <Icon name="cash-outline" size={18} color={c.success} />
+            <Label size={14} style={{ flex: 1 }}>
+              {airport.cashRefund}
+            </Label>
+          </View>
+        ) : null}
+        {airport.visitJapanWeb ? (
+          <Label muted size={12}>
+            이 공항은 출발 로비 전용 와이파이에서 비짓 재팬 웹으로도 세관 확인을
+            할 수 있어요.
+          </Label>
+        ) : null}
+      </View>
+      <View style={{ gap: 8 }}>
+        {airport.liveWaitUrl ? (
+          <Button
+            label="보안검사 실시간 대기 시간 보기 (공식)"
+            icon="time-outline"
+            onPress={() => open(airport.liveWaitUrl!)}
+          />
+        ) : null}
+        {airport.guideUrl ? (
+          <Button
+            label={`${airport.name} 공항 출발 안내 열기`}
+            icon="open-outline"
+            variant="ghost"
+            onPress={() => open(airport.guideUrl!)}
+          />
+        ) : null}
+        <Label muted size={12}>
+          세관 면세 기계 줄은 어느 공항도 실시간으로 공개하지 않아요.
+          {airport.liveWaitUrl
+            ? " 보안검사 대기 시간은 공항이 공식 페이지에 올려요."
+            : " 이 공항의 실시간 대기 시간은 공항 안 안내 화면으로 확인하세요."}
+        </Label>
+      </View>
+
+      <View
+        style={{
+          gap: 10,
+          borderTopWidth: 1,
+          borderColor: c.line,
+          paddingTop: 16,
+        }}
+      >
+        <Label size={15} weight="700">
+          몇 시까지 공항에 가야 할까
+        </Label>
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <Field
+              label="출발 날짜 (YYYY-MM-DD)"
+              value={date}
+              onChange={setDate}
+              maxLength={10}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Field
+              label="비행기 출발 (HH:mm)"
+              value={time}
+              onChange={setTime}
+              maxLength={5}
+              placeholder="예: 14:30"
+            />
+          </View>
+        </View>
+        <Field
+          label="세관 확인할 면세 영수증 수"
+          value={receipts}
+          onChange={setReceipts}
+          numeric
+          maxLength={3}
+        />
+        <Choice
+          label="연휴·성수기에 떠나요"
+          checkbox
+          selected={holiday}
+          onPress={() => setHoliday(!holiday)}
+        />
+        {planError ? (
+          <Text accessibilityRole="alert" style={{ color: c.error }}>
+            {planError}
+          </Text>
+        ) : null}
+        {plan ? (
+          <View
+            style={{
+              backgroundColor: c.accentSoft,
+              borderRadius: radius.md,
+              padding: 14,
+              gap: 6,
+            }}
+          >
+            <Label size={13} style={{ color: c.accentInk }} weight="700">
+              늦어도 이때까지 공항 도착
+            </Label>
+            <Text
+              style={{
+                color: c.ink,
+                fontSize: 30,
+                fontWeight: "800",
+                fontVariant: ["tabular-nums"],
+              }}
+            >
+              {japanDateTime(plan.arriveAt).slice(0, 10) === date.trim()
+                ? japanDateTime(plan.arriveAt).slice(11)
+                : japanDateTime(plan.arriveAt)}
+            </Text>
+            <Label size={13}>
+              출발 {Math.floor(plan.minutes / 60)}시간
+              {plan.minutes % 60 ? ` ${plan.minutes % 60}분` : ""} 전 (일본 시각)
+            </Label>
+            {plan.parts.map((part) => (
+              <Label key={part.label} muted size={12}>
+                {part.label} +{part.minutes}분
+              </Label>
+            ))}
+          </View>
+        ) : null}
+        <Label muted size={12}>
+          앱이 어림한 시간이에요. 항공사 체크인 마감 시각이 더 이르면 그쪽을
+          따르세요. 세관 확인 때문에 비행기를 놓쳐도 항공사·세관이 책임지지
+          않아요.
+        </Label>
+      </View>
+    </Card>
   );
 }

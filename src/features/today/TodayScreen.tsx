@@ -29,6 +29,11 @@ import {
 } from "./model";
 import { notifier, type PermissionState } from "./notifications";
 import {
+  japanDay,
+  refundSummary,
+  type DutyFreeReceipt,
+} from "../pay/taxFreeTracker";
+import {
   describeWeather,
   fetchWeather,
   isWeatherStale,
@@ -47,9 +52,12 @@ export function TodayScreen({
   onWeatherCity,
   onWeather,
   onNotifications,
+  onOpenRefunds,
 }: {
   state: LocalState;
   onNavigate: (tab: AppTab, section?: TripSection) => void;
+  /** Opens PAY on the tax-free receipts list. */
+  onOpenRefunds?: () => void;
   onWeatherCity: (id: WeatherCityId) => Promise<void>;
   onWeather: (w: WeatherSnapshot) => Promise<void>;
   onNotifications: (s: NotificationSettings) => Promise<void>;
@@ -114,6 +122,11 @@ export function TodayScreen({
           </>
         )}
       </Card>
+      <RefundCard
+        receipts={state.dutyFreeReceipts}
+        now={now}
+        onOpen={onOpenRefunds ?? (() => onNavigate("pay"))}
+      />
       {reminder && (
         <LastTrainCard
           reminder={reminder}
@@ -648,6 +661,70 @@ function NotificationCard({
           <Label size={13}>{notice}</Label>
         </View>
       )}
+    </Card>
+  );
+}
+
+/**
+ * Tax still owed back under the refund method. Shown only while there is
+ * something to do or to receive; the nearest 90-day deadline turns red
+ * in its last week.
+ */
+function RefundCard({
+  receipts,
+  now,
+  onOpen,
+}: {
+  receipts: DutyFreeReceipt[];
+  now: number;
+  onOpen: () => void;
+}) {
+  const c = useTheme();
+  const summary = refundSummary(receipts, now);
+  if (!summary.expectedJpy && !summary.lostJpy) return null;
+  const daysLeft =
+    summary.nextDeadline === null
+      ? null
+      : Math.ceil((summary.nextDeadline - now) / 86400000);
+  const urgent = daysLeft !== null && daysLeft <= 7;
+  return (
+    <Card>
+      <SectionTitle icon="receipt-outline" title="돌려받을 면세 세금" />
+      <Press
+        accessibilityRole="button"
+        accessibilityLabel={`돌려받을 면세 세금 약 ${summary.expectedJpy}엔, 면세 기록 보기`}
+        onPress={onOpen}
+        style={{ gap: 4 }}
+      >
+        <Text
+          style={{
+            color: c.ink,
+            fontSize: 28,
+            fontWeight: "800",
+            fontVariant: ["tabular-nums"],
+          }}
+        >
+          약 ¥{summary.expectedJpy.toLocaleString()}
+        </Text>
+        {summary.nextDeadline !== null && daysLeft !== null ? (
+          <Label size={14} style={{ color: urgent ? c.error : c.accentInk }}>
+            세관 확인 전 영수증 {summary.waitingCount}장 · 마감{" "}
+            {japanDay(summary.nextDeadline)} ({daysLeft}일 남음)
+          </Label>
+        ) : (
+          <Label muted size={14}>
+            세관 확인을 마쳤어요. 환급이 들어오면 '환급 받음'으로 바꿔 주세요.
+          </Label>
+        )}
+        {summary.lostJpy > 0 && (
+          <Label size={13} style={{ color: c.error }}>
+            90일이 지나 못 받게 된 세금 약 ¥{summary.lostJpy.toLocaleString()}
+          </Label>
+        )}
+        <Label muted size={12}>
+          짐 맡기기 전에 공항 세관 기계에 여권을 대야 돌려받아요.
+        </Label>
+      </Press>
     </Card>
   );
 }

@@ -302,3 +302,48 @@ test("new tax-free refund guide and receipt tracking", async ({ page }) => {
     page.getByText("돌려받을 예정 약 ¥0 · 받은 돈 약 ¥1,000", { exact: true }),
   ).toBeVisible();
 });
+
+test("airport planner, keep-sealed badge and Today refund card", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "나중에 입력하기", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "결제", exact: true }).click();
+  await page.getByRole("button", { name: "새 면세 안내", exact: true }).click();
+  await page.getByRole("button", { name: "나리타", exact: true }).click();
+  await expect(
+    page.getByRole("button", {
+      name: "보안검사 실시간 대기 시간 보기 (공식)",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("textbox", { name: "비행기 출발 (HH:mm)", exact: true })
+    .fill("14:00");
+  await expect(page.getByText("12:00", { exact: true })).toBeVisible();
+
+  await page
+    .getByRole("button", { name: "내 면세 영수증 기록하기", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "구매처 (매장명)", exact: true })
+    .fill("마츠모토키요시 신사이바시점");
+  await page
+    .getByRole("textbox", { name: "결제한 금액 (엔, 세금 포함)", exact: true })
+    .fill("5500");
+  await page.getByRole("button", { name: "영수증 등록", exact: true }).click();
+  await expect(
+    page.getByText("출국 전까지 일본에서 뜯거나 쓰지 마세요", { exact: true }),
+  ).toBeVisible();
+
+  await page.getByRole("tab", { name: "오늘", exact: true }).click();
+  await expect(
+    page.getByText("돌려받을 면세 세금", { exact: true }),
+  ).toBeVisible();
+  await page.getByText("약 ¥500", { exact: true }).click();
+  await expect(
+    page.getByText("등록된 쇼핑 내역 (1건)", { exact: true }),
+  ).toBeVisible();
+});

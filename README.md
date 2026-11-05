@@ -29,7 +29,9 @@ The feature list below describes **implemented source code and supported UI path
 - PAY & finance helpers:
   - Optional reference exchange-rate refresh (off by default; refreshes rates older than 6 hours when PAY opens), manual exchange rate, JPY↔KRW conversions from entered/fetched rates
   - Sequential discount / tax-free / later-refund / fee / cashback calculator
-  - New tax-free guide (refund method from 2026-11-01): old vs new comparison, hand-drawn shop → customs kiosk → refund illustrations, airport order, cases with no refund, Japanese phrases to show staff, Japan Tourism Agency and JNTO links
+  - New tax-free guide (refund method from 2026-11-01): old vs new comparison, hand-drawn shop → customs kiosk → refund illustrations, airport order, cases with no refund, Japanese phrases to show staff, Japan Tourism Agency, JNTO and Japan Customs (Korean) links
+  - Per departure airport: customs kiosk locations, cash refund machines and official guides (Kansai, Haneda, Narita, Chubu, Fukuoka, New Chitose, Naha), a link to Narita's official live security waiting times, and an "arrive by" estimate from flight time, receipt count, busy hours and holidays (no airport publishes customs kiosk queues)
+  - Shop refund methods (only what shops announced, with check dates), a "do not open in Japan" mark on consumable receipts, and a Today card with refunds due and the nearest 90-day deadline
   - Tax-free receipts & customs-limit tracker: per-receipt method (old/new) and tax rate (10%/8%), expected refund, 90-day deadline and refund status, same-store same-day ¥5,000 (tax-excluded) check, and Korea's $800 entry allowance with alcohol (2 bottles / 2 L / $400), tobacco (200), and perfume (100 ml)
   - Coin-wallet optimizer: calculates a smart cash payment combination that minimizes received coins
   - Warikan (split-bill) calculator: per-person JPY/KRW share plus rounding up/down to the nearest ¥100

@@ -108,3 +108,54 @@ describe("refund method (purchases from 2026-11-01)", () => {
     expect(analysis.estimatedTaxSavedJpy).toBe(1000);
   });
 });
+
+import {
+  isBusyDeparture,
+  recommendedArrival,
+  taxFreeAirports,
+} from "../src/features/pay/airportTaxFree";
+import { validTravelLink } from "../src/features/guides/linkPolicy";
+
+describe("airport tax-free planning", () => {
+  const at = (iso: string) => Date.parse(`${iso}+09:00`);
+
+  it("marks Narita's busy security hours in Japan time", () => {
+    expect(isBusyDeparture(at("2026-11-20T09:30:00"))).toBe(true);
+    expect(isBusyDeparture(at("2026-11-20T13:00:00"))).toBe(false);
+    expect(isBusyDeparture(at("2026-11-20T17:10:00"))).toBe(true);
+    expect(isBusyDeparture(at("2026-11-20T22:00:00"))).toBe(false);
+  });
+
+  it("adds customs, busy-hour and holiday time to the 2 hour base", () => {
+    const quiet = recommendedArrival({
+      departure: at("2026-11-20T14:00:00"),
+      receipts: 0,
+      holiday: false,
+    });
+    expect(quiet.minutes).toBe(120);
+    const busy = recommendedArrival({
+      departure: at("2026-11-20T10:00:00"),
+      receipts: 5,
+      holiday: true,
+    });
+    // 120 base + (30 + 2 extra receipts * 5) + 20 busy + 30 holiday
+    expect(busy.minutes).toBe(210);
+    expect(busy.arriveAt).toBe(at("2026-11-20T06:30:00"));
+    // Very many receipts are capped at one extra hour for customs.
+    const many = recommendedArrival({
+      departure: at("2026-11-20T14:00:00"),
+      receipts: 40,
+      holiday: false,
+    });
+    expect(many.minutes).toBe(180);
+  });
+
+  it("only links to allowed official pages", () => {
+    for (const airport of taxFreeAirports) {
+      if (airport.guideUrl) expect(validTravelLink(airport.guideUrl)).toBe(true);
+      if (airport.liveWaitUrl)
+        expect(validTravelLink(airport.liveWaitUrl)).toBe(true);
+      expect(airport.kiosk.length).toBeGreaterThan(0);
+    }
+  });
+});

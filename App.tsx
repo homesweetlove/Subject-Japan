@@ -16,7 +16,7 @@ import { initialState, type LocalState } from "./src/domain/models";
 import { ProfileScreen } from "./src/features/profile/ProfileScreen";
 import { TranslationHub } from "./src/features/translation/TranslationHub";
 import { CardScreen } from "./src/features/cards/CardScreen";
-import { PayScreen } from "./src/features/pay/PayScreen";
+import { PayScreen, type PayTab } from "./src/features/pay/PayScreen";
 import { CouponHub } from "./src/features/coupons/CouponHub";
 import { TripScreen, type TripSection } from "./src/features/trip/TripScreen";
 import { TodayScreen, type AppTab } from "./src/features/today/TodayScreen";
@@ -91,7 +91,23 @@ function Application() {
     section: TripSection;
     nonce: number;
   }>({ section: "itinerary", nonce: 0 });
+  // Same remount trick for PAY, so Today can open the tax-free receipts.
+  const [payTarget, setPayTarget] = useState<{
+    tab: PayTab;
+    nonce: number;
+  }>({ tab: "calculator", nonce: 0 });
+  // Plain visits to PAY start on the calculator again.
+  const resetPay = () =>
+    setPayTarget((t) =>
+      t.tab === "calculator" ? t : { tab: "calculator", nonce: t.nonce + 1 },
+    );
+  const openRefunds = () => {
+    navigate("pay");
+    // Queued after navigate's reset, so this target wins.
+    setPayTarget((t) => ({ tab: "customs", nonce: t.nonce + 1 }));
+  };
   const navigate = (next: AppTab, section?: TripSection) => {
+    if (next === "pay") resetPay();
     if (next === "trip" && section)
       setTripTarget((t) => ({ section, nonce: t.nonce + 1 }));
     setTab(next);
@@ -387,6 +403,7 @@ function Application() {
                     onNotifications={(notifications) =>
                       commit((s) => ({ ...s, notifications }))
                     }
+                    onOpenRefunds={openRefunds}
                   />
                 ) : tab === "translate" ? (
                   <TranslationHub
@@ -441,6 +458,8 @@ function Application() {
                   />
                 ) : tab === "pay" ? (
                   <PayScreen
+                    key={payTarget.nonce}
+                    initialTab={payTarget.tab}
                     rate={state.exchangeRate}
                     onRate={(exchangeRate) =>
                       commit((s) => ({ ...s, exchangeRate }))
@@ -527,6 +546,7 @@ function Application() {
               tabs={tabs}
               value={tab}
               onChange={(next) => {
+                if (next === "pay") resetPay();
                 setTab(next);
                 scroll.current?.scrollTo({ y: 0, animated: false });
               }}
