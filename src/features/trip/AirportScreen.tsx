@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { AppState, Text, TextInput, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Text, TextInput, View } from "react-native";
 import { ScreenHeader, Button, Card, Label, styles } from "../../ui/components";
 import { Choice } from "../../ui/Choice";
 import { useTheme } from "../../ui/theme";
+import { useNow } from "../../ui/useNow";
 import { openTravelLink } from "../guides/links";
 import { airportRoutes, regions, type AirportRegion } from "./airports";
 import {
@@ -77,32 +78,14 @@ export function AirportScreen({
   const [openedSource, setOpenedSource] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [now, setNow] = useState(Date.now);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const route = airportRoutes.find((r) => r.id === routeId)!;
-  useEffect(() => {
-    let timer: ReturnType<typeof setInterval> | undefined;
-    const refresh = () => setNow(Date.now());
-    const start = () => {
-      if (timer) clearInterval(timer);
-      refresh();
-      timer = setInterval(refresh, 1000);
-    };
-    start();
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") start();
-      else if (timer) {
-        clearInterval(timer);
-        timer = undefined;
-      }
-    });
-    return () => {
-      if (timer) clearInterval(timer);
-      subscription.remove();
-    };
-  }, []);
+  const sortedReminders = useMemo(
+    () => [...reminders].sort((a, b) => a.departureAt - b.departureAt),
+    [reminders],
+  );
   const selectRoute = (id: string) => {
     const next = airportRoutes.find((r) => r.id === id)!;
     setRegion(next.region);
@@ -158,7 +141,7 @@ export function AirportScreen({
               fontVariant: ["tabular-nums"],
             }}
           >
-            {formatLiveJapanTime(now).fullText}
+            <LiveJapanTime />
           </Text>
         </View>
         <View
@@ -187,11 +170,8 @@ export function AirportScreen({
           저장한 공항행 막차
         </Label>
       ) : null}
-      {[...reminders]
-        .sort((a, b) => a.departureAt - b.departureAt)
-        .map((reminder) => {
+      {sortedReminders.map((reminder) => {
           const info = airportRoutes.find((r) => r.id === reminder.routeId)!;
-          const timer = countdown(reminder, now);
           return (
             <Card key={reminder.id}>
               <Label weight="700" size={19}>
@@ -200,41 +180,7 @@ export function AirportScreen({
               <Label muted size={13}>
                 {reminder.terminal} · {info.operator}
               </Label>
-              <Text
-                style={{
-                  color: timer.phase === "upcoming" ? c.accent : c.error,
-                  fontSize: 32,
-                  fontWeight: "700",
-                  fontVariant: ["tabular-nums"],
-                }}
-              >
-                {timer.phase === "departed"
-                  ? "출발 시각이 지났어요"
-                  : duration(timer.departureMs)}
-              </Text>
-              <Label muted size={13}>
-                {timer.phase === "departed"
-                  ? "다음 날 막차로 자동 변경하지 않아요. 다른 이동편을 확인하세요."
-                  : "등록한 열차 출발까지 남은 시간"}
-              </Label>
-              <Label weight="600">
-                {timer.phase === "upcoming"
-                  ? `역으로 출발하기까지 ${duration(timer.leaveMs)}`
-                  : timer.phase === "leave-now"
-                    ? "설정한 이동 여유 시간에 들어왔어요"
-                    : "운행 여부는 공식 안내에서 확인"}
-              </Label>
-              <Label muted size={13}>
-                열차 출발 {japanDateTime(reminder.departureAt)} JST{"\n"}역으로
-                출발 {japanDateTime(timer.leaveAt)} JST · 여유{" "}
-                {reminder.bufferMinutes}분{"\n"}사용자 확인{" "}
-                {japanDateTime(reminder.verifiedAt)} JST
-              </Label>
-              {timer.needsReview ? (
-                <Label muted size={13}>
-                  확인 후 하루가 지났어요. 시간표·운행 변경을 다시 확인하세요.
-                </Label>
-              ) : null}
+              <ReminderCountdown reminder={reminder} />
               <Button
                 label={`${info.airport} 운행·시간표 확인`}
                 icon="open-outline"
@@ -407,5 +353,56 @@ export function AirportScreen({
         />
       ) : null}
     </View>
+  );
+}
+
+/** Only this line re-renders every second, not the whole form. */
+function LiveJapanTime() {
+  const now = useNow(1000);
+  return <>{formatLiveJapanTime(now).fullText}</>;
+}
+
+/** The live part of a saved last-train card. */
+function ReminderCountdown({ reminder }: { reminder: AirportReminder }) {
+  const c = useTheme();
+  const now = useNow(1000);
+  const timer = countdown(reminder, now);
+  return (
+    <>
+      <Text
+        style={{
+          color: timer.phase === "upcoming" ? c.accent : c.error,
+          fontSize: 32,
+          fontWeight: "700",
+          fontVariant: ["tabular-nums"],
+        }}
+      >
+        {timer.phase === "departed"
+          ? "출발 시각이 지났어요"
+          : duration(timer.departureMs)}
+      </Text>
+      <Label muted size={13}>
+        {timer.phase === "departed"
+          ? "다음 날 막차로 자동 변경하지 않아요. 다른 이동편을 확인하세요."
+          : "등록한 열차 출발까지 남은 시간"}
+      </Label>
+      <Label weight="600">
+        {timer.phase === "upcoming"
+          ? `역으로 출발하기까지 ${duration(timer.leaveMs)}`
+          : timer.phase === "leave-now"
+            ? "설정한 이동 여유 시간에 들어왔어요"
+            : "운행 여부는 공식 안내에서 확인"}
+      </Label>
+      <Label muted size={13}>
+        열차 출발 {japanDateTime(reminder.departureAt)} JST{"\n"}역으로 출발{" "}
+        {japanDateTime(timer.leaveAt)} JST · 여유 {reminder.bufferMinutes}분
+        {"\n"}사용자 확인 {japanDateTime(reminder.verifiedAt)} JST
+      </Label>
+      {timer.needsReview ? (
+        <Label muted size={13}>
+          확인 후 하루가 지났어요. 시간표·운행 변경을 다시 확인하세요.
+        </Label>
+      ) : null}
+    </>
   );
 }

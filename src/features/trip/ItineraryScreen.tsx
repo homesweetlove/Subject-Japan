@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Linking, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { ScreenHeader, Button, Card, Label } from "../../ui/components";
 import { Field } from "../../ui/Field";
 import { Choice } from "../../ui/Choice";
+import { useStableCallback } from "../../ui/useStableCallback";
 import { validTripItem, type TripItem } from "./itinerary";
 const empty = (): TripItem => ({
   id: "",
@@ -47,6 +48,26 @@ export function ItineraryScreen({
       setNotice(e instanceof Error ? e.message : "요청을 완료하지 못했어요.");
     }
   };
+  // Stable handlers + memoized cards: typing in the form above no longer
+  // re-renders up to 200 saved items on every keystroke.
+  const sorted = useMemo(
+    () => [...items].sort((a, b) => a.when.localeCompare(b.when)),
+    [items],
+  );
+  const runStable = useStableCallback(run);
+  const onSaveStable = useStableCallback(onSave);
+  const editStable = useStableCallback((t: TripItem) => setDraft({ ...t }));
+  const deleteStable = useStableCallback((t: TripItem) => {
+    if (confirm !== t.id) {
+      setConfirm(t.id);
+      return;
+    }
+    void run(async () => {
+      await onDelete(t.id);
+      if (draft.id === t.id) setDraft(empty());
+      setConfirm("");
+    });
+  });
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
@@ -86,69 +107,17 @@ export function ItineraryScreen({
         )}
       </Card>
       {!!notice && <Label>{notice}</Label>}
-      {[...items]
-        .sort((a, b) => a.when.localeCompare(b.when))
-        .map((t) => (
-          <Card key={t.id}>
-            <Label muted size={12}>
-              {t.when} JST
-            </Label>
-            <Label size={20} weight="700">
-              {t.title}
-            </Label>
-            {!!t.place && <Label>{t.place}</Label>}
-            {!!t.reservation && (
-              <>
-                <Label>예약번호 {t.reservation}</Label>
-                <Button
-                  label={`${t.title} 예약번호 복사`}
-                  onPress={() =>
-                    void run(() => Clipboard.setStringAsync(t.reservation))
-                  }
-                />
-              </>
-            )}
-            {!!t.note && <Label muted>{t.note}</Label>}
-            <Choice
-              label={`${t.title} 완료`}
-              checkbox
-              selected={t.done}
-              onPress={() => void run(() => onSave({ ...t, done: !t.done }))}
-            />
-            {!!t.place && (
-              <Button
-                label={`${t.title} 지도에서 보기`}
-                onPress={() =>
-                  void run(() =>
-                    Linking.openURL(
-                      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.place)}`,
-                    ),
-                  )
-                }
-              />
-            )}
-            <Button
-              label={`${t.title} 수정`}
-              onPress={() => setDraft({ ...t })}
-            />
-            <Button
-              label={
-                confirm === t.id ? `${t.title} 삭제 확인` : `${t.title} 삭제`
-              }
-              onPress={() => {
-                if (confirm !== t.id) {
-                  setConfirm(t.id);
-                  return;
-                }
-                void run(async () => {
-                  await onDelete(t.id);
-                  if (draft.id === t.id) setDraft(empty());
-                  setConfirm("");
-                });
-              }}
-            />
-          </Card>
-        ))}
+      {sorted.map((t) => (
+        <TripItemCard
+          key={t.id}
+          item={t}
+          confirming={confirm === t.id}
+          onRun={runStable}
+          onSave={onSaveStable}
+          onEdit={editStable}
+          onDelete={deleteStable}
+        />
+      ))}
       {!items.length && (
         <Label muted>
           첫 일정을 추가해 보세요. 최대 200개를 저장할 수 있어요.
@@ -157,3 +126,66 @@ export function ItineraryScreen({
     </View>
   );
 }
+
+const TripItemCard = memo(function TripItemCard({
+  item: t,
+  confirming,
+  onRun,
+  onSave,
+  onEdit,
+  onDelete,
+}: {
+  item: TripItem;
+  confirming: boolean;
+  onRun: (f: () => Promise<unknown>) => Promise<void>;
+  onSave: (t: TripItem) => Promise<void>;
+  onEdit: (t: TripItem) => void;
+  onDelete: (t: TripItem) => void;
+}) {
+  return (
+    <Card>
+      <Label muted size={12}>
+        {t.when} JST
+      </Label>
+      <Label size={20} weight="700">
+        {t.title}
+      </Label>
+      {!!t.place && <Label>{t.place}</Label>}
+      {!!t.reservation && (
+        <>
+          <Label>예약번호 {t.reservation}</Label>
+          <Button
+            label={`${t.title} 예약번호 복사`}
+            onPress={() =>
+              void onRun(() => Clipboard.setStringAsync(t.reservation))
+            }
+          />
+        </>
+      )}
+      {!!t.note && <Label muted>{t.note}</Label>}
+      <Choice
+        label={`${t.title} 완료`}
+        checkbox
+        selected={t.done}
+        onPress={() => void onRun(() => onSave({ ...t, done: !t.done }))}
+      />
+      {!!t.place && (
+        <Button
+          label={`${t.title} 지도에서 보기`}
+          onPress={() =>
+            void onRun(() =>
+              Linking.openURL(
+                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.place)}`,
+              ),
+            )
+          }
+        />
+      )}
+      <Button label={`${t.title} 수정`} onPress={() => onEdit(t)} />
+      <Button
+        label={confirming ? `${t.title} 삭제 확인` : `${t.title} 삭제`}
+        onPress={() => onDelete(t)}
+      />
+    </Card>
+  );
+});

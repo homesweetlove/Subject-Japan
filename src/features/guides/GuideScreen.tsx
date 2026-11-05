@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { ScreenHeader, Button, Card, Label } from "../../ui/components";
@@ -39,11 +39,22 @@ export function GuideScreen({
       setBusy(false);
     }
   };
-  const filtered = guides.filter((g) =>
-    `${g.title} ${g.summary} ${g.badge} ${g.sections.map((s) => s.body).join(" ")}`
-      .toLocaleLowerCase()
-      .includes(query.trim().toLocaleLowerCase()),
+  // Build each guide's search text once, not on every keystroke.
+  const searchable = useMemo(
+    () =>
+      guides.map((g) => ({
+        guide: g,
+        text: `${g.title} ${g.summary} ${g.badge} ${g.sections.map((s) => s.body).join(" ")}`.toLocaleLowerCase(),
+      })),
+    [guides],
   );
+  const deferredQuery = useDeferredValue(query);
+  const filtered = useMemo(() => {
+    const needle = deferredQuery.trim().toLocaleLowerCase();
+    return searchable
+      .filter((entry) => entry.text.includes(needle))
+      .map((entry) => entry.guide);
+  }, [searchable, deferredQuery]);
   return (
     <View style={{ gap: 22 }}>
       <ScreenHeader title={title} subtitle={subtitle} />

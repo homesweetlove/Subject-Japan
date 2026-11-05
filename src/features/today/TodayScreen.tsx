@@ -13,6 +13,7 @@ import {
 } from "../../ui/components";
 import { Choice } from "../../ui/Choice";
 import { elevation, radius, useTheme } from "../../ui/theme";
+import { useNow } from "../../ui/useNow";
 import { airportRoutes } from "../trip/airports";
 import { countdown } from "../trip/countdown";
 import type { TripSection } from "../trip/TripScreen";
@@ -54,17 +55,8 @@ export function TodayScreen({
   onNotifications: (s: NotificationSettings) => Promise<void>;
 }) {
   const c = useTheme();
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 30000);
-    const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") setNow(Date.now());
-    });
-    return () => {
-      clearInterval(timer);
-      sub.remove();
-    };
-  }, []);
+  // Shared 30-second clock: paused in the background, refreshed on return.
+  const now = useNow(30000);
   const trip = nextTripItem(state.tripItems, now);
   const reminder = nextReminder(state.airportReminders, now);
   const card = [...state.transitCards].sort((a, b) => b.readAt - a.readAt)[0];

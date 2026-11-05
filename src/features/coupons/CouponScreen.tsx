@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import {
-  AppState,
   Linking,
   Modal,
   ScrollView,
@@ -18,6 +17,7 @@ import {
   styles,
 } from "../../ui/components";
 import { useTheme } from "../../ui/theme";
+import { useNow } from "../../ui/useNow";
 import { couponCatalog } from "./catalog";
 import {
   audienceLabels,
@@ -89,6 +89,7 @@ function DetailSection({
     </View>
   );
 }
+const categories = [...new Set(couponCatalog.map((coupon) => coupon.category))];
 export function CouponScreen({
   savedIds,
   onToggleSaved,
@@ -105,26 +106,22 @@ export function CouponScreen({
   const [selected, setSelected] = useState<Coupon | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [now, setNow] = useState(Date.now);
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 60000);
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") setNow(Date.now());
-    });
-    return () => {
-      clearInterval(timer);
-      subscription.remove();
-    };
-  }, []);
-  const results = filterCoupons(couponCatalog, {
-    query,
-    audience,
-    category,
-    savedOnly,
-    savedIds,
-    validOnly,
-    now,
-  });
+  const now = useNow(60000);
+  // Typing stays responsive; the list catches up with the deferred query.
+  const deferredQuery = useDeferredValue(query);
+  const results = useMemo(
+    () =>
+      filterCoupons(couponCatalog, {
+        query: deferredQuery,
+        audience,
+        category,
+        savedOnly,
+        savedIds,
+        validOnly,
+        now,
+      }),
+    [deferredQuery, audience, category, savedOnly, savedIds, validOnly, now],
+  );
   const save = async (id: string) => {
     setBusy(true);
     setError("");
@@ -155,9 +152,7 @@ export function CouponScreen({
     setSavedOnly(false);
     setValidOnly(false);
   };
-  const categories = [
-    ...new Set(couponCatalog.map((coupon) => coupon.category)),
-  ];
+
   return (
     <View style={{ gap: 22 }}>
       <ScreenHeader

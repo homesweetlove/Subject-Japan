@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   Keyboard,
   AccessibilityInfo,
@@ -22,7 +22,7 @@ import {
   type Category,
   type Phrase,
 } from "../phrases/phrases";
-import { sameTranslation } from "../../storage/state";
+
 import {
   ScreenHeader,
   Button,
@@ -42,6 +42,12 @@ import {
 } from "../../ui/TranslationDisplay";
 import type { Register } from "../phrases/register";
 import { Press } from "../../ui/Press";
+import { useStableCallback } from "../../ui/useStableCallback";
+import type { Profile } from "../../domain/models";
+
+/** Same fields as sameTranslation(), as one comparable key. */
+const translationKey = (t: Translation) =>
+  `${t.source}\u0000${t.original}\u0000${t.translated}`;
 
 export function TranslateScreen({
   state,
@@ -205,8 +211,31 @@ export function TranslateScreen({
     }
   };
   const detected = source === "auto" ? detectLanguage(text) : source;
-  const starred =
-    result && state.favorites.some((t) => sameTranslation(t, result));
+  // One lookup set instead of comparing every saved item with every favorite.
+  const favoriteKeys = useMemo(
+    () => new Set(state.favorites.map(translationKey)),
+    [state.favorites],
+  );
+  const starred = !!result && favoriteKeys.has(translationKey(result));
+  // Stable handlers let the memoized lists below skip re-rendering while
+  // the user types in the input above.
+  const choosePhraseStable = useStableCallback((phrase: Phrase) => {
+    void choosePhrase(phrase);
+  });
+  const showResult = useStableCallback(() => setFullscreen(true));
+  const favoriteStable = useStableCallback((value: Translation) => {
+    void favorite(value);
+  });
+  const copyStable = useStableCallback((value: string) => {
+    void copy(value);
+  });
+  const openSaved = useStableCallback((value: Translation) => {
+    invalidate();
+    setSource(value.source);
+    setText(value.original);
+    setResult(value);
+    Keyboard.dismiss();
+  });
   return (
     <View style={{ gap: 24 }}>
       <ScreenHeader
@@ -610,77 +639,14 @@ export function TranslateScreen({
                 </Press>
               ))}
             </ScrollView>
-            <View style={{ gap: 10 }}>
-              {phrases
-                .filter((p) => p.category === category)
-                .map((phrase) => {
-                  const pair = resolvePhrase(phrase, state.profile, register);
-                  return (
-                    <Fragment key={phrase.id}>
-                      <Press
-                        accessibilityRole="button"
-                        accessibilityLabel={
-                          pair?.ko ??
-                          `${phrase.sizeKey === "top" ? "상의" : phrase.sizeKey === "bottom" ? "하의" : "신발"} 사이즈 등록하기`
-                        }
-                        onPress={() => void choosePhrase(phrase)}
-                        style={({ pressed }) => ({
-                          padding: 19,
-                          borderRadius: 18,
-                          backgroundColor: pressed ? c.soft : c.surface,
-                          borderWidth: 1,
-                          borderColor: c.line,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 12,
-                        })}
-                      >
-                        <View style={{ flex: 1, gap: 5 }}>
-                          <Label size={14} weight="500">
-                            {pair?.ko ??
-                              "내 사이즈를 등록하면 바로 쓸 수 있어요"}
-                          </Label>
-                          <Label size={12} muted>
-                            {pair?.ja ??
-                              (phrase.sizeKey === "top"
-                                ? "상의 사이즈 등록"
-                                : phrase.sizeKey === "bottom"
-                                  ? "하의 사이즈 등록"
-                                  : "신발 사이즈 등록")}
-                          </Label>
-                        </View>
-                        <Icon
-                          name={pair ? "arrow-up-outline" : "add-outline"}
-                          size={19}
-                        />
-                      </Press>
-                      {pair &&
-                        result &&
-                        result.original === pair[result.source] &&
-                        result.translated === pair[result.target] && (
-                          <Card tone="muted">
-                            <Text
-                              selectable
-                              {...translationLanguage(result.target)}
-                              style={{
-                                color: c.ink,
-                                fontSize: 24,
-                                lineHeight: 38,
-                              }}
-                            >
-                              {result.translated}
-                            </Text>
-                            <Button
-                              label="선택한 문장 크게 보기"
-                              primary
-                              onPress={() => setFullscreen(true)}
-                            />
-                          </Card>
-                        )}
-                    </Fragment>
-                  );
-                })}
-            </View>
+            <PhraseList
+              category={category}
+              register={register}
+              profile={state.profile}
+              result={result}
+              onChoose={choosePhraseStable}
+              onShow={showResult}
+            />
           </>
         ) : (
           <>
@@ -731,52 +697,14 @@ export function TranslateScreen({
                 </Label>
               </Card>
             )}
-            {(library === "history" ? state.history : state.favorites).map(
-              (value) => (
-                <Card key={value.id}>
-                  <Press
-                    accessibilityRole="button"
-                    accessibilityLabel={`${value.original} 다시 열기`}
-                    onPress={() => {
-                      invalidate();
-                      setSource(value.source);
-                      setText(value.original);
-                      setResult(value);
-                      Keyboard.dismiss();
-                    }}
-                  >
-                    <Label muted size={13}>
-                      {value.original}
-                    </Label>
-                    <Label size={18}>{value.translated}</Label>
-                  </Press>
-                  <View style={styles.between}>
-                    <Label muted size={11}>
-                      {new Date(value.createdAt).toLocaleDateString("ko-KR")} ·{" "}
-                      {languageNames[value.source]} →{" "}
-                      {languageNames[value.target]}
-                    </Label>
-                    <View style={styles.row}>
-                      <IconButton
-                        name={
-                          state.favorites.some((t) => sameTranslation(t, value))
-                            ? "bookmark"
-                            : "bookmark-outline"
-                        }
-                        label={`${value.original} 즐겨찾기 변경`}
-                        disabled={savingFavorite}
-                        onPress={() => void favorite(value)}
-                      />
-                      <IconButton
-                        name="copy-outline"
-                        label={`${value.original} 번역 복사`}
-                        onPress={() => void copy(value.translated)}
-                      />
-                    </View>
-                  </View>
-                </Card>
-              ),
-            )}
+            <SavedList
+              items={library === "history" ? state.history : state.favorites}
+              favoriteKeys={favoriteKeys}
+              savingFavorite={savingFavorite}
+              onOpen={openSaved}
+              onFavorite={favoriteStable}
+              onCopy={copyStable}
+            />
           </>
         )}
       </View>
@@ -807,3 +735,151 @@ export function TranslateScreen({
     </View>
   );
 }
+
+const PhraseList = memo(function PhraseList({
+  category,
+  register,
+  profile,
+  result,
+  onChoose,
+  onShow,
+}: {
+  category: Category;
+  register: Register;
+  profile: Profile;
+  result: Translation | null;
+  onChoose: (phrase: Phrase) => void;
+  onShow: () => void;
+}) {
+  const c = useTheme();
+  return (
+    <View style={{ gap: 10 }}>
+      {phrases
+        .filter((p) => p.category === category)
+        .map((phrase) => {
+          const pair = resolvePhrase(phrase, profile, register);
+          return (
+            <Fragment key={phrase.id}>
+              <Press
+                accessibilityRole="button"
+                accessibilityLabel={
+                  pair?.ko ??
+                  `${phrase.sizeKey === "top" ? "상의" : phrase.sizeKey === "bottom" ? "하의" : "신발"} 사이즈 등록하기`
+                }
+                onPress={() => onChoose(phrase)}
+                style={({ pressed }) => ({
+                  padding: 19,
+                  borderRadius: 18,
+                  backgroundColor: pressed ? c.soft : c.surface,
+                  borderWidth: 1,
+                  borderColor: c.line,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                })}
+              >
+                <View style={{ flex: 1, gap: 5 }}>
+                  <Label size={14} weight="500">
+                    {pair?.ko ?? "내 사이즈를 등록하면 바로 쓸 수 있어요"}
+                  </Label>
+                  <Label size={12} muted>
+                    {pair?.ja ??
+                      (phrase.sizeKey === "top"
+                        ? "상의 사이즈 등록"
+                        : phrase.sizeKey === "bottom"
+                          ? "하의 사이즈 등록"
+                          : "신발 사이즈 등록")}
+                  </Label>
+                </View>
+                <Icon
+                  name={pair ? "arrow-up-outline" : "add-outline"}
+                  size={19}
+                />
+              </Press>
+              {pair &&
+                result &&
+                result.original === pair[result.source] &&
+                result.translated === pair[result.target] && (
+                  <Card tone="muted">
+                    <Text
+                      selectable
+                      {...translationLanguage(result.target)}
+                      style={{
+                        color: c.ink,
+                        fontSize: 24,
+                        lineHeight: 38,
+                      }}
+                    >
+                      {result.translated}
+                    </Text>
+                    <Button
+                      label="선택한 문장 크게 보기"
+                      primary
+                      onPress={onShow}
+                    />
+                  </Card>
+                )}
+            </Fragment>
+          );
+        })}
+    </View>
+  );
+});
+
+const SavedList = memo(function SavedList({
+  items,
+  favoriteKeys,
+  savingFavorite,
+  onOpen,
+  onFavorite,
+  onCopy,
+}: {
+  items: Translation[];
+  favoriteKeys: Set<string>;
+  savingFavorite: boolean;
+  onOpen: (value: Translation) => void;
+  onFavorite: (value: Translation) => void;
+  onCopy: (text: string) => void;
+}) {
+  return (
+    <>
+      {items.map((value) => (
+        <Card key={value.id}>
+          <Press
+            accessibilityRole="button"
+            accessibilityLabel={`${value.original} 다시 열기`}
+            onPress={() => onOpen(value)}
+          >
+            <Label muted size={13}>
+              {value.original}
+            </Label>
+            <Label size={18}>{value.translated}</Label>
+          </Press>
+          <View style={styles.between}>
+            <Label muted size={11}>
+              {new Date(value.createdAt).toLocaleDateString("ko-KR")} ·{" "}
+              {languageNames[value.source]} → {languageNames[value.target]}
+            </Label>
+            <View style={styles.row}>
+              <IconButton
+                name={
+                  favoriteKeys.has(translationKey(value))
+                    ? "bookmark"
+                    : "bookmark-outline"
+                }
+                label={`${value.original} 즐겨찾기 변경`}
+                disabled={savingFavorite}
+                onPress={() => onFavorite(value)}
+              />
+              <IconButton
+                name="copy-outline"
+                label={`${value.original} 번역 복사`}
+                onPress={() => onCopy(value.translated)}
+              />
+            </View>
+          </View>
+        </Card>
+      ))}
+    </>
+  );
+});
