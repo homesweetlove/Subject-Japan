@@ -10,6 +10,9 @@ const hosts = new Set([
   "www.meitetsu.co.jp",
   "ib.eplus.jp",
   "l-tike.com",
+  // Japan Tourism Agency and JNTO pages on the 2026 tax-free refund method.
+  "www.mlit.go.jp",
+  "www.japan.travel",
 ]);
 export function validTravelLink(value: string): boolean {
   try {

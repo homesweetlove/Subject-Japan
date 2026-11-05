@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import {
   Button,
   Card,
@@ -23,10 +23,22 @@ import {
 import {
   analyzeCustoms,
   categoryLabels,
+  japanDay,
+  receiptScheme,
+  receiptTaxJpy,
+  refundDaysLeft,
+  refundDeadline,
+  refundStatusLabels,
+  refundSummary,
+  sameStoreDayTaxExcluded,
+  schemeFor,
   type DutyFreeCategory,
   type DutyFreeReceipt,
+  type RefundStatus,
+  type TaxFreeScheme,
   TAX_FREE_MIN_JPY,
 } from "./taxFreeTracker";
+import { TaxFreeGuide } from "./TaxFreeGuide";
 import {
   atmGuides,
   calculateSmartPayment,
@@ -52,9 +64,9 @@ export function PayScreen({
   onToggleAutoRefresh?: (enabled: boolean) => Promise<void>;
 }) {
   const c = useTheme();
-  const [tab, setTab] = useState<"calculator" | "customs" | "coins" | "atm">(
-    "calculator",
-  );
+  const [tab, setTab] = useState<
+    "calculator" | "taxfree" | "customs" | "coins" | "atm"
+  >("calculator");
 
   // Calculator states
   const [price, setPrice] = useState("");
@@ -93,6 +105,10 @@ export function PayScreen({
   const [receiptCategory, setReceiptCategory] =
     useState<DutyFreeCategory>("consumable");
   const [receiptTaxFree, setReceiptTaxFree] = useState(true);
+  const [receiptScheme_, setReceiptScheme] = useState<TaxFreeScheme>(() =>
+    schemeFor(Date.now()),
+  );
+  const [receiptRate, setReceiptRate] = useState<8 | 10>(10);
   const [itemCount, setItemCount] = useState("1");
   const [itemVolume, setItemVolume] = useState("700");
   const [receiptError, setReceiptError] = useState("");
@@ -212,6 +228,10 @@ export function PayScreen({
       category: receiptCategory,
       jpyAmount: amount,
       taxFreeApplied: receiptTaxFree,
+      scheme: receiptScheme_,
+      taxRate: receiptRate,
+      refundStatus:
+        receiptScheme_ === "refund" && receiptTaxFree ? "waiting" : undefined,
       quantity:
         receiptCategory === "liquor" || receiptCategory === "tobacco"
           ? Number(itemCount) || 1
@@ -239,6 +259,27 @@ export function PayScreen({
   };
 
   const customs = analyzeCustoms(dutyFreeReceipts, rate);
+  const nowMs = Date.now();
+  const refunds = refundSummary(dutyFreeReceipts, nowMs);
+  // The 5,000 yen rule is per store per day, before tax.
+  const draftAmount = Number(receiptJpy);
+  const draftTaxExcluded =
+    Number.isFinite(draftAmount) && draftAmount > 0
+      ? receiptScheme_ === "refund"
+        ? Math.round((draftAmount * 100) / (100 + receiptRate))
+        : draftAmount
+      : 0;
+  const draftDayTotal =
+    draftTaxExcluded +
+    (storeName.trim()
+      ? sameStoreDayTaxExcluded(dutyFreeReceipts, storeName, nowMs)
+      : 0);
+  const setRefundStatus = (item: DutyFreeReceipt, status: RefundStatus) =>
+    onSaveReceipt?.({ ...item, refundStatus: status }).catch((e) =>
+      setReceiptError(
+        e instanceof Error ? e.message : "상태를 저장하지 못했어요.",
+      ),
+    );
   const enteredRate = Number(rateText);
   const hasRate =
     Number.isFinite(enteredRate) && enteredRate > 0 && enteredRate <= 100000;
@@ -258,13 +299,14 @@ export function PayScreen({
       <ScreenHeader
         seal="払"
         title="계산은 똑똑하게"
-        subtitle="환율 자동 최신화부터 5,000엔 면세, 동전 최소화 및 와리캉 정산까지."
+        subtitle="환율, 할인 계산, 새 면세 환급 안내와 기록, 동전·더치페이까지."
       />
 
       <SubNav
         items={[
           { key: "calculator", label: "결제·할인", icon: "calculator-outline" },
-          { key: "customs", label: "면세·세관 $800", icon: "receipt-outline" },
+          { key: "taxfree", label: "새 면세 안내", icon: "airplane-outline" },
+          { key: "customs", label: "면세 기록·세관", icon: "receipt-outline" },
           { key: "coins", label: "동전·더치페이", icon: "cash-outline" },
           { key: "atm", label: "ATM·사이즈표", icon: "card-outline" },
         ]}
@@ -479,8 +521,8 @@ export function PayScreen({
                   label={
                     [
                       "면세 없음",
-                      "결제 시 면세·즉시 환급",
-                      "세금 결제 후 나중에 환급",
+                      "예전 방식: 계산대에서 세금 빼기 (10월 31일까지)",
+                      "새 방식: 세금 내고 출국 때 돌려받기",
                     ][i]
                   }
                   selected={taxMode === v}
@@ -489,17 +531,14 @@ export function PayScreen({
               ))}
             </View>
             <Label muted size={12}>
-              면세 자격·최소 구매액(5,000엔)·대상 상품을 매장에서 확인한 경우만
-              선택하세요. 2026년 11월 1일부터 일본 면세는 출국 확인 후 환급
-              방식으로 바뀝니다.
+              2026년 11월 1일 구매분부터는 새 방식만 있어요. 같은 매장 같은 날
+              세금 빼고 5,000엔 이상, 90일 안에 출국하면서 공항 세관 확인을
+              받아야 돌려받아요.
             </Label>
             <Button
-              label="일본 국세청 면세 제도 안내"
-              onPress={() =>
-                void Linking.openURL(
-                  "https://www.nta.go.jp/publication/pamph/shohi/menzei/201805/format/002.htm",
-                ).catch(() => setNotice("공식 페이지를 열지 못했어요."))
-              }
+              label="새 면세 방식 자세히 보기"
+              icon="airplane-outline"
+              onPress={() => setTab("taxfree")}
             />
             <Field
               label="환급 세액에서 차감되는 수수료 (%)"
@@ -507,6 +546,9 @@ export function PayScreen({
               onChange={setRefundFee}
               numeric
             />
+            <Label muted size={12}>
+              환급 수수료와 방법(카드·앱·현금)은 매장·환급 업체마다 달라요.
+            </Label>
             <Field
               label="카드 해외 결제 수수료 (%)"
               value={cardFee}
@@ -551,6 +593,8 @@ export function PayScreen({
           )}
           {!!notice && <Label>{notice}</Label>}
         </>
+      ) : tab === "taxfree" ? (
+        <TaxFreeGuide onOpenTracker={() => setTab("customs")} />
       ) : tab === "customs" ? (
         <>
           {/* Duty Free & Customs Tracker Mode */}
@@ -594,12 +638,18 @@ export function PayScreen({
               </View>
 
               <Label muted size={12}>
-                엔화 총액: ¥{customs.totalJpy.toLocaleString()} (약 ₩
-                {customs.totalKrw.toLocaleString()})
+                엔화 총액: ¥{customs.totalJpy.toLocaleString()}
+                {customs.totalKrw !== null
+                  ? ` (약 ₩${customs.totalKrw.toLocaleString()})`
+                  : ""}
+              </Label>
+              <Label muted size={12}>
+                달러는 1달러=148엔으로 어림한 값이에요. 한도에 가까우면 실제
+                환율로 다시 확인하세요.
               </Label>
             </View>
 
-            {/* Tax-free saved badge */}
+            {/* Japan consumption tax: refunds still to come and old savings */}
             <View
               style={{
                 backgroundColor: c.soft,
@@ -609,11 +659,28 @@ export function PayScreen({
               }}
             >
               <Label weight="700" size={14}>
-                🇯🇵 일본 면세 절약 세금 (소비세 10%)
+                일본 소비세 돌려받기
               </Label>
               <Label size={13}>
-                면세 적용 총액: ¥{customs.taxFreeTotalJpy.toLocaleString()} →
-                절약 세금: 약 ¥{customs.estimatedTaxSavedJpy.toLocaleString()}
+                돌려받을 예정 약 ¥{refunds.expectedJpy.toLocaleString()} · 받은 돈
+                약 ¥{refunds.receivedJpy.toLocaleString()}
+              </Label>
+              {refunds.nextDeadline !== null && (
+                <Label size={13} style={{ color: c.accentInk }}>
+                  세관 확인 전 영수증 {refunds.waitingCount}장 · 가장 빠른 마감{" "}
+                  {japanDay(refunds.nextDeadline)}
+                </Label>
+              )}
+              {refunds.lostJpy > 0 && (
+                <Label size={13} style={{ color: c.error }}>
+                  90일이 지나 돌려받을 수 없는 세금 약 ¥
+                  {refunds.lostJpy.toLocaleString()}
+                </Label>
+              )}
+              <Label muted size={12}>
+                전체 면세 세금 합계 약 ¥
+                {customs.estimatedTaxSavedJpy.toLocaleString()} (10월 31일까지
+                계산대에서 뺀 세금 포함). 환급 수수료는 빼지 않은 값이에요.
               </Label>
             </View>
 
@@ -684,19 +751,48 @@ export function PayScreen({
               value={storeName}
               onChange={setStoreName}
             />
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              <Choice
+                label="11월 1일부터 구매 (새 방식)"
+                selected={receiptScheme_ === "refund"}
+                onPress={() => setReceiptScheme("refund")}
+              />
+              <Choice
+                label="10월 31일까지 구매 (예전 방식)"
+                selected={receiptScheme_ === "instant"}
+                onPress={() => setReceiptScheme("instant")}
+              />
+            </View>
             <Field
-              label="구매 금액 (엔 JPY)"
+              label={
+                receiptScheme_ === "refund"
+                  ? "결제한 금액 (엔, 세금 포함)"
+                  : "결제한 금액 (엔, 세금 뺀 값)"
+              }
               placeholder="예: 8500"
               value={receiptJpy}
-              onChange={(val) => {
-                setReceiptJpy(val);
-                // Auto recommend tax-free if >= 5000 JPY
-                if (Number(val) >= TAX_FREE_MIN_JPY) {
-                  setReceiptTaxFree(true);
-                }
-              }}
+              onChange={setReceiptJpy}
               numeric
             />
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              <Choice
+                label="소비세 10%"
+                selected={receiptRate === 10}
+                onPress={() => setReceiptRate(10)}
+              />
+              <Choice
+                label="8% (먹을거리·음료, 술 제외)"
+                selected={receiptRate === 8}
+                onPress={() => setReceiptRate(8)}
+              />
+            </View>
+            {draftTaxExcluded > 0 && draftDayTotal < TAX_FREE_MIN_JPY ? (
+              <Label size={12} style={{ color: c.accentInk }}>
+                같은 매장 오늘 합계가 세금 빼고 ¥
+                {draftDayTotal.toLocaleString()}이에요. 5,000엔이 넘어야 면세가
+                돼요.
+              </Label>
+            ) : null}
 
             <Label muted size={13}>
               품목 분류
@@ -739,7 +835,11 @@ export function PayScreen({
             ) : null}
 
             <Choice
-              label="5,000엔 이상 면세(Tax-Free) 적용됨"
+              label={
+                receiptScheme_ === "refund"
+                  ? "매장에서 면세 절차를 했어요 (여권 보여주고 환급 방법 등록)"
+                  : "계산대에서 면세 받았어요"
+              }
               checkbox
               selected={receiptTaxFree}
               onPress={() => setReceiptTaxFree(!receiptTaxFree)}
@@ -794,37 +894,24 @@ export function PayScreen({
                   </Text>
                 </View>
 
-                <View style={styles.between}>
-                  <View
-                    style={{
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                      borderRadius: 6,
-                      backgroundColor: item.taxFreeApplied
-                        ? c.successSoft
-                        : c.soft,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 11,
-                        fontWeight: "700",
-                        color: item.taxFreeApplied ? c.success : c.ink,
-                      }}
-                    >
-                      {item.taxFreeApplied
-                        ? "면세 적용 (10% 절약)"
-                        : "면세 미적용 (일반과세)"}
-                    </Text>
-                  </View>
-                  {onDeleteReceipt ? (
-                    <Button
-                      label="삭제"
-                      icon="trash-outline"
-                      onPress={() => void onDeleteReceipt(item.id)}
-                    />
-                  ) : null}
-                </View>
+                <ReceiptRefund
+                  item={item}
+                  now={nowMs}
+                  onStatus={
+                    onSaveReceipt
+                      ? (status) => void setRefundStatus(item, status)
+                      : undefined
+                  }
+                />
+                {onDeleteReceipt ? (
+                  <Button
+                    label={`${item.storeName} 삭제`}
+                    icon="trash-outline"
+                    size="sm"
+                    variant="ghost"
+                    onPress={() => void onDeleteReceipt(item.id)}
+                  />
+                ) : null}
               </Card>
             ))
           )}
@@ -1064,6 +1151,61 @@ export function PayScreen({
             </View>
           </Card>
         </>
+      )}
+    </View>
+  );
+}
+
+/** Tax status of one receipt: what comes back, by when, and where it stands. */
+function ReceiptRefund({
+  item,
+  now,
+  onStatus,
+}: {
+  item: DutyFreeReceipt;
+  now: number;
+  onStatus?: (status: RefundStatus) => void;
+}) {
+  const c = useTheme();
+  const tax = receiptTaxJpy(item);
+  if (!item.taxFreeApplied)
+    return (
+      <Label muted size={13}>
+        면세 없이 산 물건이에요.
+      </Label>
+    );
+  if (receiptScheme(item) === "instant")
+    return (
+      <Label size={13} style={{ color: c.success }}>
+        계산대에서 세금 약 ¥{tax.toLocaleString()}을 이미 뺐어요 (예전 방식).
+      </Label>
+    );
+  const status = item.refundStatus ?? "waiting";
+  const daysLeft = refundDaysLeft(item, now);
+  const late = status === "waiting" && daysLeft < 0;
+  return (
+    <View style={{ gap: 8 }}>
+      <Label size={13} weight="600">
+        돌려받을 세금 약 ¥{tax.toLocaleString()}
+      </Label>
+      {status === "waiting" && (
+        <Label size={12} style={{ color: late ? c.error : c.accentInk }}>
+          {late
+            ? "90일이 지나 이 영수증은 돌려받을 수 없어요."
+            : `${japanDay(refundDeadline(item))}까지 출국하며 세관 확인 (${daysLeft}일 남음)`}
+        </Label>
+      )}
+      {onStatus && !late && (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+          {(["waiting", "confirmed", "refunded"] as const).map((value) => (
+            <Choice
+              key={value}
+              label={refundStatusLabels[value]}
+              selected={status === value}
+              onPress={() => onStatus(value)}
+            />
+          ))}
+        </View>
       )}
     </View>
   );

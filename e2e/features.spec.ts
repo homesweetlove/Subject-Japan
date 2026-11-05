@@ -99,7 +99,10 @@ test("payment calculation, persisted FX, itinerary edit and full reset", async (
     .getByRole("textbox", { name: "상품 금액 (엔)", exact: true })
     .fill("11000");
   await page
-    .getByRole("button", { name: "결제 시 면세·즉시 환급", exact: true })
+    .getByRole("button", {
+      name: "새 방식: 세금 내고 출국 때 돌려받기",
+      exact: true,
+    })
     .click();
   await expect(page.getByText("₩90,000", { exact: true })).toBeVisible();
   await page

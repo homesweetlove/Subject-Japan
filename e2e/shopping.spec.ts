@@ -261,3 +261,44 @@ test("320px dark display keeps large text scrollable and close keyboard-accessib
   await expect(dialog).toHaveCount(0);
   await expect(button(page, "선택한 문장 크게 보기")).toBeFocused();
 });
+
+test("new tax-free refund guide and receipt tracking", async ({ page }) => {
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "나중에 입력하기", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "결제", exact: true }).click();
+  await page.getByRole("button", { name: "새 면세 안내", exact: true }).click();
+  await expect(
+    page.getByText("면세는 이제 출국할 때 돌려받아요", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "환급 수수료가 드나요? 크게 보기", exact: true })
+    .click();
+  await expect(
+    page.getByRole("dialog").getByText("返金の手数料はかかりますか？", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "확인 완료", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "내 면세 영수증 기록하기", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "구매처 (매장명)", exact: true })
+    .fill("돈키호테 도톤보리점");
+  await page
+    .getByRole("textbox", { name: "결제한 금액 (엔, 세금 포함)", exact: true })
+    .fill("11000");
+  await page.getByRole("button", { name: "영수증 등록", exact: true }).click();
+  await expect(
+    page.getByText("돌려받을 세금 약 ¥1,000", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "환급 받음", exact: true }).click();
+  await expect(
+    page.getByText("돌려받을 예정 약 ¥0 · 받은 돈 약 ¥1,000", { exact: true }),
+  ).toBeVisible();
+});

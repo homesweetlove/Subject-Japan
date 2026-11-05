@@ -29,7 +29,8 @@ The feature list below describes **implemented source code and supported UI path
 - PAY & finance helpers:
   - Optional reference exchange-rate refresh (off by default; refreshes rates older than 6 hours when PAY opens), manual exchange rate, JPY↔KRW conversions from entered/fetched rates
   - Sequential discount / tax-free / later-refund / fee / cashback calculator
-  - Tax-free & customs-limit tracker: Japan ¥5,000 tax-free threshold and Korea's $800 duty-free entry allowance, with separate tracking for alcohol (2 bottles / 2 L / $400), tobacco (200 cigarettes), and perfume (100 ml)
+  - New tax-free guide (refund method from 2026-11-01): old vs new comparison, hand-drawn shop → customs kiosk → refund illustrations, airport order, cases with no refund, Japanese phrases to show staff, Japan Tourism Agency and JNTO links
+  - Tax-free receipts & customs-limit tracker: per-receipt method (old/new) and tax rate (10%/8%), expected refund, 90-day deadline and refund status, same-store same-day ¥5,000 (tax-excluded) check, and Korea's $800 entry allowance with alcohol (2 bottles / 2 L / $400), tobacco (200), and perfume (100 ml)
   - Coin-wallet optimizer: calculates a smart cash payment combination that minimizes received coins
   - Warikan (split-bill) calculator: per-person JPY/KRW share plus rounding up/down to the nearest ¥100
   - Japan ATM fee & travel-card withdrawal guide for Travelog, Travel Wallet, and Toss
@@ -181,7 +182,7 @@ Existing features are connected across six tabs. Hardware/external-data dependen
 - Politeness: 23 prewritten phrase-pack entries provide three expression levels. ML Kit free-form translation has no tone-control API, so arbitrary politeness conversion is not supported.
 - Nearby coupons: candidates come from stores registered in OpenStreetMap. With user consent, searches send coordinates rounded to about 100 m to Overpass and do not guarantee coupon eligibility at a branch. Complete coupon collection/automatic refresh is not provided.
 - Last train: verified-time manual-entry model. Real-time operation and automatic last-train search require a separate timetable provider. Native-app local notifications work while the app is closed; web/browser does not support them.
-- Payments: reference calculations only and do not guarantee store authorization or card-billing amounts. The app includes guidance and National Tax Agency sources for the November 1, 2026 tax-free refund model transition.
+- Payments: reference calculations only and do not guarantee store authorization or card-billing amounts. The app explains the November 1, 2026 refund method with Japan Tourism Agency sources; refund methods, fees and timing depend on each shop or refund company.
 
 Feature usage, limitations, and official sources are documented in [device feature guidance](docs/device-features.md).
 See [architecture/extension plan](docs/architecture.md) for detailed design.
