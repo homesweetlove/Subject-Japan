@@ -14,11 +14,17 @@ import {
 } from "./transit";
 
 /** Without a saved rate the taxi estimate shows yen only. */
-export function TransitScreen({ krwPer100Jpy }: { krwPer100Jpy?: number }) {
+export function TransitScreen({
+  krwPer100Jpy,
+  initialTab = "passes",
+}: {
+  krwPer100Jpy?: number;
+  initialTab?: "passes" | "shinkansen" | "subway" | "taxi";
+}) {
   const c = useTheme();
   const [subTab, setSubTab] = useState<
     "passes" | "shinkansen" | "subway" | "taxi"
-  >("passes");
+  >(initialTab);
 
   // Pass calculator states
   const [selectedPassId, setSelectedPassId] = useState(transitPasses[0].id);

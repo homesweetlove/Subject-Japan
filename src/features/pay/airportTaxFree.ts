@@ -17,6 +17,8 @@ export type AirportId =
 export interface TaxFreeAirport {
   id: AirportId;
   name: string;
+  /** Japanese name for maps, taxis and ride apps. */
+  jaName: string;
   /** Where the customs kiosks are: always before bag drop. */
   kiosk: string[];
   /** Airport machines that pay the refund in yen cash, when they exist. */
@@ -30,6 +32,7 @@ export interface TaxFreeAirport {
 export const taxFreeAirports: TaxFreeAirport[] = [
   {
     id: "kix",
+    jaName: "関西国際空港",
     name: "간사이",
     kiosk: [
       "1터미널: 4층 국제선 출발 로비. 체크인 카운터에서 짐 맡기기 전에 세관 기계와 세관 검사 장소가 있어요.",
@@ -40,6 +43,7 @@ export const taxFreeAirports: TaxFreeAirport[] = [
   },
   {
     id: "haneda",
+    jaName: "羽田空港",
     name: "하네다",
     kiosk: [
       "3터미널(국제선): 3층 보안검사 전.",
@@ -53,6 +57,7 @@ export const taxFreeAirports: TaxFreeAirport[] = [
   },
   {
     id: "narita",
+    jaName: "成田国際空港",
     name: "나리타",
     kiosk: [
       "체크인 층 출발 로비(1터미널 4층, 2터미널 3층, 3터미널 2층)에서 짐 맡기기 전.",
@@ -67,6 +72,7 @@ export const taxFreeAirports: TaxFreeAirport[] = [
   },
   {
     id: "chubu",
+    jaName: "中部国際空港",
     name: "주부(나고야)",
     kiosk: [
       "1터미널 3층 출발 로비의 세관 키오스크. 공항에 도착하면 이것부터 하라고 안내해요.",
@@ -77,18 +83,21 @@ export const taxFreeAirports: TaxFreeAirport[] = [
   },
   {
     id: "fukuoka",
+    jaName: "福岡空港",
     name: "후쿠오카",
     kiosk: ["국제선 출발 로비, 짐 맡기기 전."],
     visitJapanWeb: true,
   },
   {
     id: "chitose",
+    jaName: "新千歳空港",
     name: "신치토세(삿포로)",
     kiosk: ["국제선 출발 로비, 짐 맡기기 전."],
     visitJapanWeb: true,
   },
   {
     id: "naha",
+    jaName: "那覇空港",
     name: "나하(오키나와)",
     kiosk: ["국제선 출발 로비, 짐 맡기기 전."],
     cashRefund:

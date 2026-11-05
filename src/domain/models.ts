@@ -3,6 +3,8 @@ import type { TransitCard } from "../features/cards/model";
 import type { ExchangeRate } from "../features/pay/calculator";
 import type { TripItem } from "../features/trip/itinerary";
 import type { DutyFreeReceipt } from "../features/pay/taxFreeTracker";
+import type { Expense } from "../features/pay/expenses";
+import type { Departure } from "../features/trip/departure";
 import {
   defaultNotificationSettings,
   type NotificationSettings,
@@ -46,6 +48,10 @@ export interface LocalState {
   /** Unset until the user picks a city, so no forecast request happens before. */
   weatherCity: WeatherCityId | null;
   weather: WeatherSnapshot | null;
+  /** Travel spending log, newest first. */
+  expenses: Expense[];
+  /** The flight home, entered once; null until the user saves it. */
+  departure: Departure | null;
 }
 export const initialState = (): LocalState => ({
   version: 1,
@@ -66,6 +72,8 @@ export const initialState = (): LocalState => ({
   notifications: defaultNotificationSettings(),
   weatherCity: null,
   weather: null,
+  expenses: [],
+  departure: null,
 });
 export const languageNames: Record<Language, string> = {
   ko: "한국어",

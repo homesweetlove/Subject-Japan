@@ -23,6 +23,8 @@ import {
   type AirportId,
 } from "./airportTaxFree";
 import { REFUND_METHOD_START, REFUND_WINDOW_DAYS } from "./taxFreeTracker";
+import { validDeparture, type Departure } from "../trip/departure";
+import { japanHoliday } from "../today/holidays";
 
 /*
  * Facts on this page follow the Japan Tourism Agency traveller page and
@@ -146,10 +148,14 @@ const links: { label: string; url: string }[] = [
 export function TaxFreeGuide({
   onOpenTracker,
   waitingReceipts = 0,
+  departure = null,
+  onSaveDeparture,
 }: {
   onOpenTracker: () => void;
   /** Receipts still waiting for the customs check, from the tracker. */
   waitingReceipts?: number;
+  departure?: Departure | null;
+  onSaveDeparture?: (d: Departure | null) => Promise<void>;
 }) {
   const c = useTheme();
   const [phrase, setPhrase] = useState<ShowCardContent | null>(null);
@@ -185,6 +191,8 @@ export function TaxFreeGuide({
       <AirportPlanner
         waitingReceipts={waitingReceipts}
         onLinkError={setLinkError}
+        departure={departure}
+        onSaveDeparture={onSaveDeparture}
       />
 
       <Card>
@@ -755,19 +763,51 @@ function RefundArt() {
 function AirportPlanner({
   waitingReceipts,
   onLinkError,
+  departure,
+  onSaveDeparture,
 }: {
   waitingReceipts: number;
   onLinkError: (message: string) => void;
+  departure: Departure | null;
+  onSaveDeparture?: (d: Departure | null) => Promise<void>;
 }) {
   const c = useTheme();
-  const [airportId, setAirportId] = useState<AirportId>("kix");
-  const airport = taxFreeAirports.find((a) => a.id === airportId)!;
-  const [date, setDate] = useState(() =>
-    japanDateTime(Date.now()).slice(0, 10),
+  // A saved flight home fills the planner; edits stay local until saved.
+  const [airportId, setAirportId] = useState<AirportId>(
+    departure?.airportId ?? "kix",
   );
-  const [time, setTime] = useState("");
+  const airport = taxFreeAirports.find((a) => a.id === airportId)!;
+  const [date, setDate] = useState(
+    () => departure?.date ?? japanDateTime(Date.now()).slice(0, 10),
+  );
+  const [time, setTime] = useState(departure?.time ?? "");
   const [receipts, setReceipts] = useState(String(waitingReceipts));
-  const [holiday, setHoliday] = useState(false);
+  const [holiday, setHoliday] = useState(
+    () => !!departure && japanHoliday(departure.date) !== null,
+  );
+  const [saveNote, setSaveNote] = useState("");
+  const draft: Departure = { date: date.trim(), time: time.trim(), airportId };
+  const savedSame =
+    !!departure &&
+    departure.date === draft.date &&
+    departure.time === draft.time &&
+    departure.airportId === draft.airportId;
+  const save = async () => {
+    if (!onSaveDeparture) return;
+    setSaveNote("");
+    if (!validDeparture(draft)) {
+      setSaveNote("출발 날짜와 시각을 확인해 주세요.");
+      return;
+    }
+    try {
+      await onSaveDeparture(draft);
+      setSaveNote(
+        "저장했어요. 오늘 화면에 보이고, 알림을 켜 두면 전날 저녁과 공항 가기 전에 알려 드려요.",
+      );
+    } catch {
+      setSaveNote("저장하지 못했어요. 다시 시도해 주세요.");
+    }
+  };
   let plan: ReturnType<typeof recommendedArrival> | null = null;
   let planError = "";
   if (time.trim()) {
@@ -935,6 +975,33 @@ function AirportPlanner({
                 {part.label} +{part.minutes}분
               </Label>
             ))}
+          </View>
+        ) : null}
+        {onSaveDeparture ? (
+          <View style={{ gap: 6 }}>
+            <Button
+              label={savedSame ? "내 출국 정보로 저장됨" : "내 출국 정보로 저장"}
+              icon="bookmark-outline"
+              disabled={savedSame || !plan}
+              onPress={() => void save()}
+            />
+            {departure ? (
+              <Button
+                label="저장한 출국 정보 지우기"
+                size="sm"
+                variant="ghost"
+                onPress={() =>
+                  void onSaveDeparture(null)
+                    .then(() => setSaveNote("출국 정보를 지웠어요."))
+                    .catch(() => setSaveNote("지우지 못했어요."))
+                }
+              />
+            ) : null}
+            {saveNote ? (
+              <Label size={12} style={{ color: c.accentInk }}>
+                {saveNote}
+              </Label>
+            ) : null}
           </View>
         ) : null}
         <Label muted size={12}>

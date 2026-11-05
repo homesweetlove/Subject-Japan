@@ -14,8 +14,10 @@ import { DiningScreen } from "./DiningScreen";
 import { TransitScreen } from "./TransitScreen";
 import { EtiquetteScreen } from "./EtiquetteScreen";
 import { DigitalUtilitiesScreen } from "./DigitalUtilitiesScreen";
+import { GoScreen } from "./GoScreen";
 
 export type TripSection =
+  | "go"
   | "itinerary"
   | "airport"
   | "dining"
@@ -26,6 +28,7 @@ export type TripSection =
   | "digital"
   | "tickets";
 const sections: NavItem<TripSection>[] = [
+  { key: "go", label: "길찾기·택시·운행", icon: "navigate-outline" },
   { key: "itinerary", label: "일정·예약", icon: "calendar-outline" },
   { key: "airport", label: "공항 막차", icon: "airplane-outline" },
   { key: "dining", label: "식당 주문·알레르기", icon: "restaurant-outline" },
@@ -57,6 +60,7 @@ export function TripScreen({
   initialSection?: TripSection;
 }) {
   const [section, setSection] = useState<TripSection>(initialSection);
+  const [transitTab, setTransitTab] = useState<"passes" | "taxi">("passes");
 
   // No guessed fallback: screens hide won amounts until a real rate exists.
   const krwRate = state.exchangeRate?.krwPer100Jpy;
@@ -65,7 +69,16 @@ export function TripScreen({
     <View style={{ gap: 22 }}>
       <SubNav items={sections} value={section} onChange={setSection} />
 
-      {section === "itinerary" ? (
+      {section === "go" ? (
+        <GoScreen
+          tripItems={state.tripItems}
+          departure={state.departure}
+          onOpenTaxiFare={() => {
+            setTransitTab("taxi");
+            setSection("transit");
+          }}
+        />
+      ) : section === "itinerary" ? (
         <ItineraryScreen
           items={state.tripItems}
           onSave={onSaveItem}
@@ -80,7 +93,11 @@ export function TripScreen({
       ) : section === "dining" ? (
         <DiningScreen krwPer100Jpy={krwRate} />
       ) : section === "transit" ? (
-        <TransitScreen krwPer100Jpy={krwRate} />
+        <TransitScreen
+          key={transitTab}
+          krwPer100Jpy={krwRate}
+          initialTab={transitTab}
+        />
       ) : section === "checklist" ? (
         <ChecklistScreen
           profile={state.profile}

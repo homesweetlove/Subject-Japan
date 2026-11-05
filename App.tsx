@@ -22,9 +22,18 @@ import { TripScreen, type TripSection } from "./src/features/trip/TripScreen";
 import { TodayScreen, type AppTab } from "./src/features/today/TodayScreen";
 import { planNotifications } from "./src/features/today/model";
 import { notifier } from "./src/features/today/notifications";
+import { refundSummary } from "./src/features/pay/taxFreeTracker";
+import { recommendedArrival } from "./src/features/pay/airportTaxFree";
+import { japanHoliday } from "./src/features/today/holidays";
+import {
+  departureAirportName,
+  departureTime,
+} from "./src/features/trip/departure";
 import { REMINDER_LIMIT } from "./src/features/trip/countdown";
 import { localRepository } from "./src/storage/localRepository";
 import {
+  deleteExpense,
+  saveExpense,
   deleteDutyFreeReceipt,
   recordTranslation,
   saveDutyFreeReceipt,
@@ -101,11 +110,12 @@ function Application() {
     setPayTarget((t) =>
       t.tab === "calculator" ? t : { tab: "calculator", nonce: t.nonce + 1 },
     );
-  const openRefunds = () => {
+  const openPay = (tab: PayTab) => {
     navigate("pay");
     // Queued after navigate's reset, so this target wins.
-    setPayTarget((t) => ({ tab: "customs", nonce: t.nonce + 1 }));
+    setPayTarget((t) => ({ tab, nonce: t.nonce + 1 }));
   };
+  const openRefunds = () => openPay("customs");
   const navigate = (next: AppTab, section?: TripSection) => {
     if (next === "pay") resetPay();
     if (next === "trip" && section)
@@ -119,12 +129,29 @@ function Application() {
     if (!loaded || !notifier.available) return;
     let active = true;
     const timer = setTimeout(() => {
+      const waiting = refundSummary(state.dutyFreeReceipts).waitingCount;
+      const departureAt = state.departure
+        ? departureTime(state.departure)
+        : null;
       void notifier
         .sync(
           planNotifications({
             tripItems: state.tripItems,
             airportReminders: state.airportReminders,
             settings: state.notifications,
+            departure:
+              state.departure && departureAt !== null
+                ? {
+                    at: departureAt,
+                    airport: departureAirportName(state.departure),
+                    arriveAt: recommendedArrival({
+                      departure: departureAt,
+                      receipts: waiting,
+                      holiday: japanHoliday(state.departure.date) !== null,
+                    }).arriveAt,
+                  }
+                : null,
+            waitingReceipts: waiting,
           }),
         )
         .then(() => {
@@ -146,12 +173,16 @@ function Application() {
     state.tripItems,
     state.airportReminders,
     state.notifications,
+    state.departure,
+    state.dutyFreeReceipts,
     resumeTick,
   ]);
   useEffect(
     () =>
       notifier.onOpen((target) =>
-        navigate("trip", target === "airport" ? "airport" : "itinerary"),
+        target === "taxfree"
+          ? openRefunds()
+          : navigate("trip", target === "airport" ? "airport" : "itinerary"),
       ),
     [],
   );
@@ -404,6 +435,7 @@ function Application() {
                       commit((s) => ({ ...s, notifications }))
                     }
                     onOpenRefunds={openRefunds}
+                    onOpenTaxFreeGuide={() => openPay("taxfree")}
                   />
                 ) : tab === "translate" ? (
                   <TranslationHub
@@ -474,6 +506,17 @@ function Application() {
                     }
                     onToggleAutoRefresh={(enabled) =>
                       commit((s) => setAutoRefreshRate(s, enabled))
+                    }
+                    expenses={state.expenses}
+                    onSaveExpense={(expense) =>
+                      commit((s) => saveExpense(s, expense))
+                    }
+                    onDeleteExpense={(id) =>
+                      commit((s) => deleteExpense(s, id))
+                    }
+                    departure={state.departure}
+                    onSaveDeparture={(departure) =>
+                      commit((s) => ({ ...s, departure }))
                     }
                   />
                 ) : tab === "trip" ? (

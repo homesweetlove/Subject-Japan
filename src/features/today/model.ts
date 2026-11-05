@@ -73,7 +73,7 @@ export interface PlannedNotification {
   at: number;
   title: string;
   body: string;
-  target: "airport" | "itinerary";
+  target: "airport" | "itinerary" | "taxfree";
 }
 /** iOS keeps at most 64 pending local notifications per app. */
 export const NOTIFICATION_CAP = 60;
@@ -88,11 +88,46 @@ export function planNotifications(
     tripItems: TripItem[];
     airportReminders: AirportReminder[];
     settings: NotificationSettings;
+    /** Flight home plus how many tax-free receipts still need customs. */
+    departure?: { at: number; airport: string; arriveAt: number } | null;
+    waitingReceipts?: number;
   },
   now = Date.now(),
 ): PlannedNotification[] {
   if (!input.settings.enabled) return [];
   const plan: PlannedNotification[] = [];
+  const dep = input.departure;
+  if (dep) {
+    const receipts = input.waitingReceipts ?? 0;
+    // 20:00 Japan time the evening before the flight.
+    const eve =
+      Date.parse(
+        `${new Date(dep.at - 86400000 + 9 * 3600000).toISOString().slice(0, 10)}T20:00:00+09:00`,
+      );
+    if (eve > now && eve < dep.at)
+      plan.push({
+        key: "departure:eve",
+        at: eve,
+        title: "내일 일본을 떠나요",
+        body:
+          receipts > 0
+            ? `면세 영수증 ${receipts}장의 물건을 모두 챙겨 두세요. 하나라도 없으면 그 영수증은 환급이 안 돼요.`
+            : `${dep.airport} 공항 ${jstClock(dep.arriveAt)}까지 도착을 목표로 준비하세요.`,
+        target: receipts > 0 ? "taxfree" : "itinerary",
+      });
+    const go = dep.arriveAt - 60 * 60000;
+    if (go > now)
+      plan.push({
+        key: "departure:go",
+        at: go,
+        title: `1시간 뒤 ${dep.airport} 공항 도착 목표`,
+        body:
+          receipts > 0
+            ? "짐을 맡기기 전에 세관 면세 기계에 여권부터 대세요."
+            : `비행기 ${jstClock(dep.at)}(일본 시각) 출발이에요.`,
+        target: receipts > 0 ? "taxfree" : "itinerary",
+      });
+  }
   for (const r of input.airportReminders) {
     const { leaveAt } = countdown(r, now);
     const route = airportRoutes.find((a) => a.id === r.routeId);

@@ -32,12 +32,15 @@ The feature list below describes **implemented source code and supported UI path
   - New tax-free guide (refund method from 2026-11-01): old vs new comparison, hand-drawn shop → customs kiosk → refund illustrations, airport order, cases with no refund, Japanese phrases to show staff, Japan Tourism Agency, JNTO and Japan Customs (Korean) links
   - Per departure airport: customs kiosk locations, cash refund machines and official guides (Kansai, Haneda, Narita, Chubu, Fukuoka, New Chitose, Naha), a link to Narita's official live security waiting times, and an "arrive by" estimate from flight time, receipt count, busy hours and holidays (no airport publishes customs kiosk queues)
   - Shop refund methods (only what shops announced, with check dates), a "do not open in Japan" mark on consumable receipts, and a Today card with refunds due and the nearest 90-day deadline
-  - Tax-free receipts & customs-limit tracker: per-receipt method (old/new) and tax rate (10%/8%), expected refund, 90-day deadline and refund status, same-store same-day ¥5,000 (tax-excluded) check, and Korea's $800 entry allowance with alcohol (2 bottles / 2 L / $400), tobacco (200), and perfume (100 ml)
+  - Tax-free receipts & customs-limit tracker: per-receipt method (old/new) and tax rate (10%/8%), expected refund, 90-day deadline and refund status, same-store same-day ¥5,000 (tax-excluded) check, and Korea's $800 entry allowance with alcohol (2 L / $400 total; the 2-bottle rule ended on 2025-03-21), tobacco (200), and perfume (100 ml), using the fetched dollar rate, plus a rough entry-tax estimate above $800 (20% general rate, 30% self-declaration discount up to 200,000 won, 40% penalty if undeclared)
   - Coin-wallet optimizer: calculates a smart cash payment combination that minimizes received coins
   - Warikan (split-bill) calculator: per-person JPY/KRW share plus rounding up/down to the nearest ¥100
   - Japan ATM fee & travel-card withdrawal guide for Travelog, Travel Wallet, and Toss
   - Korea/Japan clothing & shoe-size comparison table (Korean mm/size ↔ Japanese cm/size ↔ US/EU)
 - 20 TRIP utilities:
+  - Directions, taxis and train status: enter a destination once → Google Maps transit/walking directions, Uber opened with the drop-off filled in (Uber shows its fare estimate), a Japanese destination card for taxi drivers, quick picks from itinerary places and the departure airport, live Kanto/Kansai and JR West service status
+  - Today: Japanese public holidays (2026–2027) today or tomorrow, JMA earthquakes of intensity 3+ in the last 24 hours (automatic once a weather city is chosen, otherwise on tap)
+  - Spending log (yen, category, cash/card, memo) with daily, total and category sums and won conversion; departure entered once with a Today countdown, airport arrival target and reminders the evening before and an hour before airport arrival
   - Essential restaurant phrases and order cards such as “no wasabi,” with full-screen card mode
   - Otoshi (お通し / table charge) calculator by party size and guidance on whether refusal is possible
   - Japanese sentence generator and display card for food allergies and disliked ingredients

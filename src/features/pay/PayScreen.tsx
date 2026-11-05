@@ -31,6 +31,7 @@ import {
   refundDeadline,
   refundStatusLabels,
   refundSummary,
+  estimateKoreaTax,
   sameStoreDayTaxExcluded,
   schemeFor,
   type DutyFreeCategory,
@@ -40,6 +41,9 @@ import {
   TAX_FREE_MIN_JPY,
 } from "./taxFreeTracker";
 import { TaxFreeGuide } from "./TaxFreeGuide";
+import { ExpenseScreen } from "./ExpenseScreen";
+import type { Expense } from "./expenses";
+import type { Departure } from "../trip/departure";
 import {
   atmGuides,
   calculateSmartPayment,
@@ -47,7 +51,13 @@ import {
   sizeChartData,
 } from "./cashUtilities";
 
-export type PayTab = "calculator" | "taxfree" | "customs" | "coins" | "atm";
+export type PayTab =
+  | "calculator"
+  | "spend"
+  | "taxfree"
+  | "customs"
+  | "coins"
+  | "atm";
 
 export function PayScreen({
   initialTab = "calculator",
@@ -58,7 +68,17 @@ export function PayScreen({
   onSaveReceipt,
   onDeleteReceipt,
   onToggleAutoRefresh,
+  expenses = [],
+  onSaveExpense,
+  onDeleteExpense,
+  departure = null,
+  onSaveDeparture,
 }: {
+  expenses?: Expense[];
+  onSaveExpense?: (e: Expense) => Promise<void>;
+  onDeleteExpense?: (id: string) => Promise<void>;
+  departure?: Departure | null;
+  onSaveDeparture?: (d: Departure | null) => Promise<void>;
   initialTab?: PayTab;
   rate: ExchangeRate | null;
   onRate: (r: ExchangeRate) => Promise<void>;
@@ -268,6 +288,7 @@ export function PayScreen({
   const customs = analyzeCustoms(dutyFreeReceipts, rate);
   const nowMs = Date.now();
   const refunds = refundSummary(dutyFreeReceipts, nowMs);
+  const koreaTax = estimateKoreaTax(customs, rate);
   // The 5,000 yen rule is per store per day, before tax.
   const draftAmount = Number(receiptJpy);
   const draftTaxExcluded =
@@ -312,6 +333,7 @@ export function PayScreen({
       <SubNav
         items={[
           { key: "calculator", label: "결제·할인", icon: "calculator-outline" },
+          { key: "spend", label: "지출 기록", icon: "wallet-outline" },
           { key: "taxfree", label: "새 면세 안내", icon: "airplane-outline" },
           { key: "customs", label: "면세 기록·세관", icon: "receipt-outline" },
           { key: "coins", label: "동전·더치페이", icon: "cash-outline" },
@@ -600,10 +622,19 @@ export function PayScreen({
           )}
           {!!notice && <Label>{notice}</Label>}
         </>
+      ) : tab === "spend" ? (
+        <ExpenseScreen
+          expenses={expenses}
+          krwPer100Jpy={rate?.krwPer100Jpy}
+          onSave={onSaveExpense ?? (async () => {})}
+          onDelete={onDeleteExpense ?? (async () => {})}
+        />
       ) : tab === "taxfree" ? (
         <TaxFreeGuide
           onOpenTracker={() => setTab("customs")}
           waitingReceipts={refunds.waitingCount}
+          departure={departure}
+          onSaveDeparture={onSaveDeparture}
         />
       ) : tab === "customs" ? (
         <>
@@ -664,6 +695,10 @@ export function PayScreen({
               </Label>
             </View>
 
+            {customs.isOverLimit ? (
+              <KoreaTaxCard estimate={koreaTax} />
+            ) : null}
+
             {/* Japan consumption tax: refunds still to come and old savings */}
             <View
               style={{
@@ -710,7 +745,9 @@ export function PayScreen({
                   { backgroundColor: c.soft, padding: 10, borderRadius: 10 },
                 ]}
               >
-                <Label size={13}>주류: 최대 2병, 2L 이하 ($400 이하)</Label>
+                <Label size={13}>
+                  주류: 합계 2L 이하·$400 이하 (병 수 제한 없음)
+                </Label>
                 <Label
                   weight="700"
                   size={13}
@@ -1244,6 +1281,52 @@ function ReceiptRefund({
           ))}
         </View>
       )}
+    </View>
+  );
+}
+
+/** Rough Korean entry tax once the $800 allowance is exceeded. */
+function KoreaTaxCard({
+  estimate,
+}: {
+  estimate: ReturnType<typeof estimateKoreaTax>;
+}) {
+  const c = useTheme();
+  const won = (n: number) => `₩${n.toLocaleString()}`;
+  return (
+    <View
+      style={{
+        backgroundColor: c.accentSoft,
+        padding: 12,
+        borderRadius: 12,
+        gap: 4,
+      }}
+    >
+      <Label weight="700" size={14} style={{ color: c.accentInk }}>
+        한국 들어갈 때 낼 세금 (어림)
+      </Label>
+      {estimate ? (
+        <>
+          <Label size={14}>
+            ${estimate.excessUsd} 초과 → 자진 신고하면 약{" "}
+            {won(estimate.selfDeclaredKrw)}
+          </Label>
+          <Label muted size={12}>
+            신고 안 하고 걸리면 약 {won(estimate.undeclaredKrw)} (가산세 40%).
+            일반 물품 20%로 계산했고, 옷·화장품·명품 가방·시계는 세율이 달라요.
+            1달러 = {estimate.krwPerUsd.toLocaleString()}원 기준.
+          </Label>
+        </>
+      ) : (
+        <Label size={13}>
+          결제·할인에서 '최신 환율 새로고침'을 누르면 원화로 어림해 드려요.
+        </Label>
+      )}
+      <Label muted size={12}>
+        $800을 넘으면 입국 때 자진 신고가 거의 항상 이득이에요 (세금 30% 감면,
+        최대 20만 원). 정확한 세액은 관세청 '여행자 휴대품 예상세액 조회'에서
+        확인하세요.
+      </Label>
     </View>
   );
 }

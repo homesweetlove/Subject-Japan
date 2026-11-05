@@ -17,6 +17,12 @@ import {
   RECEIPT_LIMIT,
   type DutyFreeReceipt,
 } from "../features/pay/taxFreeTracker";
+import {
+  EXPENSE_LIMIT,
+  validExpense,
+  type Expense,
+} from "../features/pay/expenses";
+import { validDeparture } from "../features/trip/departure";
 
 export const STORAGE_KEY = "subject-japan.local.v1";
 export const HISTORY_LIMIT = 100;
@@ -220,5 +226,31 @@ export function decodeState(raw: string | null): LocalState {
     validWeather(value.weather) && value.weather.cityId === state.weatherCity
       ? value.weather
       : null;
+  state.expenses = Array.isArray(value.expenses)
+    ? value.expenses
+        .filter(validExpense)
+        .filter(
+          (v: { id: string }, i: number, a: { id: string }[]) =>
+            a.findIndex((x) => x.id === v.id) === i,
+        )
+        .slice(0, EXPENSE_LIMIT)
+    : [];
+  state.departure = validDeparture(value.departure) ? value.departure : null;
   return state;
+}
+
+export function saveExpense(state: LocalState, expense: Expense): LocalState {
+  if (!validExpense(expense)) throw new Error("지출 금액을 확인해 주세요.");
+  const exists = state.expenses.some((e) => e.id === expense.id);
+  if (!exists && state.expenses.length >= EXPENSE_LIMIT)
+    throw new Error(`지출은 ${EXPENSE_LIMIT}개까지 기록할 수 있어요.`);
+  return {
+    ...state,
+    expenses: exists
+      ? state.expenses.map((e) => (e.id === expense.id ? expense : e))
+      : [expense, ...state.expenses],
+  };
+}
+export function deleteExpense(state: LocalState, id: string): LocalState {
+  return { ...state, expenses: state.expenses.filter((e) => e.id !== id) };
 }

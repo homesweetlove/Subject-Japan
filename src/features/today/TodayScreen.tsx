@@ -33,6 +33,23 @@ import {
   refundSummary,
   type DutyFreeReceipt,
 } from "../pay/taxFreeTracker";
+import { japanDate, japanHoliday } from "./holidays";
+import {
+  fetchQuakes,
+  intensityAdvice,
+  intensityLabel,
+  intensityRank,
+  notableQuake,
+  QUAKE_PAGE_URL,
+  type Quake,
+} from "./quakes";
+import { openTravelLink } from "../guides/links";
+import { recommendedArrival } from "../pay/airportTaxFree";
+import {
+  departureAirportName,
+  departureTime,
+  type Departure,
+} from "../trip/departure";
 import {
   describeWeather,
   fetchWeather,
@@ -53,11 +70,14 @@ export function TodayScreen({
   onWeather,
   onNotifications,
   onOpenRefunds,
+  onOpenTaxFreeGuide,
 }: {
   state: LocalState;
   onNavigate: (tab: AppTab, section?: TripSection) => void;
   /** Opens PAY on the tax-free receipts list. */
   onOpenRefunds?: () => void;
+  /** Opens PAY on the tax-free guide (airport planner). */
+  onOpenTaxFreeGuide?: () => void;
   onWeatherCity: (id: WeatherCityId) => Promise<void>;
   onWeather: (w: WeatherSnapshot) => Promise<void>;
   onNotifications: (s: NotificationSettings) => Promise<void>;
@@ -80,6 +100,15 @@ export function TodayScreen({
         }
         subtitle={`일본 시각 ${jstHeadline(now)}`}
       />
+      <HolidayNote now={now} />
+      {state.departure && (
+        <DepartureCard
+          departure={state.departure}
+          receipts={state.dutyFreeReceipts}
+          now={now}
+          onOpen={onOpenTaxFreeGuide ?? (() => onNavigate("pay"))}
+        />
+      )}
       <WeatherCard
         city={state.weatherCity}
         weather={state.weather}
@@ -122,6 +151,10 @@ export function TodayScreen({
           </>
         )}
       </Card>
+      <QuakeCard
+        autoCheck={state.weatherCity !== null}
+        onGuide={() => onNavigate("trip", "emergency")}
+      />
       <RefundCard
         receipts={state.dutyFreeReceipts}
         now={now}
@@ -725,6 +758,208 @@ function RefundCard({
           짐 맡기기 전에 공항 세관 기계에 여권을 대야 돌려받아요.
         </Label>
       </Press>
+    </Card>
+  );
+}
+
+/** Japanese public holidays today or tomorrow: crowds, closed banks. */
+function HolidayNote({ now }: { now: number }) {
+  const c = useTheme();
+  const today = japanHoliday(japanDate(now));
+  const tomorrow = japanHoliday(japanDate(now + 86400000));
+  if (!today && !tomorrow) return null;
+  return (
+    <View
+      style={[
+        styles.row,
+        {
+          backgroundColor: c.accentSoft,
+          borderRadius: radius.md,
+          padding: 12,
+          alignItems: "flex-start",
+        },
+      ]}
+    >
+      <Icon name="flag-outline" size={18} color={c.accentInk} />
+      <Label size={13} style={{ flex: 1, color: c.accentInk }}>
+        {today
+          ? `오늘은 일본 공휴일 ${today}이에요. 관광지·열차가 붐비고 은행·일부 관공서는 쉬어요.`
+          : `내일은 일본 공휴일 ${tomorrow}이에요. 인기 식당·관광지는 미리 예약하세요.`}
+      </Label>
+    </View>
+  );
+}
+
+/** The flight home: days left and when to be at the airport. */
+function DepartureCard({
+  departure,
+  receipts,
+  now,
+  onOpen,
+}: {
+  departure: Departure;
+  receipts: DutyFreeReceipt[];
+  now: number;
+  onOpen: () => void;
+}) {
+  const c = useTheme();
+  const at = departureTime(departure);
+  if (at < now) return null;
+  const waiting = refundSummary(receipts, now).waitingCount;
+  const plan = recommendedArrival({
+    departure: at,
+    receipts: waiting,
+    holiday: japanHoliday(departure.date) !== null,
+  });
+  const days = Math.round(
+    (Date.parse(`${departure.date}T00:00:00+09:00`) -
+      Date.parse(`${japanDate(now)}T00:00:00+09:00`)) /
+      86400000,
+  );
+  return (
+    <Card>
+      <SectionTitle icon="airplane-outline" title="일본을 떠나는 날" />
+      <Press
+        accessibilityRole="button"
+        accessibilityLabel="출국 정보와 공항 도착 시간 보기"
+        onPress={onOpen}
+        style={{ gap: 4 }}
+      >
+        <View style={styles.between}>
+          <Label size={19} weight="700">
+            {departureAirportName(departure)} 공항 {departure.time} 출발
+          </Label>
+          <Badge
+            label={days === 0 ? "오늘" : days === 1 ? "내일" : `D-${days}`}
+            tone="accent"
+          />
+        </View>
+        <Label size={14} style={{ color: c.accentInk }}>
+          {days === 0 ? "" : `${departure.date} `}
+          {jstClock(plan.arriveAt)}까지 공항 도착 (일본 시각)
+        </Label>
+        <Label muted size={12}>
+          {waiting > 0
+            ? `세관 확인할 면세 영수증 ${waiting}장 포함해 계산했어요. 짐 맡기기 전 세관 기계부터.`
+            : "면세 영수증이 없으면 공항 안내대로 2시간 전 기준이에요."}
+        </Label>
+      </Press>
+    </Card>
+  );
+}
+
+/**
+ * Recent earthquakes from JMA. Checked automatically only when the user has
+ * already allowed JMA requests by picking a weather city; otherwise one tap.
+ */
+function QuakeCard({
+  autoCheck,
+  onGuide,
+}: {
+  autoCheck: boolean;
+  onGuide: () => void;
+}) {
+  const c = useTheme();
+  const [state, setState] = useState<
+    | { kind: "idle" }
+    | { kind: "loading" }
+    | { kind: "done"; quake: Quake | null; checkedAt: number }
+    | { kind: "error"; message: string }
+  >({ kind: "idle" });
+  const controller = useRef<AbortController | null>(null);
+  const check = async () => {
+    controller.current?.abort();
+    const current = new AbortController();
+    controller.current = current;
+    const timeout = setTimeout(() => current.abort(), 10000);
+    setState({ kind: "loading" });
+    try {
+      const list = await fetchQuakes(current.signal);
+      if (controller.current !== current) return;
+      const checkedAt = Date.now();
+      setState({ kind: "done", quake: notableQuake(list, checkedAt), checkedAt });
+    } catch (e) {
+      if (controller.current !== current) return;
+      setState({
+        kind: "error",
+        message:
+          e instanceof Error && e.name !== "AbortError"
+            ? e.message
+            : "지진 정보를 가져오지 못했어요.",
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+  };
+  useEffect(() => {
+    if (autoCheck) void check();
+    return () => {
+      controller.current?.abort();
+      controller.current = null;
+    };
+  }, [autoCheck]);
+  const quake = state.kind === "done" ? state.quake : null;
+  const strong = quake && intensityRank(quake.intensity) >= intensityRank("5-");
+  return (
+    <Card tone={strong ? "accent" : "default"}>
+      <SectionTitle icon="pulse-outline" title="최근 지진 (기상청)" />
+      {state.kind === "idle" ? (
+        <Button
+          label="지난 24시간 지진 확인"
+          icon="refresh-outline"
+          size="sm"
+          onPress={() => void check()}
+        />
+      ) : state.kind === "loading" ? (
+        <Label muted size={13}>
+          확인하는 중이에요…
+        </Label>
+      ) : state.kind === "error" ? (
+        <>
+          <Label muted size={13}>
+            {state.message}
+          </Label>
+          <Button
+            label="다시 확인"
+            size="sm"
+            variant="ghost"
+            onPress={() => void check()}
+          />
+        </>
+      ) : quake ? (
+        <View style={{ gap: 4 }}>
+          <Label size={19} weight="800" style={strong ? { color: c.error } : undefined}>
+            최대 진도 {intensityLabel(quake.intensity)}
+            {quake.magnitude !== null ? ` · 규모 ${quake.magnitude}` : ""}
+          </Label>
+          <Label size={14}>
+            {quake.place} · {jstClock(quake.at)} (일본 시각)
+          </Label>
+          <Label muted size={13}>
+            {intensityAdvice(quake.intensity)}
+          </Label>
+        </View>
+      ) : (
+        <Label muted size={13}>
+          지난 24시간 동안 진도 3 이상 지진은 없었어요.
+        </Label>
+      )}
+      <View style={[styles.row, { flexWrap: "wrap" }]}>
+        <Button
+          label="지진 대피 요령"
+          icon="shield-checkmark-outline"
+          size="sm"
+          variant="ghost"
+          onPress={onGuide}
+        />
+        <Button
+          label="기상청 지진 지도"
+          icon="open-outline"
+          size="sm"
+          variant="ghost"
+          onPress={() => void openTravelLink(QUAKE_PAGE_URL).catch(() => {})}
+        />
+      </View>
     </Card>
   );
 }

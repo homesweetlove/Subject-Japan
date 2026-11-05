@@ -61,7 +61,9 @@ export const notifier = {
       if (
         request.identifier.startsWith(PREFIX) &&
         !seen.has(key) &&
-        (target === "airport" || target === "itinerary")
+        (target === "airport" ||
+          target === "itinerary" ||
+          target === "taxfree")
       ) {
         seen.add(key);
         listener(target);

@@ -146,7 +146,6 @@ export const TAX_FREE_MIN_JPY = 5000;
 /** Old-method cap for consumables; abolished for purchases from 2026-11-01. */
 export const TAX_FREE_CONSUMABLE_MAX_JPY = 500000;
 export const KOREA_CUSTOMS_LIMIT_USD = 800;
-export const LIQUOR_BOTTLE_LIMIT = 2;
 export const LIQUOR_VOLUME_LIMIT_ML = 2000;
 export const LIQUOR_USD_LIMIT = 400;
 export const TOBACCO_LIMIT_CIGARETTES = 200;
@@ -250,7 +249,7 @@ export function analyzeCustoms(
 
 
   const isLiquorOver =
-    liquorCount > LIQUOR_BOTTLE_LIMIT ||
+    // The 2-bottle rule was abolished on 2025-03-21; only 2 L and $400 remain.
     liquorVolumeMl > LIQUOR_VOLUME_LIMIT_ML ||
     liquorUsd > LIQUOR_USD_LIMIT;
   const isTobaccoOver = tobaccoCount > TOBACCO_LIMIT_CIGARETTES;
@@ -275,5 +274,48 @@ export function analyzeCustoms(
     isTobaccoOver,
     perfumeVolumeMl,
     isPerfumeOver,
+  };
+}
+
+export const SELF_DECLARE_DISCOUNT_RATE = 0.3;
+export const SELF_DECLARE_DISCOUNT_CAP_KRW = 200000;
+export const UNDECLARED_PENALTY_RATE = 0.4;
+/** Most everyday goods; clothes, cosmetics and luxury goods differ. */
+export const GENERAL_SIMPLE_TAX_RATE = 0.2;
+
+export interface KoreaTaxEstimate {
+  excessUsd: number;
+  krwPerUsd: number;
+  taxKrw: number;
+  discountKrw: number;
+  selfDeclaredKrw: number;
+  undeclaredKrw: number;
+}
+
+/**
+ * Rough Korean entry tax on goods above the $800 allowance: the excess at
+ * the common 20% simplified rate, 30% off (up to 200,000 won) when declared,
+ * 40% extra when caught undeclared. Real duty depends on item rates and the
+ * customs exchange rate on the entry day, so this is only a planning guide.
+ */
+export function estimateKoreaTax(
+  analysis: Pick<CustomsAnalysis, "totalUsd" | "usdIsEstimate">,
+  rate: ExchangeRate | null,
+): KoreaTaxEstimate | null {
+  if (!rate || rate.usdPerJpy === undefined) return null;
+  const excessUsd = Math.max(0, analysis.totalUsd - KOREA_CUSTOMS_LIMIT_USD);
+  const krwPerUsd = rate.krwPer100Jpy / 100 / rate.usdPerJpy;
+  const taxKrw = Math.round(excessUsd * krwPerUsd * GENERAL_SIMPLE_TAX_RATE);
+  const discountKrw = Math.min(
+    Math.round(taxKrw * SELF_DECLARE_DISCOUNT_RATE),
+    SELF_DECLARE_DISCOUNT_CAP_KRW,
+  );
+  return {
+    excessUsd: Math.round(excessUsd * 10) / 10,
+    krwPerUsd: Math.round(krwPerUsd * 100) / 100,
+    taxKrw,
+    discountKrw,
+    selfDeclaredKrw: taxKrw - discountKrw,
+    undeclaredKrw: Math.round(taxKrw * (1 + UNDECLARED_PENALTY_RATE)),
   };
 }

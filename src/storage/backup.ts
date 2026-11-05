@@ -76,6 +76,7 @@ export function backupSummary(state: LocalState): string {
   const parts: [string, number][] = [
     ["일정", state.tripItems.length],
     ["면세 영수증", state.dutyFreeReceipts.length],
+    ["지출 기록", state.expenses.length],
     ["즐겨찾기", state.favorites.length],
     ["번역 기록", state.history.length],
     ["교통카드", state.transitCards.length],

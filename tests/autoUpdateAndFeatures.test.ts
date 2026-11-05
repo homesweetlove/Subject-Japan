@@ -19,7 +19,6 @@ import {
   validReceipt,
   type DutyFreeReceipt,
   KOREA_CUSTOMS_LIMIT_USD,
-  LIQUOR_BOTTLE_LIMIT,
   LIQUOR_USD_LIMIT,
   LIQUOR_VOLUME_LIMIT_ML,
   PERFUME_LIMIT_ML,

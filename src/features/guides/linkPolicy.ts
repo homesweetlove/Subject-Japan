@@ -19,6 +19,11 @@ const hosts = new Set([
   "tokyo-haneda.com",
   "www.narita-airport.jp",
   "www.centrair.jp",
+  // Live train service status.
+  "transit.yahoo.co.jp",
+  "www.westjr.co.jp",
+  // Japan Meteorological Agency earthquake pages.
+  "www.jma.go.jp",
 ]);
 export function validTravelLink(value: string): boolean {
   try {

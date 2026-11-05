@@ -272,3 +272,46 @@ test("coupons: filter, official conditions, local save, reload and reset", async
   ).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test("directions hand-off, taxi card and spending log", async ({ page }) => {
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "나중에 입력하기", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "여행", exact: true }).click();
+  await page
+    .getByRole("button", { name: "길찾기·택시·운행", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", {
+      name: "가고 싶은 곳 (일본어 주소나 장소 이름이 가장 정확해요)",
+      exact: true,
+    })
+    .fill("大阪城");
+  await page
+    .getByRole("button", { name: "택시 기사에게 보여주기", exact: true })
+    .click();
+  await expect(
+    page.getByRole("dialog").getByText("大阪城までお願いします。", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "확인 완료", exact: true })
+    .click();
+
+  await page.getByRole("tab", { name: "결제", exact: true }).click();
+  await page.getByRole("button", { name: "지출 기록", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "금액 (엔)", exact: true })
+    .fill("1280");
+  await page
+    .getByRole("button", { name: "이 지출 기록하기", exact: true })
+    .click();
+  await expect(page.getByText("¥1,280", { exact: true }).first()).toBeVisible();
+  await page.reload();
+  await page.getByRole("tab", { name: "결제", exact: true }).click();
+  await page.getByRole("button", { name: "지출 기록", exact: true }).click();
+  await expect(page.getByText("1건", { exact: true })).toBeVisible();
+});
