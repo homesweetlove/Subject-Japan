@@ -2,6 +2,10 @@
 
 # SUBJECT:JAPAN
 
+[![Android APK 바로 다운로드](https://img.shields.io/badge/Android-APK%20%EB%B0%94%EB%A1%9C%20%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-36370733642/Subject-Japan-android-test-arm64.apk) [![전체 릴리스](https://img.shields.io/badge/GitHub-%EC%A0%84%EC%B2%B4%20%EB%A6%B4%EB%A6%AC%EC%8A%A4-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
+
+> **Android 테스트 APK:** ARM64 전용 · 2026년 9월 28일 빌드. 버튼을 누르면 APK가 다운로드되며, 내려받은 파일을 열어 설치할 수 있습니다. 이후 소스 수정 사항은 포함되지 않았습니다. iPhone 설치 파일은 제공되지 않습니다. 비공개 저장소이므로 다운로드하려면 저장소 접근 권한이 필요합니다.
+
 한국 여행자를 위한 일본 여행 유틸리티. Android와 iPhone에서 쓰는 하나의 앱을 목표로 합니다. 첫 번째 기능은 **번역과 내 사이즈를 기억하는 쇼핑 문장**입니다.
 
 ## 사용자 문제와 개발 동기
