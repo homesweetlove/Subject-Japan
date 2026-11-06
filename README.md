@@ -2,6 +2,10 @@
 
 # SUBJECT:JAPAN
 
+[![Download Android test APK](https://img.shields.io/badge/Android-Download%20APK-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-36370733642/Subject-Japan-android-test-arm64.apk) [![View releases](https://img.shields.io/badge/GitHub-All%20Releases-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
+
+> **Android test build:** ARM64 only · built September 28, 2026. Tap the button to download the APK, then open the downloaded file to install it. This build predates later source changes; iOS installation is not available here. This repository is private, so downloading requires repository access.
+
 ## User problem and motivation
 
 Finding a shopping phrase and typing the same clothing sizes repeatedly is difficult during a conversation in a Japanese store. This app keeps sizes and authored phrases available locally, including when connectivity is poor. The central flow is **save sizes → choose a shopping phrase → show Japanese → favorite it for reuse after restart**. Free-text translation requires a dedicated native build and downloaded on-device models.
