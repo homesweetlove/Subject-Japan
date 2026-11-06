@@ -31,6 +31,7 @@ export interface Expense {
 
 export const EXPENSE_LIMIT = 1000;
 export const EXPENSE_MAX_JPY = 10_000_000;
+const JAPAN_OFFSET_MS = 9 * 3600000;
 
 export function validExpense(value: unknown): value is Expense {
   if (!value || typeof value !== "object") return false;
@@ -46,12 +47,13 @@ export function validExpense(value: unknown): value is Expense {
     (e.method === "cash" || e.method === "card") &&
     typeof e.memo === "string" &&
     e.memo.length <= 60 &&
-    Number.isFinite(e.createdAt)
+    Number.isFinite(e.createdAt) &&
+    Number.isFinite(new Date(e.createdAt + JAPAN_OFFSET_MS).getTime())
   );
 }
 
 const japanDay = (timestamp: number) =>
-  new Date(timestamp + 9 * 3600000).toISOString().slice(0, 10);
+  new Date(timestamp + JAPAN_OFFSET_MS).toISOString().slice(0, 10);
 
 export interface ExpenseSummary {
   totalJpy: number;
