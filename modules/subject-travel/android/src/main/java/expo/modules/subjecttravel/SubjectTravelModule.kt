@@ -15,6 +15,7 @@ import android.os.Looper
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import com.facebook.react.bridge.ReactContext
 import com.facebook.react.common.LifecycleState
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
@@ -193,7 +194,7 @@ class SubjectTravelModule : Module() {
   private fun isForeground(): Boolean {
     val activity = appContext.currentActivity
     return !destroyed && foreground && activity != null && !activity.isFinishing && !activity.isDestroyed &&
-      appContext.reactContext?.lifecycleState == LifecycleState.RESUMED
+      (appContext.reactContext as? ReactContext)?.lifecycleState == LifecycleState.RESUMED
   }
 
   private fun requireForeground(promise: Promise): Boolean {
