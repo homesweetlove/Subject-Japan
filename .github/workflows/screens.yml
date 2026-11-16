@@ -1,0 +1,46 @@
+name: Screen pictures
+# Saves a picture of each main screen from the web build to the `ci-screens`
+# branch, so design changes can be reviewed without installing the app.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/screens.yml"
+      - "App.tsx"
+      - "src/**"
+      - "screens/**"
+      - "playwright.screens.config.ts"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: screen-pictures
+  cancel-in-progress: true
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx expo export --platform web
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --config playwright.screens.config.ts
+      - name: Publish pictures to the ci-screens branch
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p screens-out
+          cd screens-out
+          echo "Screen pictures for $GITHUB_SHA" > README.md
+          git init -q -b ci-screens
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "screens for $GITHUB_SHA"
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ci-screens

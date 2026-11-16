@@ -55,3 +55,6 @@ coverage/
 modules/*/android/.gradle/
 modules/*/android/build/
 modules/*/ios/build/
+
+# Screen pictures written by playwright.screens.config.ts
+screens-out/
