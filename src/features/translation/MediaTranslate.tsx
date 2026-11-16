@@ -167,6 +167,10 @@ export function MediaTranslate({
   };
   const listen = async () => {
     if (operation.current) return;
+    if (!travelTools.available) {
+      setNotice("이 기능은 전용 Android·iPhone 앱에서 사용할 수 있어요.");
+      return;
+    }
     const token = ++sequence.current;
     operation.current = "listen";
     recognitionStarted.current = false;
