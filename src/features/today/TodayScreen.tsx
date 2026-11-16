@@ -181,10 +181,20 @@ export function TodayScreen({
         />
         <Tile
           icon="card-outline"
-          label="교통카드"
-          value={card ? `¥${card.entries[0].balance.toLocaleString()}` : "읽기"}
+          label="카드"
+          value={
+            card
+              ? `¥${card.entries[0].balance.toLocaleString()}`
+              : state.membershipCards.length
+                ? `멤버십 ${state.membershipCards.length}개`
+                : "열기"
+          }
           hint={
-            card ? `${card.name || "내 카드"} 마지막 잔액` : "NFC로 잔액 확인"
+            card
+              ? `${card.name || "내 카드"} 마지막 잔액 · 멤버십 ${state.membershipCards.length}개`
+              : state.membershipCards.length
+                ? "저장한 멤버십 열기"
+                : "교통카드와 멤버십"
           }
           onPress={() => onNavigate("card")}
         />
@@ -877,7 +887,11 @@ function QuakeCard({
       const list = await fetchQuakes(current.signal);
       if (controller.current !== current) return;
       const checkedAt = Date.now();
-      setState({ kind: "done", quake: notableQuake(list, checkedAt), checkedAt });
+      setState({
+        kind: "done",
+        quake: notableQuake(list, checkedAt),
+        checkedAt,
+      });
     } catch (e) {
       if (controller.current !== current) return;
       setState({
@@ -928,7 +942,11 @@ function QuakeCard({
         </>
       ) : quake ? (
         <View style={{ gap: 4 }}>
-          <Label size={19} weight="800" style={strong ? { color: c.error } : undefined}>
+          <Label
+            size={19}
+            weight="800"
+            style={strong ? { color: c.error } : undefined}
+          >
             최대 진도 {intensityLabel(quake.intensity)}
             {quake.magnitude !== null ? ` · 규모 ${quake.magnitude}` : ""}
           </Label>

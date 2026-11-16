@@ -15,7 +15,7 @@ import { StatusBar } from "expo-status-bar";
 import { initialState, type LocalState } from "./src/domain/models";
 import { ProfileScreen } from "./src/features/profile/ProfileScreen";
 import { TranslationHub } from "./src/features/translation/TranslationHub";
-import { CardScreen } from "./src/features/cards/CardScreen";
+import { CardHub } from "./src/features/cards/CardHub";
 import { PayScreen, type PayTab } from "./src/features/pay/PayScreen";
 import { CouponHub } from "./src/features/coupons/CouponHub";
 import { TripScreen, type TripSection } from "./src/features/trip/TripScreen";
@@ -33,7 +33,9 @@ import { REMINDER_LIMIT } from "./src/features/trip/countdown";
 import { localRepository } from "./src/storage/localRepository";
 import {
   deleteExpense,
+  deleteMembership,
   saveExpense,
+  saveMembership,
   deleteDutyFreeReceipt,
   recordTranslation,
   saveDutyFreeReceipt,
@@ -49,7 +51,7 @@ import { dark, light, ThemeContext } from "./src/ui/theme";
 
 const tabs: TabItem<AppTab>[] = [
   { key: "today", label: "오늘", icon: "today-outline", activeIcon: "today" },
-  { key: "card", label: "교통카드", icon: "card-outline", activeIcon: "card" },
+  { key: "card", label: "카드", icon: "card-outline", activeIcon: "card" },
   {
     key: "coupon",
     label: "쿠폰",
@@ -392,194 +394,205 @@ function Application() {
                     {notificationError}
                   </Label>
                 )}
-                <Enter
-                  key={!state.onboarded || profileOpen ? "profile" : tab}
-                >
-                {!state.onboarded || profileOpen ? (
-                  <ProfileScreen
-                    key={state.onboarded ? "profile" : "onboarding"}
-                    state={state}
-                    onClose={() => setProfileOpen(false)}
-                    onSave={async (profile, theme) => {
-                      await commit((s) => ({
-                        ...s,
-                        onboarded: true,
-                        profile,
-                        theme,
-                      }));
-                      setProfileOpen(false);
-                      scroll.current?.scrollTo({ y: 0, animated: false });
-                    }}
-                    onReset={async (fresh) => {
-                      await commit(() => fresh);
-                      setProfileOpen(false);
-                      setTab("today");
-                      scroll.current?.scrollTo({ y: 0, animated: false });
-                    }}
-                  />
-                ) : tab === "today" ? (
-                  <TodayScreen
-                    state={state}
-                    onNavigate={navigate}
-                    onWeatherCity={(weatherCity) =>
-                      commit((s) => ({ ...s, weatherCity }))
-                    }
-                    onWeather={(weather) =>
-                      commit((s) =>
-                        s.weatherCity === weather.cityId
-                          ? { ...s, weather }
-                          : s,
-                      )
-                    }
-                    onNotifications={(notifications) =>
-                      commit((s) => ({ ...s, notifications }))
-                    }
-                    onOpenRefunds={openRefunds}
-                    onOpenTaxFreeGuide={() => openPay("taxfree")}
-                  />
-                ) : tab === "translate" ? (
-                  <TranslationHub
-                    state={state}
-                    onRecord={(value) =>
-                      commit((s) => recordTranslation(s, value))
-                    }
-                    onFavorite={(value) =>
-                      commit((s) => toggleFavorite(s, value))
-                    }
-                    onClearHistory={() =>
-                      commit((s) => ({ ...s, history: [] }))
-                    }
-                    onProfile={openProfile}
-                  />
-                ) : tab === "coupon" ? (
-                  <CouponHub
-                    state={state}
-                    onToggleGuide={toggleGuide}
-                    onToggleSaved={(id) =>
-                      commit((s) => toggleSavedCoupon(s, id))
-                    }
-                  />
-                ) : tab === "card" ? (
-                  <CardScreen
-                    cards={state.transitCards}
-                    rate={state.exchangeRate}
-                    onSave={(value) =>
-                      commit((s) => {
-                        if (
-                          !s.transitCards.some((c) => c.id === value.id) &&
-                          s.transitCards.length >= 20
-                        )
-                          throw new Error(
-                            "교통카드는 20장까지 저장할 수 있어요.",
-                          );
-                        return {
+                <Enter key={!state.onboarded || profileOpen ? "profile" : tab}>
+                  {!state.onboarded || profileOpen ? (
+                    <ProfileScreen
+                      key={state.onboarded ? "profile" : "onboarding"}
+                      state={state}
+                      onClose={() => setProfileOpen(false)}
+                      onSave={async (profile, theme) => {
+                        await commit((s) => ({
                           ...s,
-                          transitCards: [
-                            value,
-                            ...s.transitCards.filter((c) => c.id !== value.id),
-                          ],
-                        };
-                      })
-                    }
-                    onDelete={(id) =>
-                      commit((s) => ({
-                        ...s,
-                        transitCards: s.transitCards.filter((c) => c.id !== id),
-                      }))
-                    }
-                  />
-                ) : tab === "pay" ? (
-                  <PayScreen
-                    key={payTarget.nonce}
-                    initialTab={payTarget.tab}
-                    rate={state.exchangeRate}
-                    onRate={(exchangeRate) =>
-                      commit((s) => ({ ...s, exchangeRate }))
-                    }
-                    dutyFreeReceipts={state.dutyFreeReceipts}
-                    autoRefreshRate={state.autoRefreshRate}
-                    onSaveReceipt={(receipt) =>
-                      commit((s) => saveDutyFreeReceipt(s, receipt))
-                    }
-                    onDeleteReceipt={(id) =>
-                      commit((s) => deleteDutyFreeReceipt(s, id))
-                    }
-                    onToggleAutoRefresh={(enabled) =>
-                      commit((s) => setAutoRefreshRate(s, enabled))
-                    }
-                    expenses={state.expenses}
-                    onSaveExpense={(expense) =>
-                      commit((s) => saveExpense(s, expense))
-                    }
-                    onDeleteExpense={(id) =>
-                      commit((s) => deleteExpense(s, id))
-                    }
-                    departure={state.departure}
-                    onSaveDeparture={(departure) =>
-                      commit((s) => ({ ...s, departure }))
-                    }
-                  />
-                ) : tab === "trip" ? (
-                  <TripScreen
-                    key={tripTarget.nonce}
-                    initialSection={tripTarget.section}
-                    state={state}
-                    onRestore={(restored) => commit(() => restored)}
-                    onSaveItem={(item) =>
-                      commit((s) => {
-                        if (
-                          !s.tripItems.some((t) => t.id === item.id) &&
-                          s.tripItems.length >= 200
+                          onboarded: true,
+                          profile,
+                          theme,
+                        }));
+                        setProfileOpen(false);
+                        scroll.current?.scrollTo({ y: 0, animated: false });
+                      }}
+                      onReset={async (fresh) => {
+                        await commit(() => fresh);
+                        setProfileOpen(false);
+                        setTab("today");
+                        scroll.current?.scrollTo({ y: 0, animated: false });
+                      }}
+                    />
+                  ) : tab === "today" ? (
+                    <TodayScreen
+                      state={state}
+                      onNavigate={navigate}
+                      onWeatherCity={(weatherCity) =>
+                        commit((s) => ({ ...s, weatherCity }))
+                      }
+                      onWeather={(weather) =>
+                        commit((s) =>
+                          s.weatherCity === weather.cityId
+                            ? { ...s, weather }
+                            : s,
                         )
-                          throw new Error("일정은 200개까지 저장할 수 있어요.");
-                        return {
+                      }
+                      onNotifications={(notifications) =>
+                        commit((s) => ({ ...s, notifications }))
+                      }
+                      onOpenRefunds={openRefunds}
+                      onOpenTaxFreeGuide={() => openPay("taxfree")}
+                    />
+                  ) : tab === "translate" ? (
+                    <TranslationHub
+                      state={state}
+                      onRecord={(value) =>
+                        commit((s) => recordTranslation(s, value))
+                      }
+                      onFavorite={(value) =>
+                        commit((s) => toggleFavorite(s, value))
+                      }
+                      onClearHistory={() =>
+                        commit((s) => ({ ...s, history: [] }))
+                      }
+                      onProfile={openProfile}
+                    />
+                  ) : tab === "coupon" ? (
+                    <CouponHub
+                      state={state}
+                      onToggleGuide={toggleGuide}
+                      onToggleSaved={(id) =>
+                        commit((s) => toggleSavedCoupon(s, id))
+                      }
+                    />
+                  ) : tab === "card" ? (
+                    <CardHub
+                      cards={state.transitCards}
+                      memberships={state.membershipCards}
+                      rate={state.exchangeRate}
+                      onSave={(value) =>
+                        commit((s) => {
+                          if (
+                            !s.transitCards.some((c) => c.id === value.id) &&
+                            s.transitCards.length >= 20
+                          )
+                            throw new Error(
+                              "교통카드는 20장까지 저장할 수 있어요.",
+                            );
+                          return {
+                            ...s,
+                            transitCards: [
+                              value,
+                              ...s.transitCards.filter(
+                                (c) => c.id !== value.id,
+                              ),
+                            ],
+                          };
+                        })
+                      }
+                      onDelete={(id) =>
+                        commit((s) => ({
                           ...s,
-                          tripItems: [
-                            ...s.tripItems.filter((t) => t.id !== item.id),
-                            item,
-                          ],
-                        };
-                      })
-                    }
-                    onDeleteItem={(id) =>
-                      commit((s) => ({
-                        ...s,
-                        tripItems: s.tripItems.filter((t) => t.id !== id),
-                      }))
-                    }
-                    onToggleGuide={toggleGuide}
-                    onSaveReminder={(reminder) =>
-                      commit((s) => {
-                        if (
-                          !s.airportReminders.some(
-                            (r) => r.id === reminder.id,
-                          ) &&
-                          s.airportReminders.length >= REMINDER_LIMIT
-                        )
-                          throw new Error(
-                            "막차 타이머는 12개까지 저장할 수 있어요.",
-                          );
-                        return {
+                          transitCards: s.transitCards.filter(
+                            (c) => c.id !== id,
+                          ),
+                        }))
+                      }
+                      onSaveMembership={(card) =>
+                        commit((s) => saveMembership(s, card))
+                      }
+                      onDeleteMembership={(id) =>
+                        commit((s) => deleteMembership(s, id))
+                      }
+                    />
+                  ) : tab === "pay" ? (
+                    <PayScreen
+                      key={payTarget.nonce}
+                      initialTab={payTarget.tab}
+                      rate={state.exchangeRate}
+                      onRate={(exchangeRate) =>
+                        commit((s) => ({ ...s, exchangeRate }))
+                      }
+                      dutyFreeReceipts={state.dutyFreeReceipts}
+                      autoRefreshRate={state.autoRefreshRate}
+                      onSaveReceipt={(receipt) =>
+                        commit((s) => saveDutyFreeReceipt(s, receipt))
+                      }
+                      onDeleteReceipt={(id) =>
+                        commit((s) => deleteDutyFreeReceipt(s, id))
+                      }
+                      onToggleAutoRefresh={(enabled) =>
+                        commit((s) => setAutoRefreshRate(s, enabled))
+                      }
+                      expenses={state.expenses}
+                      onSaveExpense={(expense) =>
+                        commit((s) => saveExpense(s, expense))
+                      }
+                      onDeleteExpense={(id) =>
+                        commit((s) => deleteExpense(s, id))
+                      }
+                      departure={state.departure}
+                      onSaveDeparture={(departure) =>
+                        commit((s) => ({ ...s, departure }))
+                      }
+                    />
+                  ) : tab === "trip" ? (
+                    <TripScreen
+                      key={tripTarget.nonce}
+                      initialSection={tripTarget.section}
+                      state={state}
+                      onRestore={(restored) => commit(() => restored)}
+                      onSaveItem={(item) =>
+                        commit((s) => {
+                          if (
+                            !s.tripItems.some((t) => t.id === item.id) &&
+                            s.tripItems.length >= 200
+                          )
+                            throw new Error(
+                              "일정은 200개까지 저장할 수 있어요.",
+                            );
+                          return {
+                            ...s,
+                            tripItems: [
+                              ...s.tripItems.filter((t) => t.id !== item.id),
+                              item,
+                            ],
+                          };
+                        })
+                      }
+                      onDeleteItem={(id) =>
+                        commit((s) => ({
                           ...s,
-                          airportReminders: [
-                            ...s.airportReminders.filter(
-                              (r) => r.id !== reminder.id,
-                            ),
-                            reminder,
-                          ],
-                        };
-                      })
-                    }
-                    onDeleteReminder={(id) =>
-                      commit((s) => ({
-                        ...s,
-                        airportReminders: s.airportReminders.filter(
-                          (r) => r.id !== id,
-                        ),
-                      }))
-                    }
-                  />
-                ) : null}
+                          tripItems: s.tripItems.filter((t) => t.id !== id),
+                        }))
+                      }
+                      onToggleGuide={toggleGuide}
+                      onSaveReminder={(reminder) =>
+                        commit((s) => {
+                          if (
+                            !s.airportReminders.some(
+                              (r) => r.id === reminder.id,
+                            ) &&
+                            s.airportReminders.length >= REMINDER_LIMIT
+                          )
+                            throw new Error(
+                              "막차 타이머는 12개까지 저장할 수 있어요.",
+                            );
+                          return {
+                            ...s,
+                            airportReminders: [
+                              ...s.airportReminders.filter(
+                                (r) => r.id !== reminder.id,
+                              ),
+                              reminder,
+                            ],
+                          };
+                        })
+                      }
+                      onDeleteReminder={(id) =>
+                        commit((s) => ({
+                          ...s,
+                          airportReminders: s.airportReminders.filter(
+                            (r) => r.id !== id,
+                          ),
+                        }))
+                      }
+                    />
+                  ) : null}
                 </Enter>
               </ScrollView>
             </KeyboardAvoidingView>

@@ -31,6 +31,12 @@ import {
   type CouponCategory,
 } from "./model";
 import { Press } from "../../ui/Press";
+import {
+  couponSourceStatusLabel,
+  fetchCouponSourceStatuses,
+  formatRemoteCheckedAt,
+  type CouponSourceStatus,
+} from "./liveStatus";
 
 function Chip({
   label,
@@ -106,6 +112,34 @@ export function CouponScreen({
   const [selected, setSelected] = useState<Coupon | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [checkingSources, setCheckingSources] = useState(false);
+  const [sourceNotice, setSourceNotice] = useState("");
+  const [sourceStatuses, setSourceStatuses] = useState<
+    Record<string, CouponSourceStatus>
+  >({});
+  const checkSources = async () => {
+    if (checkingSources) return;
+    setCheckingSources(true);
+    setSourceNotice("");
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const statuses = await fetchCouponSourceStatuses(controller.signal);
+      setSourceStatuses(statuses);
+      setSourceNotice(
+        Object.keys(statuses).length
+          ? "외부 데이터 제공처의 확인 상태를 불러왔어요. 사용 가능 여부는 매장에서 다시 확인해 주세요."
+          : "이 혜택에 연결된 최신 확인 상태가 없어요. 공식 안내를 확인해 주세요.",
+      );
+    } catch {
+      setSourceNotice(
+        "최신 상태를 확인하지 못했어요. 저장된 쿠폰 안내는 그대로 사용할 수 있어요.",
+      );
+    } finally {
+      clearTimeout(timeout);
+      setCheckingSources(false);
+    }
+  };
   const now = useNow(60000);
   // Typing stays responsive; the list catches up with the deferred query.
   const deferredQuery = useDeferredValue(query);
@@ -234,6 +268,19 @@ export function CouponScreen({
         공식 안내를 정리한 목록으로 실시간 발급·재고를 보장하지 않아요. 일반
         고객용도 일본 앱 가입 등 개별 조건을 확인해 주세요.
       </Label>
+      <View style={{ gap: 6 }}>
+        <Button
+          label="쿠폰 출처 최신 확인 상태 조회"
+          icon="refresh-outline"
+          busy={checkingSources}
+          onPress={() => void checkSources()}
+        />
+        <Label muted size={11}>
+          눌렀을 때 외부 조회 서버에 접속합니다. 결과는 쿠폰 발급·사용 보장이
+          아니에요.
+        </Label>
+        {!!sourceNotice && <Label size={12}>{sourceNotice}</Label>}
+      </View>
       {error && !selected ? (
         <Text accessibilityRole="alert" style={{ color: c.error }}>
           {error}
@@ -251,6 +298,7 @@ export function CouponScreen({
       {results.map((coupon) => {
         const dDayInfo = couponDDay(coupon, now);
         const status = couponStatus(coupon, now);
+        const sourceStatus = sourceStatuses[coupon.id];
         return (
           <Card key={coupon.id}>
             <View style={styles.between}>
@@ -309,6 +357,22 @@ export function CouponScreen({
                   ? "여권·방문객 자격 등 사용 조건 확인"
                   : "개인 컵 등 사용 조건 확인"}
             </Label>
+            {sourceStatus ? (
+              <Label
+                size={12}
+                style={{
+                  color:
+                    sourceStatus.changed || sourceStatus.state === "stale"
+                      ? c.error
+                      : c.muted,
+                }}
+              >
+                {couponSourceStatusLabel(sourceStatus)}
+                {formatRemoteCheckedAt(sourceStatus.checkedAt)
+                  ? ` · ${formatRemoteCheckedAt(sourceStatus.checkedAt)}`
+                  : ""}
+              </Label>
+            ) : null}
             <View style={styles.between}>
               <Button
                 label={`${coupon.merchant} 상세 보기`}
@@ -390,6 +454,16 @@ export function CouponScreen({
                     <Label weight="600">
                       {statusLabels[couponStatus(selected, now)]}
                     </Label>
+                    {sourceStatuses[selected.id] ? (
+                      <Label size={13} muted>
+                        {couponSourceStatusLabel(sourceStatuses[selected.id])}
+                        {formatRemoteCheckedAt(
+                          sourceStatuses[selected.id].checkedAt,
+                        )
+                          ? ` · ${formatRemoteCheckedAt(sourceStatuses[selected.id].checkedAt)}`
+                          : ""}
+                      </Label>
+                    ) : null}
                     <Label muted size={13}>
                       공식 안내 확인일 {selected.checkedOn}
                       {"\n"}확인일은 사용 보장일이 아니에요. 결제 전 최신 조건을
@@ -458,8 +532,8 @@ export function CouponScreen({
                     onPress={() => void save(selected.id)}
                   />
                   <Label muted size={12}>
-                    Subject Japan은 쿠폰 발급처가 아니에요. 여권·매장 계정 정보를
-                    수집하지 않으며, 저장 목록만 이 기기에 보관합니다.
+                    Subject Japan은 쿠폰 발급처가 아니에요. 여권·매장 계정
+                    정보를 수집하지 않으며, 저장 목록만 이 기기에 보관합니다.
                   </Label>
                 </ScrollView>
               </View>

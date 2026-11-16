@@ -170,7 +170,7 @@ test("small screen, explicit fallback, manual Japanese and navigation", async ({
     )
     .toBe(true);
   for (const [name, title] of [
-    ["교통카드", "이동을 더 가볍게"],
+    ["카드", "이동을 더 가볍게"],
     ["결제", "계산은 똑똑하게"],
   ]) {
     await page.getByRole("tab", { name, exact: true }).click();
@@ -315,3 +315,4 @@ test("directions hand-off, taxi card and spending log", async ({ page }) => {
   await page.getByRole("button", { name: "지출 기록", exact: true }).click();
   await expect(page.getByText("1건", { exact: true })).toBeVisible();
 });
+

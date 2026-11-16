@@ -32,7 +32,11 @@
 - 카메라·사진 번역: 일본어/한국어 OCR → 편집 → 기기 내 번역 (사진은 업로드하지 않음)
 - 음성 대화: 기기 내 음성 인식 → 원문 확인 → 번역 → 시스템 음성 읽기, 양방향 대화 기록
 - 실물 Suica/PASMO/ICOCA NFC 읽기, 마지막 잔액·최대 20건 기록, 카드 20장 이름 관리, 원화 환산
+- 카드 → 멤버십: 정적 회원 바코드(EAN-13/Code 128)와 공식 멤버십 링크를 기기에 최대 40개 저장. 동적 QR·공식 앱 인증은 대신하지 않음
+- 프로필·쇼핑 체크리스트: 일본 쇼핑용 **참고 사이즈**와 원본 표기를 함께 표시. 실제 치수는 브랜드별 확인 필요
+- 쿠폰: 버튼을 눌렀을 때만 외부 데이터 서버의 출처 확인 상태 조회(사용 가능 보장 아님). 기본 목록·저장은 오프라인 유지
 - PAY & 금융 도우미:
+  - Android 전용 사진 금액 인식: 가격표·영수증에서 엔화 후보를 기기 내 OCR로 추출. 선택한 값만 입력란에 반영하고 자동 구매·등록은 하지 않음
   - 참고 환율 자동 최신화(기본 꺼짐, 켜면 PAY 진입 시 6시간 이상 지난 값 갱신)·수동 환율, 입력/조회한 환율 기반 엔화-원화 환산표
   - 순차 할인·면세/추후 환급·수수료·캐시백 계산기
   - 새 면세(2026-11-01 환급 방식) 안내: 예전·새 방식 비교, 직접 그린 매장→공항 세관 기계→환급 3단계 그림, 공항 순서, 돌려받지 못하는 경우, 직원에게 보여줄 일본어, 관광청·일본정부관광국·일본 세관 한국어 안내 링크
@@ -145,6 +149,7 @@ src/features/profile/             첫 실행 및 사용자 페이지
 src/features/coupons/             공식 혜택 카탈로그, 필터/기간 판단, 목록·상세 화면
 src/features/trip/                공항 노선, JST 카운트다운, 일정·예약 관리
 src/features/cards/               FeliCa 기록 검증·해석, 여러 카드 관리
+src/features/membership/          로컬 멤버십·바코드 생성
 src/features/pay/                 환율·할인·면세·환급·캐시백 계산
 src/features/tools/               OCR·음성·NFC 네이티브 어댑터
 src/features/guides/              공연·게스트/VIP 안내, 준비 체크리스트
@@ -208,3 +213,4 @@ Quality 검사는 모든 코드 변경에 실행하며, 네이티브 컴파일�
 세부 설계는 [확장 계획](docs/architecture.md)을 참고하세요.
 
 공식 참고: [Expo 로컬 모듈](https://docs.expo.dev/modules/get-started/), [ML Kit 번역](https://developers.google.com/ml-kit/language/translation), [Android](https://developers.google.com/ml-kit/language/translation/android), [iOS](https://developers.google.com/ml-kit/language/translation/ios).
+

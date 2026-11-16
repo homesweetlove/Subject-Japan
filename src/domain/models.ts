@@ -5,6 +5,7 @@ import type { TripItem } from "../features/trip/itinerary";
 import type { DutyFreeReceipt } from "../features/pay/taxFreeTracker";
 import type { Expense } from "../features/pay/expenses";
 import type { Departure } from "../features/trip/departure";
+import type { MembershipCard } from "../features/membership/model";
 import {
   defaultNotificationSettings,
   type NotificationSettings,
@@ -15,7 +16,7 @@ export type SourceLanguage = Language | "auto";
 export type ThemePreference = "system" | "light" | "dark";
 export type SizeKey = "top" | "bottom" | "shoe";
 
-/** Size labels are deliberately not converted between country/brand standards. */
+/** Original size labels are stored verbatim; any Japan estimate is advisory. */
 export interface Profile {
   nickname: string;
   sizes: Record<SizeKey, string>;
@@ -40,6 +41,8 @@ export interface LocalState {
   airportReminders: AirportReminder[];
   guideChecks: string[];
   transitCards: TransitCard[];
+  /** Locally stored, user-entered membership codes and official links. */
+  membershipCards: MembershipCard[];
   exchangeRate: ExchangeRate | null;
   tripItems: TripItem[];
   dutyFreeReceipts: DutyFreeReceipt[];
@@ -64,6 +67,7 @@ export const initialState = (): LocalState => ({
   airportReminders: [],
   guideChecks: [],
   transitCards: [],
+  membershipCards: [],
   exchangeRate: null,
   tripItems: [],
   dutyFreeReceipts: [],

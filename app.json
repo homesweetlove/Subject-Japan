@@ -60,8 +60,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "번역할 메뉴판·안내문 사진을 선택합니다.",
-          "cameraPermission": "번역할 글자를 촬영합니다.",
+          "photosPermission": "번역할 메뉴판과 금액을 확인할 가격표·영수증 사진을 선택합니다.",
+          "cameraPermission": "번역할 글자나 가격표·영수증의 금액을 촬영합니다.",
           "microphonePermission": "번역할 음성을 인식할 때 마이크를 사용합니다."
         }
       ],
@@ -81,3 +81,4 @@
     ]
   }
 }
+

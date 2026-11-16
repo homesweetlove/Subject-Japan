@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { View } from "react-native";
-import type { Profile } from "../../domain/models";
+import { Linking, View } from "react-native";
+import type { Profile, SizeKey } from "../../domain/models";
 import { ScreenHeader, Button, Card, Label, styles } from "../../ui/components";
 import { Choice } from "../../ui/Choice";
 import { useTheme } from "../../ui/theme";
 import { travelChecklistItems, type ChecklistItem } from "./checklist";
+import { estimateJapanSize } from "../profile/sizeConversion";
 
 export function ChecklistScreen({
   profile,
@@ -20,6 +21,7 @@ export function ChecklistScreen({
     "all" | "prep" | "drugstore" | "donki" | "fashion"
   >("all");
   const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
 
   const filtered = travelChecklistItems.filter(
     (item) => category === "all" || item.category === category,
@@ -41,6 +43,41 @@ export function ChecklistScreen({
   const hasSizes =
     profile.sizes.top || profile.sizes.bottom || profile.sizes.shoe;
 
+  const renderSize = (key: SizeKey, title: string) => {
+    const raw = profile.sizes[key];
+    if (!raw) return null;
+    const japan = estimateJapanSize(key, raw);
+    return (
+      <View
+        style={{
+          backgroundColor: c.soft,
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          borderRadius: 12,
+          gap: 3,
+        }}
+      >
+        <Label size={12} muted>
+          {title}
+        </Label>
+        <Label weight="700">{raw}</Label>
+        {japan ? (
+          <Label size={11} style={{ color: c.accent }}>
+            {japan.display}
+          </Label>
+        ) : null}
+      </View>
+    );
+  };
+  const openChecklistLink = async (item: ChecklistItem) => {
+    if (!item.url) return;
+    try {
+      await Linking.openURL(item.url);
+    } catch {
+      setNotice("공식 사이트를 열지 못했어요. 브라우저 설정을 확인해 주세요.");
+    }
+  };
+
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
@@ -59,51 +96,9 @@ export function ChecklistScreen({
         </View>
         {hasSizes ? (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-            {profile.sizes.top ? (
-              <View
-                style={{
-                  backgroundColor: c.soft,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 12,
-                }}
-              >
-                <Label size={12} muted>
-                  상의
-                </Label>
-                <Label weight="700">{profile.sizes.top}</Label>
-              </View>
-            ) : null}
-            {profile.sizes.bottom ? (
-              <View
-                style={{
-                  backgroundColor: c.soft,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 12,
-                }}
-              >
-                <Label size={12} muted>
-                  하의
-                </Label>
-                <Label weight="700">{profile.sizes.bottom}</Label>
-              </View>
-            ) : null}
-            {profile.sizes.shoe ? (
-              <View
-                style={{
-                  backgroundColor: c.soft,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 12,
-                }}
-              >
-                <Label size={12} muted>
-                  신발
-                </Label>
-                <Label weight="700">{profile.sizes.shoe}</Label>
-              </View>
-            ) : null}
+            {renderSize("top", "상의")}
+            {renderSize("bottom", "하의")}
+            {renderSize("shoe", "신발")}
           </View>
         ) : (
           <Label muted size={13}>
@@ -187,10 +182,18 @@ export function ChecklistScreen({
               <Label muted size={13}>
                 {item.description}
               </Label>
+              {item.url ? (
+                <Button
+                  label={item.actionLabel ?? "공식 사이트 열기"}
+                  icon="open-outline"
+                  onPress={() => void openChecklistLink(item)}
+                />
+              ) : null}
             </Card>
           );
         })}
       </View>
+      {!!notice && <Label size={13}>{notice}</Label>}
     </View>
   );
 }

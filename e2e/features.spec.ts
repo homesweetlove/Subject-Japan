@@ -243,7 +243,7 @@ test("native feature fallback, authored formal phrases and no automatic network 
       exact: true,
     }),
   ).toBeVisible();
-  await page.getByRole("tab", { name: "교통카드", exact: true }).click();
+  await page.getByRole("tab", { name: "카드", exact: true }).click();
   await page
     .getByRole("button", { name: "교통카드 NFC 읽기", exact: true })
     .click();
@@ -269,3 +269,4 @@ test("native feature fallback, authored formal phrases and no automatic network 
   expect(external).toEqual([]);
   expect(errors).toEqual([]);
 });
+

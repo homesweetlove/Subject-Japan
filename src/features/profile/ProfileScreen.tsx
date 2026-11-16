@@ -18,6 +18,7 @@ import {
 } from "../../ui/components";
 import { useTheme } from "../../ui/theme";
 import { Press } from "../../ui/Press";
+import { estimateJapanSize } from "./sizeConversion";
 
 const fields: { key: SizeKey; title: string; hint: string }[] = [
   { key: "top", title: "상의", hint: "예: 44, M, 95" },
@@ -173,11 +174,34 @@ export function ProfileScreen({
                 fontSize: 16,
               }}
             />
+            {estimateJapanSize(field.key, profile.sizes[field.key]) ? (
+              <View
+                style={{
+                  gap: 4,
+                  padding: 12,
+                  borderRadius: 14,
+                  backgroundColor: c.accentSoft,
+                }}
+              >
+                <Label size={11} weight="700" style={{ color: c.accent }}>
+                  일본 매장용 참고값 (예상)
+                </Label>
+                <Label size={15} weight="700">
+                  {
+                    estimateJapanSize(field.key, profile.sizes[field.key])!
+                      .display
+                  }
+                </Label>
+                <Label size={11} muted>
+                  {estimateJapanSize(field.key, profile.sizes[field.key])!.note}
+                </Label>
+              </View>
+            ) : null}
           </View>
         ))}
         <Label size={12} muted>
-          브랜드·국가별 사이즈는 자동 환산하지 않아요. 입력한 값이 그대로
-          전달되니 매장에서 규격을 확인해 주세요.
+          입력한 원본은 그대로 저장해요. 일본 표기는 쇼핑 출발점일 뿐이며,
+          의류는 반드시 브랜드별 실측표와 착용감을 확인해 주세요.
         </Label>
       </Card>
       <Card>

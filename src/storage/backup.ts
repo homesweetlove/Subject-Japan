@@ -80,6 +80,7 @@ export function backupSummary(state: LocalState): string {
     ["즐겨찾기", state.favorites.length],
     ["번역 기록", state.history.length],
     ["교통카드", state.transitCards.length],
+    ["멤버십", state.membershipCards.length],
     ["막차 타이머", state.airportReminders.length],
     ["저장한 혜택", state.savedCouponIds.length],
   ];

@@ -23,6 +23,11 @@ import {
   type Expense,
 } from "../features/pay/expenses";
 import { validDeparture } from "../features/trip/departure";
+import {
+  MEMBERSHIP_LIMIT,
+  validMembershipCard,
+  type MembershipCard,
+} from "../features/membership/model";
 
 export const STORAGE_KEY = "subject-japan.local.v1";
 export const HISTORY_LIMIT = 100;
@@ -191,6 +196,15 @@ export function decodeState(raw: string | null): LocalState {
         )
         .slice(0, 20)
     : [];
+  state.membershipCards = Array.isArray(value.membershipCards)
+    ? value.membershipCards
+        .filter(validMembershipCard)
+        .filter(
+          (v: MembershipCard, i: number, a: MembershipCard[]) =>
+            a.findIndex((x) => x.id === v.id) === i,
+        )
+        .slice(0, MEMBERSHIP_LIMIT)
+    : [];
   state.exchangeRate = validRate(value.exchangeRate)
     ? value.exchangeRate
     : null;
@@ -253,4 +267,28 @@ export function saveExpense(state: LocalState, expense: Expense): LocalState {
 }
 export function deleteExpense(state: LocalState, id: string): LocalState {
   return { ...state, expenses: state.expenses.filter((e) => e.id !== id) };
+}
+
+export function saveMembership(
+  state: LocalState,
+  card: MembershipCard,
+): LocalState {
+  if (!validMembershipCard(card))
+    throw new Error("멤버십 정보를 확인해 주세요.");
+  const exists = state.membershipCards.some((c) => c.id === card.id);
+  if (!exists && state.membershipCards.length >= MEMBERSHIP_LIMIT)
+    throw new Error(`멤버십은 ${MEMBERSHIP_LIMIT}개까지 저장할 수 있어요.`);
+  return {
+    ...state,
+    membershipCards: exists
+      ? state.membershipCards.map((c) => (c.id === card.id ? card : c))
+      : [card, ...state.membershipCards],
+  };
+}
+
+export function deleteMembership(state: LocalState, id: string): LocalState {
+  return {
+    ...state,
+    membershipCards: state.membershipCards.filter((c) => c.id !== id),
+  };
 }

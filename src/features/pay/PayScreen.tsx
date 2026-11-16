@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Text, View } from "react-native";
+import { Platform, Text, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { travelTools } from "../tools/native";
+import {
+  extractYenCandidates,
+  type ScanPurpose,
+  type YenCandidate,
+} from "./yenOcr";
 import {
   Button,
   Card,
@@ -54,12 +61,7 @@ import {
 } from "./cashUtilities";
 
 export type PayTab =
-  | "calculator"
-  | "spend"
-  | "taxfree"
-  | "customs"
-  | "coins"
-  | "atm";
+  "calculator" | "spend" | "taxfree" | "customs" | "coins" | "atm";
 
 export function PayScreen({
   initialTab = "calculator",
@@ -137,11 +139,22 @@ export function PayScreen({
   const [itemCount, setItemCount] = useState("1");
   const [itemVolume, setItemVolume] = useState("700");
   const [receiptError, setReceiptError] = useState("");
+  const [shoppingScan, setShoppingScan] = useState<{
+    purpose: ScanPurpose;
+    candidates: YenCandidate[];
+    recognized: string;
+  } | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [scanNotice, setScanNotice] = useState("");
+  const scanSequence = useRef(0);
+  const scanPending = useRef(false);
 
   useEffect(() => {
     alive.current = true;
     return () => {
       alive.current = false;
+      scanSequence.current++;
+      if (scanPending.current) void travelTools.cancel().catch(() => {});
       controller.current?.abort();
     };
   }, []);
@@ -238,6 +251,117 @@ export function PayScreen({
   } catch (e) {
     error = (e as Error).message;
   }
+
+  // Suggestions only: neither an OCR result nor a photo creates a payment record.
+  const scanYen = async (purpose: ScanPurpose, camera: boolean) => {
+    if (scanPending.current) return;
+    if (Platform.OS !== "android" || !travelTools.available) {
+      setScanNotice("금액 사진 인식은 전용 Android 앱에서 이용할 수 있어요.");
+      return;
+    }
+    const token = ++scanSequence.current;
+    scanPending.current = true;
+    setScanning(true);
+    setScanNotice("");
+    setShoppingScan(null);
+    try {
+      if (camera) {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted)
+          throw new Error("카메라 권한을 허용해 주세요.");
+      }
+      if (!alive.current || token !== scanSequence.current) return;
+      const options: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ["images"],
+        quality: 0.85,
+        exif: false,
+        base64: false,
+      };
+      const photo = camera
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
+      if (photo.canceled || !photo.assets?.length) return;
+      if (!alive.current || token !== scanSequence.current) return;
+      const recognized = await travelTools.recognizeImage(
+        photo.assets[0].uri,
+        "ja",
+      );
+      if (!alive.current || token !== scanSequence.current) return;
+      const candidates = extractYenCandidates(recognized, purpose);
+      setShoppingScan({
+        purpose,
+        candidates,
+        recognized: recognized.slice(0, 250),
+      });
+      setScanNotice(
+        candidates.length
+          ? "금액 후보를 직접 선택한 다음 원본 사진과 다시 대조해 주세요."
+          : "금액을 확실히 찾지 못했어요. 원본을 보고 직접 입력해 주세요.",
+      );
+    } catch (error) {
+      if (alive.current && token === scanSequence.current)
+        setScanNotice(
+          error instanceof Error
+            ? error.message
+            : "사진에서 금액을 인식하지 못했어요.",
+        );
+    } finally {
+      scanPending.current = false;
+      if (alive.current && token === scanSequence.current) setScanning(false);
+    }
+  };
+  const scanActions = (
+    purpose: ScanPurpose,
+    choose: (amount: number) => void,
+  ) => (
+    <View style={{ gap: 8 }}>
+      <Button
+        label={
+          purpose === "price"
+            ? "카메라로 가격표 금액 찾기"
+            : "카메라로 영수증 금액 찾기"
+        }
+        icon="camera-outline"
+        busy={scanning}
+        onPress={() => void scanYen(purpose, true)}
+      />
+      <Button
+        label="갤러리 사진에서 금액 찾기"
+        disabled={scanning}
+        onPress={() => void scanYen(purpose, false)}
+      />
+      {shoppingScan?.purpose === purpose ? (
+        <View style={{ gap: 8 }}>
+          {shoppingScan.candidates.map((candidate) => (
+            <Button
+              key={candidate.amount}
+              label={`¥${candidate.amount.toLocaleString()} 선택 · ${candidate.line.slice(0, 22)}`}
+              onPress={() => {
+                choose(candidate.amount);
+                setScanNotice(
+                  "선택한 금액을 입력했어요. 세금 포함 여부와 원본 금액을 확인해 주세요.",
+                );
+              }}
+            />
+          ))}
+          {!shoppingScan.candidates.length && !!shoppingScan.recognized ? (
+            <Label size={12} muted>
+              {shoppingScan.recognized}
+            </Label>
+          ) : null}
+        </View>
+      ) : null}
+      {!!scanNotice && (
+        <Label size={12} muted>
+          {scanNotice}
+        </Label>
+      )}
+      <Label size={12} muted>
+        기기에서 금액 후보를 찾아요. 자동 결제·기록은 하지 않으며 세금·할인·면세
+        여부는 직접 확인해야 해요.
+      </Label>
+    </View>
+  );
 
   // Duty Free addition
   const handleAddReceipt = async () => {
@@ -492,6 +616,9 @@ export function PayScreen({
 
           {/* Price & Discounts Card */}
           <Card>
+            {Platform.OS === "android"
+              ? scanActions("price", (amount) => setPrice(String(amount)))
+              : null}
             <Field
               label="상품 금액 (엔)"
               value={price}
@@ -689,7 +816,9 @@ export function PayScreen({
               <Label
                 muted={!customs.usdIsEstimate}
                 size={12}
-                style={customs.usdIsEstimate ? { color: c.accentInk } : undefined}
+                style={
+                  customs.usdIsEstimate ? { color: c.accentInk } : undefined
+                }
               >
                 {customs.usdIsEstimate
                   ? "달러는 1달러=148엔으로 어림한 값이에요. 결제·할인에서 '최신 환율 새로고침'을 누르면 실제 달러 환율로 계산해요."
@@ -697,9 +826,7 @@ export function PayScreen({
               </Label>
             </View>
 
-            {customs.isOverLimit ? (
-              <KoreaTaxCard estimate={koreaTax} />
-            ) : null}
+            {customs.isOverLimit ? <KoreaTaxCard estimate={koreaTax} /> : null}
 
             {/* Japan consumption tax: refunds still to come and old savings */}
             <View
@@ -714,8 +841,8 @@ export function PayScreen({
                 일본 소비세 돌려받기
               </Label>
               <Label size={13}>
-                돌려받을 예정 약 ¥{refunds.expectedJpy.toLocaleString()} · 받은 돈
-                약 ¥{refunds.receivedJpy.toLocaleString()}
+                돌려받을 예정 약 ¥{refunds.expectedJpy.toLocaleString()} · 받은
+                돈 약 ¥{refunds.receivedJpy.toLocaleString()}
               </Label>
               {refunds.nextDeadline !== null && (
                 <Label size={13} style={{ color: c.accentInk }}>
@@ -817,6 +944,11 @@ export function PayScreen({
                 onPress={() => setReceiptScheme("instant")}
               />
             </View>
+            {Platform.OS === "android"
+              ? scanActions("receipt", (amount) =>
+                  setReceiptJpy(String(amount)),
+                )
+              : null}
             <Field
               label={
                 receiptScheme_ === "refund"
@@ -1107,8 +1239,8 @@ export function PayScreen({
               🏧 일본 ATM 수수료 & 트래블카드 출금 가이드
             </Label>
             <Label muted size={13}>
-              트래블로그, 트래블월렛, 토스 외화통장 카드로 현지 엔화 현금을
-              뽑을 때 어느 기계가 유리한지 정리했어요. ({ATM_CHECKED_ON} 확인)
+              트래블로그, 트래블월렛, 토스 외화통장 카드로 현지 엔화 현금을 뽑을
+              때 어느 기계가 유리한지 정리했어요. ({ATM_CHECKED_ON} 확인)
             </Label>
             {travelCardNotes.map((note) => (
               <Label key={note} muted size={12}>

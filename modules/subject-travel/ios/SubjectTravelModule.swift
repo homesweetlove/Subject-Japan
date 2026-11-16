@@ -278,8 +278,14 @@ private final class LocalCards: NSObject, NFCTagReaderSessionDelegate {
       DispatchQueue.main.async {
         guard self.session === session else { return }
         guard error == nil, flag1 == 0, flag2 == 0, data.count == 1, data[0].count == 16 else {
-          self.finish(nil, "FeliCa 실물 교통카드를 움직이지 말고 다시 시도해 주세요.")
-          session.invalidate(errorMessage: "이 카드의 기록을 읽지 못했어요."); return
+          // A non-zero status after some blocks may mean either end-of-history
+          // or a card/service error. Never turn it into a verified balance.
+          let incomplete = error == nil && (flag1 != 0 || flag2 != 0) && !blocks.isEmpty
+          let message = incomplete
+            ? "기록 일부만 읽혔어요. 검증되지 않은 잔액은 저장하지 않았어요."
+            : "FeliCa 실물 교통카드를 움직이지 말고 다시 시도해 주세요."
+          self.finish(nil, message)
+          session.invalidate(errorMessage: "이 카드의 기록을 완전히 확인하지 못했어요."); return
         }
         self.read(card, session, index + 1, blocks + [data[0].map { Int($0) }])
       }
@@ -292,3 +298,4 @@ private final class LocalCards: NSObject, NFCTagReaderSessionDelegate {
     if let error = error { promise.reject("NFC", error) } else { promise.resolve(value) }
   }
 }
+

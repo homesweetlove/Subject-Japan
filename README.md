@@ -32,6 +32,9 @@ The feature list below describes **implemented source code and supported UI path
 - Camera/photo translation: Japanese/Korean OCR → edit → on-device translation (photos are not uploaded)
 - Voice conversation: on-device speech recognition → original-text confirmation → translation → system TTS, with bidirectional conversation history
 - Read physical Suica/PASMO/ICOCA cards by NFC, keep the latest balance and up to 20 transaction records, manage names for up to 20 cards, and show KRW conversion
+- Card wallet: store up to 40 user-entered membership barcodes (EAN-13/Code 128) and HTTPS links locally. Static codes do not replace dynamic QR codes or merchant authentication
+- Optional Japan shopping size estimates alongside original profile sizes; always verify actual brand sizing
+- On-demand coupon-source freshness checks from an external status service; coupons remain browsable offline, and status does not guarantee redemption
 - PAY & finance helpers:
   - Optional reference exchange-rate refresh (off by default; refreshes rates older than 6 hours when PAY opens), manual exchange rate, JPY↔KRW conversions from entered/fetched rates
   - Sequential discount / tax-free / later-refund / fee / cashback calculator
@@ -40,6 +43,7 @@ The feature list below describes **implemented source code and supported UI path
   - Shop refund methods (only what shops announced, with check dates), a "do not open in Japan" mark on consumable receipts, and a Today card with refunds due and the nearest 90-day deadline
   - Tax-free receipts & customs-limit tracker: per-receipt method (old/new) and tax rate (10%/8%), expected refund, 90-day deadline and refund status, same-store same-day ¥5,000 (tax-excluded) check, and Korea's $800 entry allowance with alcohol (2 L / $400 total; the 2-bottle rule ended on 2025-03-21), tobacco (200), and perfume (100 ml), using the fetched dollar rate, plus a rough entry-tax estimate above $800 (20% general rate, 30% self-declaration discount up to 200,000 won, 40% penalty if undeclared)
   - Coin-wallet optimizer: calculates a smart cash payment combination that minimizes received coins
+  - Android-only on-device OCR suggests yen amounts from price tags and receipts; users choose candidates explicitly and no receipt is saved automatically
   - Warikan (split-bill) calculator: per-person JPY/KRW share plus rounding up/down to the nearest ¥100
   - Japan ATM fee & travel-card withdrawal guide for Travelog, Travel Wallet, and Toss
   - Korea/Japan clothing & shoe-size comparison table (Korean mm/size ↔ Japanese cm/size ↔ US/EU)
@@ -140,6 +144,7 @@ src/features/profile/             first-run onboarding and user page
 src/features/coupons/             official-benefit catalog, filters/date checks, list/detail screens
 src/features/trip/                airport routes, JST countdowns, itinerary/reservation management
 src/features/cards/               FeliCa record validation/parsing, multi-card management
+src/features/membership/          local membership codes and barcode rendering
 src/features/pay/                 exchange-rate/discount/tax-free/refund/cashback calculations
 src/features/tools/               OCR/voice/NFC native adapters
 src/features/guides/              concert/guest-VIP guidance, packing checklist
@@ -203,3 +208,4 @@ Feature usage, limitations, and official sources are documented in [device featu
 See [architecture/extension plan](docs/architecture.md) for detailed design.
 
 Official references: [Expo local modules](https://docs.expo.dev/modules/get-started/), [ML Kit translation](https://developers.google.com/ml-kit/language/translation), [Android](https://developers.google.com/ml-kit/language/translation/android), [iOS](https://developers.google.com/ml-kit/language/translation/ios).
+

@@ -53,8 +53,15 @@ class SubjectTravelModule : Module() {
     AsyncFunction("capabilities") { promise: Promise -> main.post {
       val context = appContext.reactContext
       if (context == null) { promise.reject("UNAVAILABLE", "앱을 다시 열어 주세요.", null); return@post }
+      val adapter = runCatching { NfcAdapter.getDefaultAdapter(context) }.getOrNull()
+      val nfcState = when {
+        adapter == null -> "unsupported"
+        !runCatching { adapter.isEnabled }.getOrDefault(false) -> "disabled"
+        else -> "ready"
+      }
       promise.resolve(mapOf("ocr" to !destroyed,
-        "nfc" to (!destroyed && runCatching { NfcAdapter.getDefaultAdapter(context)?.isEnabled == true }.getOrDefault(false)),
+        "nfc" to (!destroyed && nfcState == "ready"),
+        "nfcState" to nfcState,
         "voice" to (!destroyed && Build.VERSION.SDK_INT >= 31 &&
           runCatching { SpeechRecognizer.isOnDeviceRecognitionAvailable(context) }.getOrDefault(false))))
     }; Unit }
@@ -162,8 +169,11 @@ class SubjectTravelModule : Module() {
           promise.reject("PERMISSION", "앱의 NFC 권한 설정을 확인해 주세요.", null); return@post
         }
         val adapter = NfcAdapter.getDefaultAdapter(activity)
-        if (adapter?.isEnabled != true) {
-          promise.reject("NFC", "NFC를 켜고 실물 교통카드를 준비해 주세요.", null); return@post
+        if (adapter == null) {
+          promise.reject("NFC_UNSUPPORTED", "이 기기는 NFC를 지원하지 않아요.", null); return@post
+        }
+        if (!adapter.isEnabled) {
+          promise.reject("NFC_DISABLED", "기기 설정에서 NFC를 켜고 실물 교통카드를 준비해 주세요.", null); return@post
         }
         val current = CardSession(promise, activity, adapter)
         session = current
@@ -259,7 +269,7 @@ class SubjectTravelModule : Module() {
     var tech: NfcF? = null
     try {
       if (session.cancelled.get()) return
-      val current = NfcF.get(tag) ?: throw IOException("Unsupported tag")
+      val current = NfcF.get(tag) ?: throw IOException("NFC_F_UNSUPPORTED")
       tech = current
       session.tech = current
       checkCardActive(session)
@@ -273,15 +283,26 @@ class SubjectTravelModule : Module() {
       for (index in 0 until 20) {
         val command = byteArrayOf(16, 6) + id + byteArrayOf(1, 0x0f, 0x09, 1, 0x80.toByte(), index.toByte())
         val response = transceive(session, current, command)
-        require(response.size == 29 && (response[0].toInt() and 255) == response.size &&
-          response[1].toInt() == 7 && response.copyOfRange(2, 10).contentEquals(id) &&
-          response[10].toInt() == 0 && response[11].toInt() == 0 && response[12].toInt() == 1)
+        // Validate the full response envelope before inspecting status flags.
+        require(response.size >= 12 && (response[0].toInt() and 255) == response.size &&
+          response[1].toInt() == 7 && response.copyOfRange(2, 10).contentEquals(id))
+        if (response[10].toInt() != 0 || response[11].toInt() != 0) {
+          // Could be end-of-history or a service/card error. Without device
+          // validation, never save a subset as a complete balance/history.
+          throw IOException(if (blocks.isNotEmpty()) "PARTIAL_HISTORY" else "NO_HISTORY")
+        }
+        require(response.size == 29 && response[12].toInt() == 1)
         blocks.add(response.copyOfRange(13, 29).map { it.toInt() and 255 })
       }
       checkCardActive(session)
       result = mapOf("id" to id.joinToString("") { "%02x".format(it.toInt() and 255) }, "blocks" to blocks)
-    } catch (_: Exception) {
-      error = "카드를 움직이지 말고 다시 시도해 주세요. FeliCa 실물 교통카드만 지원해요."
+    } catch (e: Exception) {
+      error = when (e.message) {
+        "NFC_F_UNSUPPORTED" -> "FeliCa(NFC-F) 카드가 아니에요. 실물 Suica·PASMO·ICOCA를 준비해 주세요."
+        "PARTIAL_HISTORY" -> "기록 일부만 읽혔어요. 완전성이 검증되지 않아 잔액을 저장하지 않았어요."
+        "NO_HISTORY" -> "읽을 수 있는 교통카드 기록이 없어요. 이 카드 형식은 아직 검증되지 않았어요."
+        else -> "카드 기록을 완전히 읽지 못했어요. 카드를 움직이지 말고 다시 시도해 주세요."
+      }
     } finally {
       // Close before posting success; never hand a new session a still-connected transport.
       try { tech?.close() } catch (_: Exception) {}
@@ -331,3 +352,4 @@ class SubjectTravelModule : Module() {
     card?.let { finishCard(it, null, "카드 읽기를 취소했어요.") }
   }
 }
+

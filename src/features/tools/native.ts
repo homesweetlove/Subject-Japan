@@ -5,8 +5,14 @@ export interface CardRead {
   id: string;
   blocks: number[][];
 }
+export type NfcState = "ready" | "disabled" | "unsupported";
 interface NativeTravel {
-  capabilities(): Promise<{ ocr: boolean; nfc: boolean; voice: boolean }>;
+  capabilities(): Promise<{
+    ocr: boolean;
+    nfc: boolean;
+    nfcState?: NfcState;
+    voice: boolean;
+  }>;
   recognizeImage(uri: string, language: Language): Promise<string>;
   listen(language: Language): Promise<string>;
   stopListening(): Promise<void>;
@@ -30,7 +36,12 @@ export const travelTools = {
   available: !!native,
   capabilities: () =>
     native?.capabilities() ??
-    Promise.resolve({ ocr: false, nfc: false, voice: false }),
+    Promise.resolve({
+      ocr: false,
+      nfc: false,
+      nfcState: "unsupported" as const,
+      voice: false,
+    }),
   recognizeImage: async (uri: string, language: Language) => {
     validLanguage(language);
     if (!/^(file:\/\/|content:\/\/)/i.test(uri))
