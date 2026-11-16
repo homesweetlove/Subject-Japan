@@ -10,6 +10,7 @@ import {
   type NavItem,
 } from "../../ui/components";
 import { Press } from "../../ui/Press";
+import { Rise } from "../../ui/Rise";
 import { useTheme } from "../../ui/theme";
 import { GuideScreen } from "../guides/GuideScreen";
 import { ticketGuides } from "../guides/catalog";
@@ -139,9 +140,9 @@ export function TripScreen({
         {shown.length === 0 && (
           <Label muted>찾는 기능이 없어요. 다른 말로 적어 보세요.</Label>
         )}
-        {shown.map((group) => (
-          <View key={group.title}>
-            <Label muted size={14} weight="600">
+        {shown.map((group, groupIndex) => (
+          <Rise key={group.title} order={groupIndex}>
+            <Label muted size={14} weight="600" style={{ marginBottom: 2 }}>
               {group.title}
             </Label>
             {group.keys.map((key, index) => {
@@ -162,11 +163,23 @@ export function TripScreen({
                     borderColor: c.line,
                   }}
                 >
-                  <Icon
-                    name={item.icon ?? "ellipse-outline"}
-                    size={22}
-                    color={key === "emergency" ? c.error : c.accent}
-                  />
+                  <View
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 13,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor:
+                        key === "emergency" ? c.errorSoft : c.accentSoft,
+                    }}
+                  >
+                    <Icon
+                      name={item.icon ?? "ellipse-outline"}
+                      size={21}
+                      color={key === "emergency" ? c.error : c.accentInk}
+                    />
+                  </View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <Label size={16} weight="600">
                       {item.label}
@@ -179,7 +192,7 @@ export function TripScreen({
                 </Press>
               );
             })}
-          </View>
+          </Rise>
         ))}
       </View>
     );

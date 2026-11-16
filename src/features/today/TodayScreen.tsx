@@ -5,6 +5,7 @@ import {
   Badge,
   Button,
   Card,
+  Hero,
   Icon,
   Label,
   ScreenHeader,
@@ -60,6 +61,7 @@ import {
   type WeatherSnapshot,
 } from "./weather";
 import { Press } from "../../ui/Press";
+import { Rise } from "../../ui/Rise";
 import { TranslationDisplay } from "../../ui/TranslationDisplay";
 
 export type AppTab = "today" | "card" | "translate" | "pay" | "trip";
@@ -106,6 +108,7 @@ export function TodayScreen({
         subtitle={`일본 시각 ${jstHeadline(now)}`}
       />
       {lastShown && (
+        <Rise>
         <Card tone="muted">
           <Label muted size={13}>
             방금 보여준 문장
@@ -120,6 +123,7 @@ export function TodayScreen({
             onPress={() => setShowingLast(true)}
           />
         </Card>
+        </Rise>
       )}
       <TranslationDisplay
         closeLabel="닫기"
@@ -127,7 +131,8 @@ export function TodayScreen({
         onClose={() => setShowingLast(false)}
       />
       <HolidayNote now={now} />
-      <Card>
+      <Rise order={1}>
+      <Hero>
         <SectionTitle icon="calendar-outline" title="다음 일정" />
         {trip ? (
           <Press
@@ -137,7 +142,7 @@ export function TodayScreen({
             style={{ gap: 4 }}
           >
             <View style={styles.between}>
-              <Label size={24} weight="700" style={{ flexShrink: 1 }}>
+              <Label size={28} weight="700" style={{ flexShrink: 1 }}>
                 {trip.title}
               </Label>
               <Badge
@@ -162,7 +167,8 @@ export function TodayScreen({
             />
           </>
         )}
-      </Card>
+      </Hero>
+      </Rise>
       {state.departure && (
         <DepartureCard
           departure={state.departure}

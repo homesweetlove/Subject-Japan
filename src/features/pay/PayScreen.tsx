@@ -10,12 +10,14 @@ import {
 import {
   Button,
   Card,
+  Hero,
   Icon,
   Label,
   ScreenHeader,
   SubNav,
   styles,
 } from "../../ui/components";
+import { Pop } from "../../ui/Rise";
 import { Choice } from "../../ui/Choice";
 import { Field } from "../../ui/Field";
 import { useTheme } from "../../ui/theme";
@@ -585,11 +587,13 @@ export function PayScreen({
 
           {!!error && <Label>{error}</Label>}
           {result && (
-            <Card tone="accent">
+            <Hero>
               <Label weight="700">예상 최종 부담액</Label>
-              <Label size={40} weight="700">
-                ₩{result.krw.toLocaleString()}
-              </Label>
+              <Pop trigger={result.krw}>
+                <Label size={44} weight="700">
+                  ₩{result.krw.toLocaleString()}
+                </Label>
+              </Pop>
               <Label>¥{result.final.toLocaleString()} 상당</Label>
               <Label size={13}>
                 매장 결제 ¥{result.paid.toLocaleString()} + 카드 수수료 ¥
@@ -603,7 +607,7 @@ export function PayScreen({
                 참고 추정치예요. 매장 단수 처리·고정 수수료·환급 환율·카드사
                 적립 제외 조건에 따라 달라집니다.
               </Label>
-            </Card>
+            </Hero>
           )}
           {!!notice && <Label>{notice}</Label>}
 

@@ -31,6 +31,11 @@ export const light = {
   surfacePressed: "#F3F5F7",
   accentSoftPressed: "#D5E0FF",
   errorSoftPressed: "#F9D5D3",
+  /** For text, fills and lines drawn on top of the accent colour. */
+  onAccentMuted: "rgba(255,255,255,0.84)",
+  onAccentSoft: "rgba(255,255,255,0.16)",
+  onAccentSoftPressed: "rgba(255,255,255,0.26)",
+  onAccentLine: "rgba(255,255,255,0.3)",
 };
 export type Palette = typeof light;
 export const dark: Palette = {
@@ -57,6 +62,10 @@ export const dark: Palette = {
   surfacePressed: "#22262B",
   accentSoftPressed: "#24376B",
   errorSoftPressed: "#4A2421",
+  onAccentMuted: "rgba(11,21,48,0.8)",
+  onAccentSoft: "rgba(11,21,48,0.1)",
+  onAccentSoftPressed: "rgba(11,21,48,0.18)",
+  onAccentLine: "rgba(11,21,48,0.25)",
 };
 
 export const radius = { sm: 10, md: 14, lg: 16, xl: 24, pill: 999 };

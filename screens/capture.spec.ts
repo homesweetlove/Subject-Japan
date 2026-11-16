@@ -21,7 +21,7 @@ async function step(label: string, run: () => Promise<void>) {
   }
 }
 async function shot(page: Page, name: string, fullPage = false) {
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(700);
   await page.screenshot({ path: `${out}/${name}.png`, fullPage });
 }
 

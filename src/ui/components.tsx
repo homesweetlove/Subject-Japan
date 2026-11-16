@@ -20,7 +20,13 @@ import {
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { motion, useReducedMotion } from "./motion";
 import { Press } from "./Press";
-import { elevation, radius, useTheme } from "./theme";
+import {
+  elevation,
+  radius,
+  ThemeContext,
+  useTheme,
+  type Palette,
+} from "./theme";
 
 export type IconName = ComponentProps<typeof Ionicons>["name"];
 export function Icon({
@@ -239,6 +245,80 @@ export function Card({
     </View>
   );
 }
+/**
+ * The one loud block on a screen: filled with the accent colour, for the
+ * single thing the traveller should see first. Everything inside reads the
+ * theme as usual and comes out in the on-accent colours.
+ */
+export function Hero({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const c = useTheme();
+  const onAccent: Palette = {
+    ...c,
+    bg: c.accent,
+    surface: c.accent,
+    surfacePressed: c.onAccentSoft,
+    ink: c.inverse,
+    muted: c.onAccentMuted,
+    line: c.onAccentLine,
+    soft: c.onAccentSoft,
+    softPressed: c.onAccentSoftPressed,
+    accent: c.inverse,
+    accentPressed: c.onAccentMuted,
+    inverse: c.accent,
+    accentSoft: c.onAccentSoft,
+    accentSoftPressed: c.onAccentSoftPressed,
+    accentInk: c.inverse,
+    selected: c.inverse,
+    onSelected: c.accent,
+  };
+  return (
+    <View
+      style={[
+        {
+          backgroundColor: c.accent,
+          borderRadius: radius.xl,
+          padding: 22,
+          gap: 12,
+          overflow: "hidden",
+        },
+        style,
+      ]}
+    >
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          right: -70,
+          top: -90,
+          width: 220,
+          height: 220,
+          borderRadius: 110,
+          backgroundColor: c.onAccentSoft,
+        }}
+      />
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          right: 40,
+          bottom: -80,
+          width: 140,
+          height: 140,
+          borderRadius: 70,
+          backgroundColor: c.onAccentSoft,
+        }}
+      />
+      <ThemeContext.Provider value={onAccent}>{children}</ThemeContext.Provider>
+    </View>
+  );
+}
+
 /** Consistent page title block: display title, then a one-line lede. */
 export function ScreenHeader({
   title,
