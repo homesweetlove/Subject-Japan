@@ -265,7 +265,8 @@ export function TranslationDisplay({
             <ScrollView
               style={{
                 flexGrow: 0,
-                maxHeight: "48%",
+                // Turned to the clerk, their side needs the room more.
+                maxHeight: facing ? "36%" : "48%",
                 borderTopWidth: 1,
                 borderColor: c.line,
               }}
