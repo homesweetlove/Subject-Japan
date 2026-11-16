@@ -22,7 +22,6 @@ export function EtiquetteScreen() {
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
-        seal="礼"
         title="일본 문화 & 여행 매너"
         subtitle="쓰레기 분리배출, 온천·타투 규정, 신사 참배 순서와 료칸 유카타 착용법 안내예요."
       />

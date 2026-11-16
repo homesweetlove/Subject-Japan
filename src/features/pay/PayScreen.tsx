@@ -451,7 +451,6 @@ export function PayScreen({
   return (
     <View style={{ gap: 22 }}>
       <ScreenHeader
-        seal="払"
         title="계산은 똑똑하게"
         subtitle="환율, 할인 계산, 새 면세 환급 안내와 기록, 동전·더치페이까지."
       />

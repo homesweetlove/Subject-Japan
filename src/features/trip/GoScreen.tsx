@@ -64,7 +64,6 @@ export function GoScreen({
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
-        seal="道"
         title="어디로 갈까요"
         subtitle="가고 싶은 곳을 한 번 적으면 길찾기, 우버 예상 요금, 택시 기사에게 보여줄 일본어까지 한 번에 이어져요."
       />

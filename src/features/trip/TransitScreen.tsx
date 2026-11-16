@@ -58,7 +58,6 @@ export function TransitScreen({
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
-        seal="駅"
         title="교통 & 패스 유틸리티"
         subtitle="패스 vs Suica 본전 계산, 신칸센 대형 수하물 예약 규칙, 지하철 노선 색상표와 택시 요금 계산기예요."
       />

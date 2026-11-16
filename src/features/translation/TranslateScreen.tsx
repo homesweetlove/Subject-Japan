@@ -239,7 +239,6 @@ export function TranslateScreen({
   return (
     <View style={{ gap: 24 }}>
       <ScreenHeader
-        seal="訳"
         title="말이 통하는 여행"
         trailing={
           <View

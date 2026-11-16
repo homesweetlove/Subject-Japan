@@ -112,7 +112,7 @@ export function Button({
     primary: [c.accent, c.accentPressed, c.inverse],
     secondary: [c.soft, c.softPressed, c.ink],
     ghost: ["transparent", c.soft, c.ink],
-    danger: [c.accentSoft, c.accentSoftPressed, c.error],
+    danger: [c.errorSoft, c.errorSoftPressed, c.error],
   };
   const [rest, held, ink] = tones[kind];
   const bg = disabled ? c.soft : rest;
@@ -239,59 +239,21 @@ export function Card({
     </View>
   );
 }
-/**
- * A single kanji pressed like a name seal (印). It tells a Korean traveller
- * which part of the trip a screen is about without any English label.
- */
-export function Seal({ glyph }: { glyph: string }) {
-  const c = useTheme();
-  return (
-    <View
-      accessible={false}
-      importantForAccessibility="no-hide-descendants"
-      aria-hidden
-      style={{
-        width: 38,
-        height: 38,
-        borderRadius: 9,
-        borderWidth: 2,
-        borderColor: c.accent,
-        alignItems: "center",
-        justifyContent: "center",
-        transform: [{ rotate: "-4deg" }],
-      }}
-    >
-      <Text
-        style={{
-          color: c.accent,
-          fontSize: 20,
-          lineHeight: 24,
-          fontWeight: "800",
-        }}
-      >
-        {glyph}
-      </Text>
-    </View>
-  );
-}
-/** Consistent page title block: seal, display title, lede. */
+/** Consistent page title block: display title, then a one-line lede. */
 export function ScreenHeader({
-  seal,
   title,
   subtitle,
   trailing,
 }: {
-  seal?: string;
   title: string;
   subtitle?: string;
   trailing?: ReactNode;
 }) {
   return (
-    <View style={{ gap: 10 }}>
-      {!!seal && <Seal glyph={seal} />}
+    <View style={{ gap: 6 }}>
       <View style={[styles.row, { alignItems: "flex-start" }]}>
         <View style={{ flex: 1 }}>
-          <Label size={28} weight="800">
+          <Label size={26} weight="700">
             {title}
           </Label>
         </View>

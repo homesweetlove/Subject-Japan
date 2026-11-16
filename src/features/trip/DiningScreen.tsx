@@ -65,7 +65,6 @@ export function DiningScreen({ krwPer100Jpy }: { krwPer100Jpy?: number }) {
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
-        seal="食"
         title="식당 주문 & 미식 도우미"
         subtitle="와사비 빼기, 오토오시(자릿세) 계산, 알레르기 카드와 라멘 주문 맞춤 설정이에요."
       />

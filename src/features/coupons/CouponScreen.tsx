@@ -190,7 +190,6 @@ export function CouponScreen({
   return (
     <View style={{ gap: 22 }}>
       <ScreenHeader
-        seal="券"
         title="같은 여행, 더 좋은 혜택"
         subtitle="방문객 전용 쿠폰부터 일본 고객이 쓰는 일상 혜택까지."
       />

@@ -164,7 +164,6 @@ export function TaxFreeGuide({
   return (
     <View style={{ gap: 22 }}>
       <ScreenHeader
-        seal="税"
         title="면세는 이제 출국할 때 돌려받아요"
         subtitle="2026년 11월 1일에 산 물건부터예요. 매장에서는 세금까지 다 내고, 일본을 떠날 때 공항 세관 확인을 받으면 그 세금을 돌려받아요."
       />

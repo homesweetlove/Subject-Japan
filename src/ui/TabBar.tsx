@@ -139,8 +139,8 @@ function Tab<K extends string>({
         numberOfLines={1}
         style={{
           fontSize: 11,
-          fontWeight: on ? "800" : "600",
-          color: on ? c.ink : c.muted,
+          fontWeight: on ? "700" : "500",
+          color: on ? c.accent : c.muted,
         }}
       >
         {item.label}

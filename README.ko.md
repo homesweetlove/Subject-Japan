@@ -154,7 +154,7 @@ src/features/pay/                 환율·할인·면세·환급·캐시백 계�
 src/features/tools/               OCR·음성·NFC 네이티브 어댑터
 src/features/guides/              공연·게스트/VIP 안내, 준비 체크리스트
 src/storage/                     버전 있는 로컬 저장소, 데이터 검증, 기록/즐겨찾기 정책, 백업 검증·복원
-src/ui/                          디자인 시스템: 테마 토큰(와시·슈 팔레트), ScreenHeader·SubNav·Card·Button 등 공통 컴포넌트
+src/ui/                          디자인 시스템: 테마 토큰(흰 바탕·파랑 팔레트), ScreenHeader·SubNav·Card·Button 등 공통 컴포넌트
 modules/subject-translator/       ML Kit Swift/Kotlin Expo 모듈
 modules/subject-local-store/      Android Room 로컬 DB 및 Expo 브리지
 modules/subject-travel/           Android ML Kit / Apple Vision OCR, 음성 인식, NFC

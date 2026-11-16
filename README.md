@@ -149,7 +149,7 @@ src/features/pay/                 exchange-rate/discount/tax-free/refund/cashbac
 src/features/tools/               OCR/voice/NFC native adapters
 src/features/guides/              concert/guest-VIP guidance, packing checklist
 src/storage/                      versioned local storage, validation, history/favorite policy, backup restore
-src/ui/                           design system: theme tokens (washi/shu palette), shared ScreenHeader/SubNav/Card/Button
+src/ui/                           design system: theme tokens (plain white/blue palette), shared ScreenHeader/SubNav/Card/Button
 modules/subject-translator/       ML Kit Swift/Kotlin Expo module
 modules/subject-local-store/      Android Room local DB and Expo bridge
 modules/subject-travel/           Android ML Kit / Apple Vision OCR, speech recognition, NFC

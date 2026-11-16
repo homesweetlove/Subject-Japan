@@ -92,7 +92,6 @@ export function TodayScreen({
   return (
     <View style={{ gap: 18 }}>
       <ScreenHeader
-        seal="今"
         title={
           state.profile.nickname
             ? `${state.profile.nickname}님의 오늘`

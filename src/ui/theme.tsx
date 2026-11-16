@@ -1,80 +1,73 @@
 import { createContext, useContext } from "react";
-import { Platform, type ViewStyle } from "react-native";
+import { type ViewStyle } from "react-native";
 
 /**
- * "Washi & Shu" palette: warm paper, sumi ink, and vermilion (朱) reserved for
- * the one primary action on a screen. Selection uses ink so it never competes
- * with the call to action. Every text pair below meets WCAG AA (4.5:1).
+ * Plain, readable palette: a white page, near-black text, and one blue kept
+ * for the primary action and the current selection's highlight. Red is only
+ * for danger. Every text pair below meets WCAG AA (4.5:1).
  */
 export const light = {
-  bg: "#F7F4EF",
+  bg: "#FFFFFF",
   surface: "#FFFFFF",
-  ink: "#16181D",
-  muted: "#5F636B",
-  line: "#E9E3DA",
-  accent: "#C8401F",
-  soft: "#EFEAE2",
+  ink: "#17191C",
+  muted: "#5A6270",
+  line: "#E8EAED",
+  accent: "#2B5BE8",
+  soft: "#F3F5F7",
   inverse: "#FFFFFF",
-  error: "#B3261E",
-  accentSoft: "#FBE9E3",
-  accentInk: "#A8341A",
-  success: "#2F7A4F",
-  successSoft: "#E4F2E9",
-  selected: "#16181D",
+  error: "#B3241F",
+  errorSoft: "#FDECEC",
+  accentSoft: "#EAF0FF",
+  accentInk: "#1F47C4",
+  success: "#1F7A4D",
+  successSoft: "#E3F3EA",
+  selected: "#17191C",
   onSelected: "#FFFFFF",
-  overlay: "rgba(16,18,22,0.55)",
-  shadow: "#3A2A1A",
+  overlay: "rgba(23,25,28,0.55)",
+  shadow: "#000000",
   /** Held-down shades: one step deeper than the resting fill. */
-  accentPressed: "#A8341A",
-  softPressed: "#E3DCD1",
-  surfacePressed: "#F3EFE8",
-  accentSoftPressed: "#F6D7CC",
+  accentPressed: "#1F47C4",
+  softPressed: "#E6E9ED",
+  surfacePressed: "#F3F5F7",
+  accentSoftPressed: "#D5E0FF",
+  errorSoftPressed: "#F9D5D3",
 };
 export type Palette = typeof light;
 export const dark: Palette = {
-  bg: "#101216",
-  surface: "#1A1D23",
-  ink: "#F2EFE9",
-  muted: "#A0A5AF",
-  line: "#2A2E36",
-  accent: "#FF8466",
-  soft: "#252932",
-  inverse: "#1B0F0B",
+  bg: "#111315",
+  surface: "#1A1D21",
+  ink: "#F1F3F5",
+  muted: "#A3ABB6",
+  line: "#2A2F36",
+  accent: "#7DA2FF",
+  soft: "#23272D",
+  inverse: "#0B1530",
   error: "#FF8A80",
-  accentSoft: "#3A1F18",
-  accentInk: "#FFB39F",
+  errorSoft: "#3A1C1A",
+  accentSoft: "#1B2A52",
+  accentInk: "#A9C1FF",
   success: "#7FD3A0",
-  successSoft: "#1B2E23",
-  selected: "#F2EFE9",
-  onSelected: "#101216",
+  successSoft: "#17301F",
+  selected: "#F1F3F5",
+  onSelected: "#111315",
   overlay: "rgba(0,0,0,0.7)",
   shadow: "#000000",
-  accentPressed: "#F26C4C",
-  softPressed: "#313642",
-  surfacePressed: "#22262E",
-  accentSoftPressed: "#4A271E",
+  accentPressed: "#6690F5",
+  softPressed: "#2F343B",
+  surfacePressed: "#22262B",
+  accentSoftPressed: "#24376B",
+  errorSoftPressed: "#4A2421",
 };
 
-export const radius = { sm: 10, md: 14, lg: 20, xl: 28, pill: 999 };
+export const radius = { sm: 10, md: 14, lg: 16, xl: 24, pill: 999 };
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
 
-/** Soft, low elevation used for cards; flat hairline in dark mode. */
-export function elevation(c: Palette, level: 1 | 2 = 1): ViewStyle {
-  if (c === dark) return { borderWidth: 1, borderColor: c.line };
-  const blur = level === 1 ? 18 : 28;
-  const alpha = level === 1 ? 0.06 : 0.1;
-  return Platform.select<ViewStyle>({
-    web: {
-      boxShadow: `0 ${level * 4}px ${blur}px rgba(58,42,26,${alpha}), 0 1px 2px rgba(58,42,26,0.04)`,
-    } as ViewStyle,
-    android: { elevation: level * 2 },
-    default: {
-      shadowColor: c.shadow,
-      shadowOpacity: alpha,
-      shadowRadius: blur / 2,
-      shadowOffset: { width: 0, height: level * 3 },
-    },
-  })!;
+/**
+ * Cards sit flat on the page and are told apart by a hairline, not a shadow,
+ * in both themes. `level` is kept so call sites need no change.
+ */
+export function elevation(c: Palette, _level: 1 | 2 = 1): ViewStyle {
+  return { borderWidth: 1, borderColor: c.line };
 }
 
 export const ThemeContext = createContext<Palette>(light);

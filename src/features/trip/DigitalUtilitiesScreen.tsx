@@ -93,7 +93,6 @@ export function DigitalUtilitiesScreen({
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
-        seal="電"
         title="여행 디지털 & 필수 도우미"
         subtitle="100V 전압 호환성, VJW 등록 요령, eSIM 장애 해결 및 여행 데이터 백업이에요."
       />

@@ -239,7 +239,7 @@ test("320px dark display keeps large text scrollable and close keyboard-accessib
   const translated = dialog.getByText("この商品のMサイズはありますか？", {
     exact: true,
   });
-  await expect(translated).toHaveCSS("color", "rgb(242, 239, 233)");
+  await expect(translated).toHaveCSS("color", "rgb(241, 243, 245)");
   // Browser text enlargement exercises reflow; OS Dynamic Type still needs a device.
   await translated.evaluate((element) => {
     (element as HTMLElement).style.fontSize = "76px";

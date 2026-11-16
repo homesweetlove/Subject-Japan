@@ -115,7 +115,6 @@ export function AirportScreen({
   return (
     <View style={{ gap: 22 }}>
       <ScreenHeader
-        seal="空"
         title="공항으로 가는 마지막 시간"
         subtitle="공식 시간표에서 확인한 막차를 저장하고, 역으로 출발할 시간까지 챙기세요."
       />

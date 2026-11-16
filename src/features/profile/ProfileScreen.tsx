@@ -84,7 +84,6 @@ export function ProfileScreen({
   return (
     <View style={{ gap: 24 }}>
       <ScreenHeader
-        seal={state.onboarded ? "私" : "旅"}
         title={
           state.onboarded ? "나에게 맞춘 여행" : "여행의 시작,\n나에게 맞게."
         }

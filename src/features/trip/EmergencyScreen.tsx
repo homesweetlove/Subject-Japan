@@ -48,7 +48,6 @@ export function EmergencyScreen() {
   return (
     <View style={{ gap: 20 }}>
       <ScreenHeader
-        seal="急"
         title="긴급 상황 & 재난 대응"
         subtitle="일본 현지 긴급 전화, 대사관 연락망, 응급 일본어 카드와 지진 대피 가이드예요."
       />
