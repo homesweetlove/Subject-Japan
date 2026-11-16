@@ -238,25 +238,7 @@ export function TranslateScreen({
   });
   return (
     <View style={{ gap: 24 }}>
-      <ScreenHeader
-        title="말이 통하는 여행"
-        trailing={
-          <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: c.accentSoft,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: c.accent, fontSize: 22, fontWeight: "700" }}>
-              あ
-            </Text>
-          </View>
-        }
-      />
+      <ScreenHeader title="말이 통하는 여행" />
       <View style={{ gap: 10 }}>
         <View style={styles.between}>
           <View style={[styles.row, { flex: 1 }]}>

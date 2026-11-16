@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Modal, Platform, ScrollView, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import type { Translation } from "../domain/models";
-import { Button, Label } from "./components";
+import { Button } from "./components";
 import { useTheme } from "./theme";
 
 // React Native Web does not map the native accessibilityLanguage prop to lang.
@@ -45,17 +45,14 @@ export function TranslationDisplay({
               gap: 24,
             }}
           >
-            <Label size={12} weight="700">
-              SUBJECT:JAPAN
-            </Label>
             <Text
               selectable
               {...translationLanguage(value?.target ?? "ja")}
               style={{
                 color: c.ink,
-                fontSize: 38,
+                fontSize: 40,
                 lineHeight: 60,
-                fontWeight: "500",
+                fontWeight: "700",
               }}
             >
               {value?.translated}
@@ -63,7 +60,7 @@ export function TranslationDisplay({
             <Text
               selectable
               {...translationLanguage(value?.source ?? "ko")}
-              style={{ color: c.muted, fontSize: 16, lineHeight: 26 }}
+              style={{ color: c.muted, fontSize: 18, lineHeight: 28 }}
             >
               {value?.original}
             </Text>

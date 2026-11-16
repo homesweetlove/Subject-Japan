@@ -79,6 +79,35 @@ export function CardScreen({
         title="이동을 더 가볍게"
         subtitle="Suica · PASMO · ICOCA 실물 카드의 마지막 기록을 확인해요."
       />
+      {cards.map((c) => (
+        <Card key={c.id}>
+          <Label weight="700">{c.name}</Label>
+          <Label size={40} weight="700">
+            ¥{c.entries[0].balance.toLocaleString()}
+          </Label>
+          {rate && (
+            <Label muted>
+              약 ₩
+              {Math.round(
+                (c.entries[0].balance * rate.krwPer100Jpy) / 100,
+              ).toLocaleString()}{" "}
+              · {rate.date} 환율
+            </Label>
+          )}
+          <Label size={12} muted>
+            마지막 읽기 {new Date(c.readAt).toLocaleString()} · 실시간 잔액이
+            아니에요.
+          </Label>
+          <Button
+            label={`${c.name} 이용내역·이름 관리`}
+            onPress={() => {
+              setSelected(c.id);
+              setName(c.name);
+              setConfirm("");
+            }}
+          />
+        </Card>
+      ))}
       <Card>
         <Button
           label="교통카드 NFC 읽기"
@@ -111,35 +140,6 @@ export function CardScreen({
         </Label>
       </Card>
       {!!notice && <Label>{notice}</Label>}
-      {cards.map((c) => (
-        <Card key={c.id}>
-          <Label weight="700">{c.name}</Label>
-          <Label size={30} weight="700">
-            ¥{c.entries[0].balance.toLocaleString()}
-          </Label>
-          {rate && (
-            <Label muted>
-              약 ₩
-              {Math.round(
-                (c.entries[0].balance * rate.krwPer100Jpy) / 100,
-              ).toLocaleString()}{" "}
-              · {rate.date} 환율
-            </Label>
-          )}
-          <Label size={12} muted>
-            마지막 읽기 {new Date(c.readAt).toLocaleString()} · 실시간 잔액이
-            아니에요.
-          </Label>
-          <Button
-            label={`${c.name} 이용내역·이름 관리`}
-            onPress={() => {
-              setSelected(c.id);
-              setName(c.name);
-              setConfirm("");
-            }}
-          />
-        </Card>
-      ))}
       {!cards.length && (
         <Label muted>
           저장된 카드가 없어요. 최대 20장을 관리할 수 있어요. 원화 환산 환율은

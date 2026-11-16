@@ -79,7 +79,7 @@ export function EmergencyScreen() {
       {subTab === "contacts" ? (
         <View style={{ gap: 14 }}>
           <Card>
-            <Label weight="700">🚨 현지 긴급 전화 안내</Label>
+            <Label weight="700">현지 긴급 전화 안내</Label>
             <Label muted size={13}>
               일본 내에서는 일반 유심/eSIM으로 바로 걸 수 있으며, 호텔 프런트나
               공중전화 긴급버튼(빨간색 버튼)을 누르면 동전 없이 무료 통화가
@@ -98,32 +98,20 @@ export function EmergencyScreen() {
                     {contact.jpName}
                   </Label>
                 </View>
-                <View
+                <Text
+                  selectable
                   style={{
-                    backgroundColor:
+                    color:
                       contact.category === "police" ||
                       contact.category === "medical"
-                        ? c.accent
-                        : c.soft,
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderRadius: 10,
+                        ? c.error
+                        : c.ink,
+                    fontWeight: "700",
+                    fontSize: contact.phone.length > 6 ? 17 : 26,
                   }}
                 >
-                  <Text
-                    style={{
-                      color:
-                        contact.category === "police" ||
-                        contact.category === "medical"
-                          ? c.inverse
-                          : c.ink,
-                      fontWeight: "700",
-                      fontSize: 13,
-                    }}
-                  >
-                    {contact.phone}
-                  </Text>
-                </View>
+                  {contact.phone}
+                </Text>
               </View>
 
               <Label muted size={13}>

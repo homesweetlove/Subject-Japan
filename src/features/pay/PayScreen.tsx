@@ -470,6 +470,143 @@ export function PayScreen({
 
       {tab === "calculator" ? (
         <>
+          {/* Price & Discounts Card */}
+          <Card>
+            {Platform.OS === "android"
+              ? scanActions("price", (amount) => setPrice(String(amount)))
+              : null}
+            <Field
+              label="상품 금액 (엔)"
+              value={price}
+              onChange={setPrice}
+              numeric
+            />
+            <View style={styles.between}>
+              {[true, false].map((v) => (
+                <Choice
+                  key={String(v)}
+                  label={v ? "세금 포함 가격" : "세금 별도 가격"}
+                  selected={includesTax === v}
+                  onPress={() => setIncludesTax(v)}
+                />
+              ))}
+            </View>
+            <View style={styles.between}>
+              {[10, 8, 0].map((v) => (
+                <Choice
+                  key={v}
+                  label={`소비세 ${v}%`}
+                  selected={taxRate === v}
+                  onPress={() => setTaxRate(v)}
+                />
+              ))}
+            </View>
+            <Field
+              label="게스트·매장 할인 (%)"
+              value={discount}
+              onChange={setDiscount}
+              numeric
+            />
+            <Field
+              label="추가 쿠폰 할인 (%)"
+              value={coupon}
+              onChange={setCoupon}
+              numeric
+            />
+            <Choice
+              label="두 할인 중복 사용 가능 확인"
+              checkbox
+              selected={stack}
+              onPress={() => setStack(!stack)}
+            />
+            <Label size={12} muted>
+              첫 할인 후 남은 금액에 두 번째 할인을 적용해요. 서로 다른 세율
+              상품은 나누어 계산하세요.
+            </Label>
+          </Card>
+
+          {/* Tax Free Mode */}
+          <Card>
+            <Label weight="700">면세와 결제 조건</Label>
+            <View style={{ gap: 8 }}>
+              {(["none", "immediate", "refund"] as const).map((v, i) => (
+                <Choice
+                  key={v}
+                  label={
+                    [
+                      "면세 없음",
+                      "예전 방식: 계산대에서 세금 빼기 (10월 31일까지)",
+                      "새 방식: 세금 내고 출국 때 돌려받기",
+                    ][i]
+                  }
+                  selected={taxMode === v}
+                  onPress={() => setTaxMode(v)}
+                />
+              ))}
+            </View>
+            <Label muted size={12}>
+              2026년 11월 1일 구매분부터는 새 방식만 있어요. 같은 매장 같은 날
+              세금 빼고 5,000엔 이상, 90일 안에 출국하면서 공항 세관 확인을
+              받아야 돌려받아요.
+            </Label>
+            <Button
+              label="새 면세 방식 자세히 보기"
+              icon="airplane-outline"
+              onPress={() => setTab("taxfree")}
+            />
+            <Field
+              label="환급 세액에서 차감되는 수수료 (%)"
+              value={refundFee}
+              onChange={setRefundFee}
+              numeric
+            />
+            <Label muted size={12}>
+              환급 수수료와 방법(카드·앱·현금)은 매장·환급 업체마다 달라요.
+            </Label>
+            <Field
+              label="카드 해외 결제 수수료 (%)"
+              value={cardFee}
+              onChange={setCardFee}
+              numeric
+            />
+            <Field
+              label="카드 캐시백 (%)"
+              value={cashback}
+              onChange={setCashback}
+              numeric
+            />
+            <Field
+              label="캐시백 한도 (엔, 비우면 제한 없음)"
+              value={cap}
+              onChange={setCap}
+              numeric
+            />
+          </Card>
+
+          {!!error && <Label>{error}</Label>}
+          {result && (
+            <Card tone="accent">
+              <Label weight="700">예상 최종 부담액</Label>
+              <Label size={40} weight="700">
+                ₩{result.krw.toLocaleString()}
+              </Label>
+              <Label>¥{result.final.toLocaleString()} 상당</Label>
+              <Label size={13}>
+                매장 결제 ¥{result.paid.toLocaleString()} + 카드 수수료 ¥
+                {result.fee.toLocaleString()}
+              </Label>
+              <Label size={13}>
+                추후 환급 −¥{result.laterRefund.toLocaleString()} · 캐시백 −¥
+                {result.cashback.toLocaleString()}
+              </Label>
+              <Label size={12} muted>
+                참고 추정치예요. 매장 단수 처리·고정 수수료·환급 환율·카드사
+                적립 제외 조건에 따라 달라집니다.
+              </Label>
+            </Card>
+          )}
+          {!!notice && <Label>{notice}</Label>}
+
           {/* Exchange Rate Card with Auto-Refresh */}
           <Card>
             <View style={styles.between}>
@@ -612,143 +749,6 @@ export function PayScreen({
               ))}
             </View>
           </Card>
-
-          {/* Price & Discounts Card */}
-          <Card>
-            {Platform.OS === "android"
-              ? scanActions("price", (amount) => setPrice(String(amount)))
-              : null}
-            <Field
-              label="상품 금액 (엔)"
-              value={price}
-              onChange={setPrice}
-              numeric
-            />
-            <View style={styles.between}>
-              {[true, false].map((v) => (
-                <Choice
-                  key={String(v)}
-                  label={v ? "세금 포함 가격" : "세금 별도 가격"}
-                  selected={includesTax === v}
-                  onPress={() => setIncludesTax(v)}
-                />
-              ))}
-            </View>
-            <View style={styles.between}>
-              {[10, 8, 0].map((v) => (
-                <Choice
-                  key={v}
-                  label={`소비세 ${v}%`}
-                  selected={taxRate === v}
-                  onPress={() => setTaxRate(v)}
-                />
-              ))}
-            </View>
-            <Field
-              label="게스트·매장 할인 (%)"
-              value={discount}
-              onChange={setDiscount}
-              numeric
-            />
-            <Field
-              label="추가 쿠폰 할인 (%)"
-              value={coupon}
-              onChange={setCoupon}
-              numeric
-            />
-            <Choice
-              label="두 할인 중복 사용 가능 확인"
-              checkbox
-              selected={stack}
-              onPress={() => setStack(!stack)}
-            />
-            <Label size={12} muted>
-              첫 할인 후 남은 금액에 두 번째 할인을 적용해요. 서로 다른 세율
-              상품은 나누어 계산하세요.
-            </Label>
-          </Card>
-
-          {/* Tax Free Mode */}
-          <Card>
-            <Label weight="700">면세와 결제 조건</Label>
-            <View style={{ gap: 8 }}>
-              {(["none", "immediate", "refund"] as const).map((v, i) => (
-                <Choice
-                  key={v}
-                  label={
-                    [
-                      "면세 없음",
-                      "예전 방식: 계산대에서 세금 빼기 (10월 31일까지)",
-                      "새 방식: 세금 내고 출국 때 돌려받기",
-                    ][i]
-                  }
-                  selected={taxMode === v}
-                  onPress={() => setTaxMode(v)}
-                />
-              ))}
-            </View>
-            <Label muted size={12}>
-              2026년 11월 1일 구매분부터는 새 방식만 있어요. 같은 매장 같은 날
-              세금 빼고 5,000엔 이상, 90일 안에 출국하면서 공항 세관 확인을
-              받아야 돌려받아요.
-            </Label>
-            <Button
-              label="새 면세 방식 자세히 보기"
-              icon="airplane-outline"
-              onPress={() => setTab("taxfree")}
-            />
-            <Field
-              label="환급 세액에서 차감되는 수수료 (%)"
-              value={refundFee}
-              onChange={setRefundFee}
-              numeric
-            />
-            <Label muted size={12}>
-              환급 수수료와 방법(카드·앱·현금)은 매장·환급 업체마다 달라요.
-            </Label>
-            <Field
-              label="카드 해외 결제 수수료 (%)"
-              value={cardFee}
-              onChange={setCardFee}
-              numeric
-            />
-            <Field
-              label="카드 캐시백 (%)"
-              value={cashback}
-              onChange={setCashback}
-              numeric
-            />
-            <Field
-              label="캐시백 한도 (엔, 비우면 제한 없음)"
-              value={cap}
-              onChange={setCap}
-              numeric
-            />
-          </Card>
-
-          {!!error && <Label>{error}</Label>}
-          {result && (
-            <Card>
-              <Label weight="700">예상 최종 부담액</Label>
-              <Label size={32} weight="700">
-                ₩{result.krw.toLocaleString()}
-              </Label>
-              <Label>¥{result.final.toLocaleString()} 상당</Label>
-              <Label size={13}>
-                매장 결제 ¥{result.paid.toLocaleString()} + 카드 수수료 ¥
-                {result.fee.toLocaleString()}
-              </Label>
-              <Label size={13}>
-                추후 환급 −¥{result.laterRefund.toLocaleString()} · 캐시백 −¥
-                {result.cashback.toLocaleString()}
-              </Label>
-              <Label size={12} muted>
-                참고 추정치예요. 매장 단수 처리·고정 수수료·환급 환율·카드사
-                적립 제외 조건에 따라 달라집니다.
-              </Label>
-            </Card>
-          )}
-          {!!notice && <Label>{notice}</Label>}
         </>
       ) : tab === "spend" ? (
         <ExpenseScreen
