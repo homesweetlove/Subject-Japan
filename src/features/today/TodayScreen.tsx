@@ -60,6 +60,7 @@ import {
   type WeatherSnapshot,
 } from "./weather";
 import { Press } from "../../ui/Press";
+import { TranslationDisplay } from "../../ui/TranslationDisplay";
 
 export type AppTab = "today" | "card" | "translate" | "pay" | "trip";
 /** Where Today can send the traveller: a tab, or the coupon side of cards. */
@@ -91,6 +92,9 @@ export function TodayScreen({
   const reminder = nextReminder(state.airportReminders, now);
   const card = [...state.transitCards].sort((a, b) => b.readAt - a.readAt)[0];
   const rate = state.exchangeRate;
+  // The sentence last shown to a clerk, one tap away for the next clerk.
+  const lastShown = state.history.find((t) => t.target === "ja");
+  const [showingLast, setShowingLast] = useState(false);
   return (
     <View style={{ gap: 18 }}>
       <ScreenHeader
@@ -100,6 +104,27 @@ export function TodayScreen({
             : "오늘의 여행"
         }
         subtitle={`일본 시각 ${jstHeadline(now)}`}
+      />
+      {lastShown && (
+        <Card tone="muted">
+          <Label muted size={13}>
+            방금 보여준 문장
+          </Label>
+          <Label weight="700" size={17}>
+            {lastShown.original}
+          </Label>
+          <Button
+            label="다시 보여주기"
+            icon="expand-outline"
+            primary
+            onPress={() => setShowingLast(true)}
+          />
+        </Card>
+      )}
+      <TranslationDisplay
+        closeLabel="닫기"
+        value={showingLast && lastShown ? lastShown : null}
+        onClose={() => setShowingLast(false)}
       />
       <HolidayNote now={now} />
       <Card>

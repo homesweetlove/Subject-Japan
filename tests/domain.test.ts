@@ -218,3 +218,33 @@ describe("local data durability", () => {
     expect(toggleFavorite(state, translation(0)).favorites).toHaveLength(99);
   });
 });
+describe("what to show after the clerk replies", () => {
+  it("offers only catalogue phrases, and none it cannot back up", async () => {
+    const { followUpPhrases, phraseOf } =
+      await import("../src/features/phrases/phrases");
+    expect(followUpPhrases("top", "yes").map((p) => p.id)).toEqual([
+      "try",
+      "card",
+      "tax",
+    ]);
+    expect(followUpPhrases("top", "no").map((p) => p.id)).toEqual([
+      "larger",
+      "stock",
+    ]);
+    expect(followUpPhrases("top", "wait")).toEqual([]);
+    expect(followUpPhrases("not-a-phrase", "yes")).toEqual([]);
+    for (const phrase of phrases)
+      for (const reply of ["yes", "no", "wait"] as const)
+        for (const next of followUpPhrases(phrase.id, reply)) {
+          expect(phrases).toContain(next);
+          expect(next.sizeKey).toBeUndefined();
+        }
+    const profile = initialState().profile;
+    profile.sizes.top = "M";
+    expect(phraseOf("이 제품 M 사이즈도 있나요?", "ko", profile)?.id).toBe(
+      "top",
+    );
+    expect(phraseOf("この商品のMサイズはある？", "ja", profile)?.id).toBe("top");
+    expect(phraseOf("아무 말", "ko", profile)).toBeUndefined();
+  });
+});

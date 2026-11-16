@@ -17,6 +17,8 @@ import {
 } from "../../domain/models";
 import {
   categories,
+  followUpPhrases,
+  phraseOf,
   phrases,
   resolvePhrase,
   type Category,
@@ -223,6 +225,19 @@ export function TranslateScreen({
     void choosePhrase(phrase);
   });
   const showResult = useStableCallback(() => setFullscreen(true));
+  // The catalogue phrase on screen, if any: it decides what to offer next
+  // once the clerk has tapped a reply.
+  const shownPhrase = useMemo(
+    () =>
+      result
+        ? phraseOf(
+            result.source === "ko" ? result.original : result.translated,
+            "ko",
+            state.profile,
+          )
+        : undefined,
+    [result, state.profile],
+  );
   const favoriteStable = useStableCallback((value: Translation) => {
     void favorite(value);
   });
@@ -693,6 +708,18 @@ export function TranslateScreen({
         closeLabel="닫기"
         value={fullscreen ? result : null}
         onClose={() => setFullscreen(false)}
+        followUps={(reply) =>
+          shownPhrase
+            ? followUpPhrases(shownPhrase.id, reply).map((p) => ({
+                key: p.id,
+                label: p.ko,
+              }))
+            : []
+        }
+        onFollowUp={(id) => {
+          const phrase = phrases.find((p) => p.id === id);
+          if (phrase) choosePhraseStable(phrase);
+        }}
       >
         {!!notice && (
           <View accessibilityRole="alert" accessibilityLiveRegion="polite">

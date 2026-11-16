@@ -189,3 +189,44 @@ export function findPhrase(text: string, source: Language, profile: Profile) {
     )
     .find((p) => p && normalize(p[source]) === normalize(text));
 }
+
+/** The catalogue phrase a shown sentence came from, in any register. */
+export function phraseOf(
+  text: string,
+  language: Language,
+  profile: Profile,
+): Phrase | undefined {
+  const wanted = normalize(text);
+  return phrases.find((p) =>
+    (["polite", "casual", "formal"] as const).some((register) => {
+      const pair = resolvePhrase(p, profile, register);
+      return !!pair && normalize(pair[language]) === wanted;
+    }),
+  );
+}
+
+export type StaffAnswer = "yes" | "no" | "wait";
+/**
+ * What a traveller usually says next, by the clerk's reply. Only phrases
+ * already in the catalogue, so every follow-up has authored Japanese.
+ */
+const nextPhraseIds: Record<string, Partial<Record<StaffAnswer, string[]>>> = {
+  top: { yes: ["try", "card", "tax"], no: ["larger", "stock"] },
+  bottom: { yes: ["try", "card", "tax"], no: ["larger", "stock"] },
+  shoe: { yes: ["try", "card", "tax"], no: ["larger", "stock"] },
+  larger: { yes: ["try", "card"], no: ["stock"] },
+  stock: { yes: ["try", "card"], no: ["larger"] },
+  try: { yes: ["card", "tax"] },
+  card: { yes: ["tax", "bag"] },
+  tax: { yes: ["counter", "card"], no: ["guest"] },
+  guest: { yes: ["tax", "card"], no: ["tax"] },
+  order: { yes: ["bill"] },
+  bill: { yes: ["card"] },
+  checkin: { yes: ["luggage"] },
+  reserved: { no: ["reservation"] },
+};
+export function followUpPhrases(phraseId: string, answer: StaffAnswer) {
+  return (nextPhraseIds[phraseId]?.[answer] ?? [])
+    .map((id) => phrases.find((p) => p.id === id))
+    .filter((p): p is Phrase => !!p);
+}

@@ -58,7 +58,16 @@ test("capture every main screen", async ({ page }) => {
     await shot(page, "22-show");
     await button(page, "はい (네)").click();
     await shot(page, "23-show-answer");
+    await button(page, "직원 쪽으로 뒤집기").click();
+    await shot(page, "24-show-facing");
+    await button(page, "내 쪽으로 되돌리기").click();
+    await button(page, "입어 봐도 될까요?").click();
+    await shot(page, "25-show-follow-up");
     await button(page, "닫기").click();
+  });
+  await step("today after showing", async () => {
+    await tab(page, "오늘").click();
+    await shot(page, "12-today-last-shown");
   });
 
   await step("pay", async () => {
