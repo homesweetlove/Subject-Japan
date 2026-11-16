@@ -1,12 +1,12 @@
 # Release status / 릴리스 현황
 
-Last checked: **2026-11-16 (KST)** · Source commit: [`457bf4cd4099dcb832ae51e55f27730f037d300c`](https://github.com/homesweetlove/Subject-Japan/commit/457bf4cd4099dcb832ae51e55f27730f037d300c)
+Last checked: **2026-11-16 (KST)** · Source commit: [`7aca1c8d3777860802584fa022dfe1cf9122cda7`](https://github.com/homesweetlove/Subject-Japan/commit/7aca1c8d3777860802584fa022dfe1cf9122cda7)
 
 ## Current downloadable build / 현재 설치 파일
 
-- **Android ARM64 test APK:** [Subject-Japan-android-test-arm64.apk](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43784286541/Subject-Japan-android-test-arm64.apk)
-- **Release and installation notes:** [android-test-43784286541](https://github.com/homesweetlove/Subject-Japan/releases/tag/android-test-43784286541)
-- **SHA-256 file:** [SHA256SUMS.txt](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43784286541/SHA256SUMS.txt)
+- **Android ARM64 test APK:** [Subject-Japan-android-test-arm64.apk](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43793915298/Subject-Japan-android-test-arm64.apk)
+- **Release and installation notes:** [android-test-43793915298](https://github.com/homesweetlove/Subject-Japan/releases/tag/android-test-43793915298)
+- **SHA-256 file:** [SHA256SUMS.txt](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43793915298/SHA256SUMS.txt)
 - **Package:** `com.subjectjapan.app.preview`, installed name *Subject Japan Test*.
 - **Signing:** Expo template test signing. This is a standalone APK (no development server required), **not** a production-signed or Play Store release.
 
@@ -16,11 +16,11 @@ Download the APK, verify the checksum if desired, then install it on a compatibl
 
 | Workflow | Status (2026-11-16) | Scope |
 | --- | --- | --- |
-| [Quality](https://github.com/homesweetlove/Subject-Japan/actions/runs/43784286549) | Passed | TypeScript, unit tests, Expo Doctor, JS bundles and browser E2E |
-| [Native builds](https://github.com/homesweetlove/Subject-Japan/actions/runs/43784286531) | Passed | Android compilation and unsigned iOS **simulator** compilation |
-| [Android test APK](https://github.com/homesweetlove/Subject-Japan/actions/runs/43784286541) | Passed | Standalone ARM64 test APK build, package/signature checks and prerelease upload |
+| [Quality](https://github.com/homesweetlove/Subject-Japan/actions/runs/43794265722) | Passed | TypeScript, unit tests, Expo Doctor, JS bundles and browser E2E |
+| [Native builds](https://github.com/homesweetlove/Subject-Japan/actions/runs/43793563204) | Passed | Android compilation and unsigned iOS **simulator** compilation |
+| [Android test APK](https://github.com/homesweetlove/Subject-Japan/actions/runs/43793915298) | Passed | Standalone ARM64 test APK build, package/signature checks and prerelease upload |
 
-No physical-device validation, signed iPhone build, NFC entitlement acceptance or final store submission is implied by these results. The [device checklist](device-validation.md) tracks remaining checks.
+`main` is currently at `7dbbe4a`; compared with the packaged `7aca1c8` source, its only subsequent change is an E2E test assertion (no runtime-code difference). No physical-device validation, signed iPhone build, NFC entitlement acceptance or final store submission is implied by these results. The [device checklist](device-validation.md) tracks remaining checks.
 
 ## Before a production release / 정식 출시 전
 
