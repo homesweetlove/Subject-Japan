@@ -2,9 +2,9 @@
 
 # SUBJECT:JAPAN
 
-[![Android APK 바로 다운로드](https://img.shields.io/badge/Android-APK%20%EB%B0%94%EB%A1%9C%20%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43784286541/Subject-Japan-android-test-arm64.apk) [![전체 릴리스](https://img.shields.io/badge/GitHub-%EC%A0%84%EC%B2%B4%20%EB%A6%B4%EB%A6%AC%EC%8A%A4-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
+[![Android APK 바로 다운로드](https://img.shields.io/badge/Android-APK%20%EB%B0%94%EB%A1%9C%20%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43793915298/Subject-Japan-android-test-arm64.apk) [![전체 릴리스](https://img.shields.io/badge/GitHub-%EC%A0%84%EC%B2%B4%20%EB%A6%B4%EB%A6%AC%EC%8A%A4-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
 
-> **최신 Android 테스트 APK (2026년 11월 16일):** 커밋 `457bf4c`에서 빌드한 ARM64 전용 독립 실행 미리보기입니다. 위 버튼에서 APK를 내려받아 호환 기기에 설치할 수 있습니다. **테스트 서명본**으로 정식 배포/Play Store 버전이 아니며, 번역·카메라·마이크·NFC 실기기 검증은 남아 있습니다. iPhone 설치 파일은 없습니다. [릴리스 정보 및 SHA-256](docs/release-status.md).
+> **최신 Android 테스트 APK (2026년 11월 16일):** 커밋 `7aca1c8`에서 빌드한 ARM64 전용 독립 실행 미리보기입니다. 위 버튼에서 APK를 내려받아 호환 기기에 설치할 수 있습니다. **테스트 서명본**으로 정식 배포/Play Store 버전이 아니며, 번역·카메라·마이크·NFC 실기기 검증은 남아 있습니다. iPhone 설치 파일은 없습니다. [릴리스 정보 및 SHA-256](docs/release-status.md).
 
 한국 여행자를 위한 일본 여행 유틸리티. Android와 iPhone에서 쓰는 하나의 앱을 목표로 합니다. 첫 번째 기능은 **번역과 내 사이즈를 기억하는 쇼핑 문장**입니다.
 
@@ -14,7 +14,7 @@
 
 **핵심 흐름:** 내 사이즈 저장 → 번역의 사이즈/재고 문장 선택 → 일본어 확인·크게 보기 → 필요하면 즐겨찾기 → 앱을 다시 열어 재사용. 저장 실패 시 기존 데이터를 유지하고 오류를 안내합니다.
 
-**2026-11-16 검증 업데이트:** 커밋 `457bf4c` 기준 GitHub Actions의 Quality, Android 네이티브 빌드, iOS 시뮬레이터 빌드, ARM64 독립 실행 테스트 APK 빌드가 모두 성공했습니다. [10월 22일 품질 점검 기록](docs/quality-audit.md)의 계정 한도·러너 문제는 당시 상황입니다. 자동 빌드 성공을 **실기기 기능 검증 완료**로 해석하지 않습니다. [최신 릴리스 현황](docs/release-status.md) · [실기기 체크리스트](docs/device-validation.md)
+**2026-11-16 검증 업데이트:** 최신 `main`의 Quality 검사(`7dbbe4a`), Android·iOS 시뮬레이터 네이티브 빌드(`4c45919`), ARM64 테스트 APK 빌드(`7aca1c8`)가 각각 성공했습니다. 이후 `main`의 변경은 E2E 테스트 검증식 1건으로 앱 실행 코드는 같습니다. [10월 22일 품질 점검 기록](docs/quality-audit.md)의 계정 한도·러너 문제는 당시 상황입니다. 자동 빌드 성공을 **실기기 기능 검증 완료**로 해석하지 않습니다. [최신 릴리스 현황](docs/release-status.md) · [실기기 체크리스트](docs/device-validation.md)
 
 **2026-11-05 정보 최신화:** 긴급 연락처(일본정부관광국 상담 050-3816-2787, 대사관·총영사관 근무시간 외 번호, 요코하마·고베 총영사관 추가), 교통 패스 가격(도쿄 서브웨이 티켓 1,000/1,500/2,000엔, 오사카 주유패스 3,500엔), 택시 요금표(도쿄 2026-04-20, 오사카 2025-11-05, 후쿠오카), 현금 인출기·트래블카드 안내, 쿠폰 종료일, 2026년 보조배터리 규정, 출국세 3,000엔을 공식 안내와 다시 대조했습니다.
 
@@ -102,7 +102,7 @@ React Native + Expo SDK 57 + TypeScript. 공통 UI와 도메인 코드를 사용
 
 ### Android 테스트 APK 다운로드
 
-[2026년 11월 16일 Android 테스트 APK](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43784286541/Subject-Japan-android-test-arm64.apk)를 [GitHub Releases](https://github.com/homesweetlove/Subject-Japan/releases)에서 내려받아 설치합니다. ARM64 Android 기기용이며 개발 서버나 Expo Go 없이 실행합니다. 설치된 앱 이름은 **Subject Japan Test**입니다. 처음 자유 입력 번역을 사용할 때는 Wi-Fi로 번역팩을 내려받습니다.
+[2026년 11월 16일 Android 테스트 APK](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43793915298/Subject-Japan-android-test-arm64.apk)를 [GitHub Releases](https://github.com/homesweetlove/Subject-Japan/releases)에서 내려받아 설치합니다. ARM64 Android 기기용이며 개발 서버나 Expo Go 없이 실행합니다. 설치된 앱 이름은 **Subject Japan Test**입니다. 처음 자유 입력 번역을 사용할 때는 Wi-Fi로 번역팩을 내려받습니다.
 
 테스트 전용 패키지 `com.subjectjapan.app.preview`는 정식 앱과 데이터가 분리됩니다. APK는 Expo 템플릿의 테스트 서명을 사용하며 Play Store 배포본이 아닙니다. 키 파일은 저장소나 릴리스에 올리지 않습니다. 다음 테스트 APK도 GitHub Actions의 **Android test APK → Run workflow**에서 생성할 수 있으며, 번들 포함·서명·패키지 ID를 검사한 후 GitHub 프리릴리스에 APK와 SHA-256을 게시합니다.
 
