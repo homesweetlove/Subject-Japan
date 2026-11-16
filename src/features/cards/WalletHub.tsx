@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { View } from "react-native";
 import type { LocalState } from "../../domain/models";
 import { SubNav, type NavItem } from "../../ui/components";
@@ -28,7 +27,8 @@ const sections: NavItem<WalletSection>[] = [
 /** Everything the traveller shows at a till: cards, memberships, coupons. */
 export function WalletHub({
   state,
-  initialSection = "transit",
+  section,
+  onSection,
   onSave,
   onDelete,
   onSaveMembership,
@@ -37,7 +37,9 @@ export function WalletHub({
   onToggleGuide,
 }: {
   state: LocalState;
-  initialSection?: WalletSection;
+  /** Held by the app shell so the open section survives the profile page. */
+  section: WalletSection;
+  onSection: (section: WalletSection) => void;
   onSave: (card: TransitCard) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onSaveMembership: (card: MembershipCard) => Promise<void>;
@@ -45,10 +47,9 @@ export function WalletHub({
   onToggleSaved: (id: string) => Promise<void>;
   onToggleGuide: (id: string) => Promise<void>;
 }) {
-  const [section, setSection] = useState<WalletSection>(initialSection);
   return (
     <View style={{ gap: 20 }}>
-      <SubNav items={sections} value={section} onChange={setSection} />
+      <SubNav items={sections} value={section} onChange={onSection} />
       {section === "transit" ? (
         <CardScreen
           cards={state.transitCards}

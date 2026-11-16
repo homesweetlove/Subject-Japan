@@ -79,7 +79,8 @@ export function TripScreen({
   onSaveItem,
   onDeleteItem,
   onRestore,
-  initialSection = null,
+  section,
+  onSection: setSection,
 }: {
   state: LocalState;
   onSaveReminder: (r: AirportReminder) => Promise<void>;
@@ -88,11 +89,14 @@ export function TripScreen({
   onSaveItem: (item: TripItem) => Promise<void>;
   onDeleteItem: (id: string) => Promise<void>;
   onRestore?: (restored: LocalState) => Promise<void>;
-  /** `null` opens the grouped menu; a section opens that tool directly. */
-  initialSection?: TripSection | null;
+  /**
+   * `null` shows the grouped menu; a section shows that tool. Held by the
+   * app shell so the open tool survives the profile page.
+   */
+  section: TripSection | null;
+  onSection: (section: TripSection | null) => void;
 }) {
   const c = useTheme();
-  const [section, setSection] = useState<TripSection | null>(initialSection);
   const [query, setQuery] = useState("");
   const [transitTab, setTransitTab] = useState<"passes" | "taxi">("passes");
 

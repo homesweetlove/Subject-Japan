@@ -102,21 +102,12 @@ function Application() {
     });
     return () => sub.remove();
   }, [profileOpen, tab]);
-  // Remount key lets Today (or a tapped notification) open a TRIP section.
-  // A plain visit (no section) lands on the TRIP menu.
-  const [tripTarget, setTripTarget] = useState<{
-    section: TripSection | null;
-    nonce: number;
-  }>({ section: null, nonce: 0 });
-  const resetTrip = () =>
-    setTripTarget((t) =>
-      t.section === null ? t : { section: null, nonce: t.nonce + 1 },
-    );
+  // TRIP's open tool lives here so it survives opening the profile page.
+  // `null` is the grouped menu; Today or a notification can open a tool.
+  const [tripSection, setTripSection] = useState<TripSection | null>(null);
   // Cards and coupons share one tab; Today can open either side of it.
-  const [walletTarget, setWalletTarget] = useState<{
-    section: WalletSection;
-    nonce: number;
-  }>({ section: "transit", nonce: 0 });
+  const [walletSection, setWalletSection] =
+    useState<WalletSection>("transit");
   // Same remount trick for PAY, so Today can open the tax-free receipts.
   const [payTarget, setPayTarget] = useState<{
     tab: PayTab;
@@ -135,14 +126,9 @@ function Application() {
   const openRefunds = () => openPay("customs");
   const navigate = (next: NavTarget, section?: TripSection) => {
     if (next === "pay") resetPay();
-    if (next === "trip") {
-      if (section) setTripTarget((t) => ({ section, nonce: t.nonce + 1 }));
-      else resetTrip();
-    }
-    if (next === "card" || next === "coupon") {
-      const wallet: WalletSection = next === "coupon" ? "coupons" : "transit";
-      setWalletTarget((t) => ({ section: wallet, nonce: t.nonce + 1 }));
-    }
+    if (next === "trip") setTripSection(section ?? null);
+    if (next === "card") setWalletSection("transit");
+    if (next === "coupon") setWalletSection("coupons");
     setTab(next === "coupon" ? "card" : next);
     setProfileOpen(false);
     scroll.current?.scrollTo({ y: 0, animated: false });
@@ -474,8 +460,8 @@ function Application() {
                     />
                   ) : tab === "card" ? (
                     <WalletHub
-                      key={walletTarget.nonce}
-                      initialSection={walletTarget.section}
+                      section={walletSection}
+                      onSection={setWalletSection}
                       state={state}
                       onToggleGuide={toggleGuide}
                       onToggleSaved={(id) =>
@@ -549,8 +535,8 @@ function Application() {
                     />
                   ) : tab === "trip" ? (
                     <TripScreen
-                      key={tripTarget.nonce}
-                      initialSection={tripTarget.section}
+                      section={tripSection}
+                      onSection={setTripSection}
                       state={state}
                       onRestore={(restored) => commit(() => restored)}
                       onSaveItem={(item) =>
@@ -620,7 +606,7 @@ function Application() {
               value={tab}
               onChange={(next) => {
                 if (next === "pay") resetPay();
-                if (next === "trip") resetTrip();
+                if (next === "trip") setTripSection(null);
                 setTab(next);
                 scroll.current?.scrollTo({ y: 0, animated: false });
               }}
