@@ -271,14 +271,16 @@ export interface NavItem<K extends string> {
 /**
  * Section switcher. Up to three short items render as a segmented control
  * whose white thumb slides to the chosen segment; longer lists scroll
- * horizontally and keep the chosen pill in view.
+ * horizontally and keep the chosen pill in view. `wrap` lays the pills out
+ * on as many lines as they need instead, so no choice is hidden off-screen.
  */
 export function SubNav<K extends string>(props: {
   items: NavItem<K>[];
   value: K;
   onChange: (key: K) => void;
+  wrap?: boolean;
 }) {
-  return props.items.length <= 3 ? (
+  return props.items.length <= 3 && !props.wrap ? (
     <Segmented {...props} />
   ) : (
     <PillRail {...props} />
@@ -407,10 +409,12 @@ function PillRail<K extends string>({
   items,
   value,
   onChange,
+  wrap = false,
 }: {
   items: NavItem<K>[];
   value: K;
   onChange: (key: K) => void;
+  wrap?: boolean;
 }) {
   const c = useTheme();
   const reduced = useReducedMotion();
@@ -425,6 +429,63 @@ function PillRail<K extends string>({
   useEffect(() => {
     reveal(value, !reduced);
   }, [value]);
+  const pills = items.map((item) => {
+    const on = item.key === value;
+    return (
+      <Press
+        key={item.key}
+        accessibilityRole="button"
+        accessibilityLabel={item.label}
+        accessibilityState={{ selected: on }}
+        onPress={() => onChange(item.key)}
+        onLayout={(e) => {
+          offsets.current[item.key] = e.nativeEvent.layout.x;
+          if (on) reveal(item.key, false);
+        }}
+        style={({ pressed, hovered }) => ({
+          minHeight: 44,
+          paddingVertical: 8,
+          paddingHorizontal: 14,
+          borderRadius: radius.pill,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 6,
+          backgroundColor: on
+            ? c.selected
+            : pressed
+              ? c.softPressed
+              : hovered
+                ? c.soft
+                : c.surface,
+          borderWidth: 1,
+          borderColor: on ? c.selected : c.line,
+        })}
+      >
+        {item.icon && (
+          <Icon
+            name={item.icon}
+            size={16}
+            color={on ? c.onSelected : c.muted}
+          />
+        )}
+        <Text
+          style={{
+            color: on ? c.onSelected : c.ink,
+            fontSize: 14,
+            fontWeight: on ? "700" : "600",
+          }}
+        >
+          {item.label}
+        </Text>
+      </Press>
+    );
+  });
+  if (wrap)
+    return (
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        {pills}
+      </View>
+    );
   return (
     <ScrollView
       ref={rail}
@@ -433,57 +494,7 @@ function PillRail<K extends string>({
       style={{ marginHorizontal: -20, flexGrow: 0 }}
       contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
     >
-      {items.map((item) => {
-        const on = item.key === value;
-        return (
-          <Press
-            key={item.key}
-            accessibilityRole="button"
-            accessibilityLabel={item.label}
-            accessibilityState={{ selected: on }}
-            onPress={() => onChange(item.key)}
-            onLayout={(e) => {
-              offsets.current[item.key] = e.nativeEvent.layout.x;
-              if (on) reveal(item.key, false);
-            }}
-            style={({ pressed, hovered }) => ({
-              minHeight: 44,
-              paddingVertical: 8,
-              paddingHorizontal: 14,
-              borderRadius: radius.pill,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              backgroundColor: on
-                ? c.selected
-                : pressed
-                  ? c.softPressed
-                  : hovered
-                    ? c.soft
-                    : c.surface,
-              borderWidth: 1,
-              borderColor: on ? c.selected : c.line,
-            })}
-          >
-            {item.icon && (
-              <Icon
-                name={item.icon}
-                size={16}
-                color={on ? c.onSelected : c.muted}
-              />
-            )}
-            <Text
-              style={{
-                color: on ? c.onSelected : c.ink,
-                fontSize: 14,
-                fontWeight: on ? "700" : "600",
-              }}
-            >
-              {item.label}
-            </Text>
-          </Press>
-        );
-      })}
+      {pills}
     </ScrollView>
   );
 }

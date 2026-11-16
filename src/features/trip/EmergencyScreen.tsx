@@ -47,10 +47,7 @@ export function EmergencyScreen() {
 
   return (
     <View style={{ gap: 20 }}>
-      <ScreenHeader
-        title="긴급 상황 & 재난 대응"
-        subtitle="일본 현지 긴급 전화, 대사관 연락망, 응급 일본어 카드와 지진 대피 가이드예요."
-      />
+      <ScreenHeader title="긴급 상황 & 재난 대응" />
 
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         <Choice
@@ -78,15 +75,6 @@ export function EmergencyScreen() {
 
       {subTab === "contacts" ? (
         <View style={{ gap: 14 }}>
-          <Card>
-            <Label weight="700">현지 긴급 전화 안내</Label>
-            <Label muted size={13}>
-              일본 내에서는 일반 유심/eSIM으로 바로 걸 수 있으며, 호텔 프런트나
-              공중전화 긴급버튼(빨간색 버튼)을 누르면 동전 없이 무료 통화가
-              가능해요.
-            </Label>
-          </Card>
-
           {emergencyContacts.map((contact) => (
             <Card key={contact.id}>
               <View style={styles.between}>
@@ -142,6 +130,15 @@ export function EmergencyScreen() {
               ) : null}
             </Card>
           ))}
+
+          <Card>
+            <Label weight="700">현지 긴급 전화 안내</Label>
+            <Label muted size={13}>
+              일본 내에서는 일반 유심/eSIM으로 바로 걸 수 있으며, 호텔 프런트나
+              공중전화 긴급버튼(빨간색 버튼)을 누르면 동전 없이 무료 통화가
+              가능해요.
+            </Label>
+          </Card>
         </View>
       ) : subTab === "phrases" ? (
         <View style={{ gap: 14 }}>

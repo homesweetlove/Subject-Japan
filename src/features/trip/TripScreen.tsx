@@ -186,8 +186,8 @@ export function TripScreen({
   }
 
   return (
-    <View style={{ gap: 22 }}>
-      <View style={{ gap: 12 }}>
+    <View style={{ gap: 18 }}>
+      <View style={{ gap: 8 }}>
         <Button
           label="여행 도구 전체 보기"
           icon="chevron-back"

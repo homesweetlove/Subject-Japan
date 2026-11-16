@@ -481,7 +481,7 @@ export function PayScreen({
               onChange={setPrice}
               numeric
             />
-            <View style={styles.between}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               {[true, false].map((v) => (
                 <Choice
                   key={String(v)}
@@ -491,7 +491,7 @@ export function PayScreen({
                 />
               ))}
             </View>
-            <View style={styles.between}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               {[10, 8, 0].map((v) => (
                 <Choice
                   key={v}

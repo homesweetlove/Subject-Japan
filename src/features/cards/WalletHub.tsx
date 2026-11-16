@@ -49,7 +49,7 @@ export function WalletHub({
 }) {
   return (
     <View style={{ gap: 20 }}>
-      <SubNav items={sections} value={section} onChange={onSection} />
+      <SubNav items={sections} value={section} onChange={onSection} wrap />
       {section === "transit" ? (
         <CardScreen
           cards={state.transitCards}

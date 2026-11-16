@@ -3,7 +3,7 @@ import { type ViewStyle } from "react-native";
 
 /**
  * Plain, readable palette: a white page, near-black text, and one blue kept
- * for the primary action and the current selection's highlight. Red is only
+ * for the primary action and for whatever is currently selected. Red is only
  * for danger. Every text pair below meets WCAG AA (4.5:1).
  */
 export const light = {
@@ -21,7 +21,7 @@ export const light = {
   accentInk: "#1F47C4",
   success: "#1F7A4D",
   successSoft: "#E3F3EA",
-  selected: "#17191C",
+  selected: "#2B5BE8",
   onSelected: "#FFFFFF",
   overlay: "rgba(23,25,28,0.55)",
   shadow: "#000000",
@@ -48,8 +48,8 @@ export const dark: Palette = {
   accentInk: "#A9C1FF",
   success: "#7FD3A0",
   successSoft: "#17301F",
-  selected: "#F1F3F5",
-  onSelected: "#111315",
+  selected: "#7DA2FF",
+  onSelected: "#0B1530",
   overlay: "rgba(0,0,0,0.7)",
   shadow: "#000000",
   accentPressed: "#6690F5",
