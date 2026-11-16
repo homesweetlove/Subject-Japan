@@ -248,7 +248,7 @@ test("native feature fallback, authored formal phrases and no automatic network 
     .getByRole("button", { name: "교통카드 NFC 읽기", exact: true })
     .click();
   await expect(
-    page.getByText("이 기능은 전용 Android·iPhone 앱에서 사용할 수 있어요.", {
+    page.getByText("이 기기는 NFC를 지원하지 않아요.", {
       exact: true,
     }),
   ).toBeVisible();
