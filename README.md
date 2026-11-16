@@ -2,9 +2,9 @@
 
 # SUBJECT:JAPAN
 
-[![Download Android test APK](https://img.shields.io/badge/Android-Download%20APK-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43784286541/Subject-Japan-android-test-arm64.apk) [![View releases](https://img.shields.io/badge/GitHub-All%20Releases-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
+[![Download Android test APK](https://img.shields.io/badge/Android-Download%20APK-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43793915298/Subject-Japan-android-test-arm64.apk) [![View releases](https://img.shields.io/badge/GitHub-All%20Releases-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
 
-> **Latest Android test APK (November 16, 2026):** ARM64-only standalone preview built from commit `457bf4c`. Download the APK above and install it on a compatible Android device. This is **test-signed**, not a production/Play Store release; real-device translation, camera, microphone and NFC validation is still required. No iPhone installable package is provided. [Release details and SHA-256](docs/release-status.md).
+> **Latest Android test APK (November 16, 2026):** ARM64-only standalone preview built from commit `7aca1c8`. Download the APK above and install it on a compatible Android device. This is **test-signed**, not a production/Play Store release; real-device translation, camera, microphone and NFC validation is still required. No iPhone installable package is provided. [Release details and SHA-256](docs/release-status.md).
 
 ## User problem and motivation
 
@@ -12,7 +12,7 @@ Finding a shopping phrase and typing the same clothing sizes repeatedly is diffi
 
 The architecture keeps shared React Native screens/domain logic behind provider interfaces with local Swift/Kotlin modules. Android Room and iOS AsyncStorage share the existing v1 JSON contract. Local phrase packs favor predictable offline behavior; general translation adds model downloads and device-specific constraints. This pass stays on Expo SDK 57 compatible patches rather than introducing a major SDK migration.
 
-**Verification update (November 16, 2026):** Quality, Android native compilation, iOS simulator compilation, and the standalone ARM64 Android test APK build all passed in GitHub Actions for commit `457bf4c`. Earlier billing/runner limitations described in the [October 22 audit](docs/quality-audit.md) are historical. Automated checks are **not physical-device acceptance tests**; see [current release status](docs/release-status.md) and the [device checklist](docs/device-validation.md).
+**Verification update (November 16, 2026):** The latest `main` Quality workflow passed at `7dbbe4a`, Android/iOS simulator native builds passed at `4c45919`, and the latest standalone ARM64 test APK was built successfully from `7aca1c8`. The later `main` commit changes only an E2E test assertion, not app runtime code. Earlier billing/runner limitations described in the [October 22 audit](docs/quality-audit.md) are historical. Automated checks are **not physical-device acceptance tests**; see [current release status](docs/release-status.md) and the [device checklist](docs/device-validation.md).
 
 **2026-11-05 fact refresh:** emergency numbers (JNTO hotline 050-3816-2787, Korean embassy and consulate after-hours lines, new Yokohama and Kobe consulates), transit pass prices (Tokyo Subway Ticket ¥1,000/¥1,500/¥2,000, Osaka Amazing Pass ¥3,500), taxi tariffs (Tokyo 2026-04-20, Osaka 2025-11-05, Fukuoka), ATM and travel-card notes, coupon end dates, the 2026 power-bank rule and the ¥3,000 departure tax were re-checked against official sources.
 
@@ -97,7 +97,7 @@ The web/Expo Go builds do not pretend arbitrary text was translated when that fe
 
 ### Download Android Test APK
 
-Download the [November 16 Android test APK](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43784286541/Subject-Japan-android-test-arm64.apk) from [GitHub Releases](https://github.com/homesweetlove/Subject-Japan/releases). It targets ARM64 Android devices and runs without a development server or Expo Go. The installed app name is **Subject Japan Test**. The first time you use free-form translation, connect to Wi-Fi to download the translation models.
+Download the [November 16 Android test APK](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43793915298/Subject-Japan-android-test-arm64.apk) from [GitHub Releases](https://github.com/homesweetlove/Subject-Japan/releases). It targets ARM64 Android devices and runs without a development server or Expo Go. The installed app name is **Subject Japan Test**. The first time you use free-form translation, connect to Wi-Fi to download the translation models.
 
 The test-only package `com.subjectjapan.app.preview` keeps its data separate from the production app. The APK uses Expo template test signing and is not a Play Store distribution. Signing key files are not stored in the repository or release. Future test APKs can also be generated from GitHub Actions using **Android test APK → Run workflow**; the workflow verifies bundle inclusion, signature, and package ID, then publishes the APK and SHA-256 to a GitHub prerelease.
 
