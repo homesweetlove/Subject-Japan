@@ -156,13 +156,17 @@ export function TodayScreen({
           </Press>
         ) : (
           <>
+            <Label size={22} weight="700">
+              아직 적어 둔 일정이 없어요
+            </Label>
             <Label muted size={14}>
-              다가오는 일정이 없어요. 호텔 체크인이나 예약을 적어 두면 여기에
-              보여 드려요.
+              호텔 체크인이나 예약을 적어 두면, 남은 시간을 여기서 바로 보여
+              드려요.
             </Label>
             <Button
               label="일정 추가하기"
               icon="add"
+              primary
               onPress={() => onNavigate("trip", "itinerary")}
             />
           </>

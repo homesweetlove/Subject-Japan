@@ -503,6 +503,39 @@ export function PayScreen({
                 />
               ))}
             </View>
+          </Card>
+
+          {/* The answer sits right under the price, not below every option. */}
+          {!!error && <Label>{error}</Label>}
+          {result && (
+            <Hero>
+              <Label weight="700">예상 최종 부담액</Label>
+              <Pop trigger={result.krw}>
+                <Label size={44} weight="700">
+                  ₩{result.krw.toLocaleString()}
+                </Label>
+              </Pop>
+              <Label>¥{result.final.toLocaleString()} 상당</Label>
+              <Label size={13}>
+                매장 결제 ¥{result.paid.toLocaleString()} + 카드 수수료 ¥
+                {result.fee.toLocaleString()}
+              </Label>
+              <Label size={13}>
+                추후 환급 −¥{result.laterRefund.toLocaleString()} · 캐시백 −¥
+                {result.cashback.toLocaleString()}
+              </Label>
+              <Label size={12} muted>
+                참고 추정치예요. 매장 단수 처리·고정 수수료·환급 환율·카드사
+                적립 제외 조건에 따라 달라집니다.
+              </Label>
+            </Hero>
+          )}
+          {!!notice && <Label>{notice}</Label>}
+
+          <Card>
+            <Label weight="700" size={17}>
+              할인
+            </Label>
             <Field
               label="게스트·매장 할인 (%)"
               value={discount}
@@ -585,31 +618,6 @@ export function PayScreen({
             />
           </Card>
 
-          {!!error && <Label>{error}</Label>}
-          {result && (
-            <Hero>
-              <Label weight="700">예상 최종 부담액</Label>
-              <Pop trigger={result.krw}>
-                <Label size={44} weight="700">
-                  ₩{result.krw.toLocaleString()}
-                </Label>
-              </Pop>
-              <Label>¥{result.final.toLocaleString()} 상당</Label>
-              <Label size={13}>
-                매장 결제 ¥{result.paid.toLocaleString()} + 카드 수수료 ¥
-                {result.fee.toLocaleString()}
-              </Label>
-              <Label size={13}>
-                추후 환급 −¥{result.laterRefund.toLocaleString()} · 캐시백 −¥
-                {result.cashback.toLocaleString()}
-              </Label>
-              <Label size={12} muted>
-                참고 추정치예요. 매장 단수 처리·고정 수수료·환급 환율·카드사
-                적립 제외 조건에 따라 달라집니다.
-              </Label>
-            </Hero>
-          )}
-          {!!notice && <Label>{notice}</Label>}
 
           {/* Exchange Rate Card with Auto-Refresh */}
           <Card>

@@ -26,7 +26,7 @@ async function shot(page: Page, name: string, fullPage = false) {
 }
 
 test("capture every main screen", async ({ page }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(300_000);
   page.setDefaultTimeout(8_000);
   await page.goto("/");
 
@@ -52,6 +52,13 @@ test("capture every main screen", async ({ page }) => {
     await button(page, "사이즈/재고").click();
     await button(page, "이 제품 M 사이즈도 있나요?").click();
     await shot(page, "21-translate-phrase", true);
+  });
+  await step("translate camera and voice", async () => {
+    await button(page, "카메라 번역").click();
+    await shot(page, "26-translate-camera");
+    await button(page, "음성 대화").click();
+    await shot(page, "27-translate-voice");
+    await button(page, "텍스트").click();
   });
   await step("show screen", async () => {
     await button(page, "선택한 문장 크게 보기").click();
@@ -82,6 +89,16 @@ test("capture every main screen", async ({ page }) => {
     await button(page, "새 면세 안내").click();
     await shot(page, "32-taxfree", true);
   });
+  for (const [name, label] of [
+    ["33-pay-spend", "지출 기록"],
+    ["34-pay-customs", "면세 기록·세관"],
+    ["35-pay-coins", "동전·더치페이"],
+    ["36-pay-atm", "ATM·사이즈표"],
+  ] as const)
+    await step(label, async () => {
+      await button(page, label).click();
+      await shot(page, name);
+    });
 
   await step("trip menu", async () => {
     await tab(page, "여행").click();
@@ -94,6 +111,18 @@ test("capture every main screen", async ({ page }) => {
     await button(page, "식당 주문·알레르기").click();
     await shot(page, "42-trip-dining");
   });
+  for (const [name, label] of [
+    ["44-trip-itinerary", "일정·예약"],
+    ["45-trip-go", "길찾기·택시·운행"],
+    ["46-trip-transit", "교통·패스 비교"],
+    ["47-trip-airport", "공항 막차"],
+    ["48-trip-checklist", "쇼핑·체크리스트"],
+    ["49-trip-etiquette", "문화 & 매너"],
+  ] as const)
+    await step(label, async () => {
+      await button(page, label).click();
+      await shot(page, name);
+    });
   await step("trip emergency", async () => {
     await button(page, "긴급 SOS").first().click();
     await shot(page, "43-emergency", true);
