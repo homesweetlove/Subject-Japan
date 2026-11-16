@@ -133,6 +133,25 @@ describe("spending log", () => {
     state = deleteExpense(state, "b");
     expect(state.expenses).toHaveLength(1);
   });
+
+  it.each([Number.MAX_VALUE, -Number.MAX_VALUE, 8_640_000_000_000_000])(
+    "rejects a stored expense date that cannot be grouped in Japan time: %s",
+    (createdAt) => {
+      const valid = e("valid", 1200, "2026-11-20T08:00:00");
+      const invalid = { ...valid, id: "invalid", createdAt };
+      expect(validExpense(invalid)).toBe(false);
+      expect(() => saveExpense(initialState(), invalid)).toThrow();
+
+      const raw = JSON.stringify({
+        ...initialState(),
+        expenses: [valid, invalid],
+      });
+      const recovered = decodeState(raw);
+      expect(recovered.expenses).toEqual([valid]);
+      expect(summarizeExpenses(recovered.expenses).totalJpy).toBe(1200);
+      expect(() => parseBackup(raw)).toThrow(/백업 형식/);
+    },
+  );
 });
 
 describe("departure, holidays and stored state", () => {

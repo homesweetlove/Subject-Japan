@@ -41,6 +41,16 @@ test("today: weather only after choosing a city, next trip, shortcuts and native
       });
     if (url.includes("/amedas/data/point/44132/"))
       return route.fulfill({ contentType: "application/json", body: amedas });
+    if (url.endsWith("/quake/data/list.json"))
+      return route.fulfill({
+        json: [{
+          eid: "test-quake",
+          at: new Date(Date.now() - 60000).toISOString(),
+          anm: "千葉県東方沖",
+          mag: "4.1",
+          maxi: "3",
+        }],
+      });
     return route.fulfill({ status: 404 });
   });
   await page.goto("/");
@@ -61,17 +71,22 @@ test("today: weather only after choosing a city, next trip, shortcuts and native
   await expect(page.getByText("21°", { exact: true })).toBeVisible();
   await expect(page.getByText("도쿄 날씨", { exact: true })).toBeVisible();
   await expect(page.getByText(/気象庁ホームページ/)).toBeVisible();
-  // Only the city's fixed forecast office and observation station are requested.
+  await expect(page.getByText("최대 진도 3 · 규모 4.1", { exact: true })).toBeVisible();
+  await expect(page.getByText(/千葉県東方沖/)).toBeVisible();
+  // City selection enables fixed weather endpoints and the public quake feed.
   expect(external.sort()).toEqual([
     "https://www.jma.go.jp/bosai/amedas/data/latest_time.txt",
     expect.stringMatching(/\/amedas\/data\/point\/44132\/\d{8}_09\.json$/),
     "https://www.jma.go.jp/bosai/forecast/data/forecast/130000.json",
+    "https://www.jma.go.jp/bosai/quake/data/list.json",
   ]);
 
-  // Cached forecast survives a reload without another request.
+  // Forecasts are cached, while recent earthquakes are checked again on reload.
   await page.reload();
   await expect(page.getByText("21°", { exact: true })).toBeVisible();
-  expect(external).toHaveLength(3);
+  await expect(page.getByText("최대 진도 3 · 규모 4.1", { exact: true })).toBeVisible();
+  expect(external.filter((url) => !url.endsWith("/quake/data/list.json"))).toHaveLength(3);
+  expect(external.filter((url) => url.endsWith("/quake/data/list.json"))).toHaveLength(2);
 
   await page
     .getByRole("button", { name: "일정 추가하기", exact: true })
