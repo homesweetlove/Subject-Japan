@@ -195,7 +195,7 @@ export function EmergencyScreen() {
       ) : (
         <View style={{ gap: 14 }}>
           <Card>
-            <Label weight="700">⚠️ 지진 발생 시 3대 핵심 원칙</Label>
+            <Label weight="700">지진 발생 시 3대 핵심 원칙</Label>
             <Label muted size={13}>
               1. 자세 낮추기 (Drop) · 2. 머리 보호하기 (Cover) · 3. 흔들림 멈출
               때까지 기다리기 (Hold on)
@@ -205,7 +205,7 @@ export function EmergencyScreen() {
           {disasterGuidelines.map((guide, idx) => (
             <Card key={idx}>
               <Label weight="700" size={17}>
-                📍 {guide.location}
+                {guide.location}
               </Label>
               <Text
                 style={{

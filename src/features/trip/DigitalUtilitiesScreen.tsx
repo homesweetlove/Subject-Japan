@@ -124,7 +124,7 @@ export function DigitalUtilitiesScreen({
         <View style={{ gap: 14 }}>
           <Card>
             <Label weight="700" size={17}>
-              ⚡ 110V 돼지코와 220V 전압 차이 주의사항
+              110V 돼지코와 220V 전압 차이 주의사항
             </Label>
             <Label muted size={13}>
               일본의 콘센트 규격은 100V (A타입 11자 핀)입니다. 단순 모양 변환용
@@ -177,7 +177,7 @@ export function DigitalUtilitiesScreen({
         <View style={{ gap: 14 }}>
           <Card>
             <Label weight="700" size={17}>
-              🇯🇵 Visit Japan Web (VJW) 등록 가이드
+              Visit Japan Web (VJW) 등록 가이드
             </Label>
             <Label muted size={13}>
               일본 입국 심사 및 세관 신고를 모바일 QR코드로 간편하게 통과할 수
@@ -210,7 +210,7 @@ export function DigitalUtilitiesScreen({
               </View>
               <Label size={13}>{step.detail}</Label>
               <Label muted size={12}>
-                💡 팁: {step.tip}
+                팁: {step.tip}
               </Label>
             </Card>
           ))}
@@ -219,7 +219,7 @@ export function DigitalUtilitiesScreen({
         <View style={{ gap: 14 }}>
           <Card>
             <Label weight="700" size={17}>
-              📶 일본 현지 eSIM / 로밍 데이터 안 될 때 긴급 대처
+              일본 현지 eSIM / 로밍 데이터 안 될 때 긴급 대처
             </Label>
             <Label muted size={13}>
               공항 도착 후 데이터가 잡히지 않을 때 아래 3가지 조치를 순서대로
@@ -230,7 +230,7 @@ export function DigitalUtilitiesScreen({
           {esimTroubles.map((item, idx) => (
             <Card key={idx}>
               <Label weight="700" size={15} style={{ color: c.accent }}>
-                ❓ {item.problem}
+                {item.problem}
               </Label>
               <View style={{ gap: 6, marginTop: 4 }}>
                 {item.solution.map((sol, solIdx) => (

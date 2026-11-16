@@ -712,7 +712,7 @@ export function PayScreen({
           {/* Quick Currency Conversion Table */}
           <Card>
             <Label weight="700" size={16}>
-              ⚡ 빠른 엔화-원화 환산표
+              빠른 엔화-원화 환산표
             </Label>
             {!hasRate && (
               <Label muted>
@@ -1106,7 +1106,7 @@ export function PayScreen({
           {/* Coin Minimizer Card */}
           <Card>
             <Label weight="700" size={17}>
-              🪙 동전 지갑 털기 (거스름돈 최소화)
+              동전 지갑 털기 (거스름돈 최소화)
             </Label>
             <Label muted size={13}>
               결제 금액을 입력하면 잔돈으로 동전을 받지 않도록 지폐와 함께 낼
@@ -1141,7 +1141,7 @@ export function PayScreen({
                 ¥{smartPayment.totalToPay.toLocaleString()} 결제 시
               </Text>
               <Label size={14} style={{ color: c.accent, fontWeight: "700" }}>
-                💡 {smartPayment.tip}
+                {smartPayment.tip}
               </Label>
               <Label size={13}>
                 • 지폐: ¥{smartPayment.payBills.toLocaleString()}
@@ -1159,7 +1159,7 @@ export function PayScreen({
           {/* Warikan (Dutch Pay) Card */}
           <Card>
             <Label weight="700" size={17}>
-              🤝 와리캉 (더치페이) 정산기
+              와리캉 (더치페이) 정산기
             </Label>
             <Label muted size={13}>
               식사나 술자리 후 총액을 인원수로 나누어 1인당 부담액을 계산해요.
@@ -1235,7 +1235,7 @@ export function PayScreen({
           {/* ATM Guides Card */}
           <Card>
             <Label weight="700" size={17}>
-              🏧 일본 ATM 수수료 & 트래블카드 출금 가이드
+              일본 ATM 수수료 & 트래블카드 출금 가이드
             </Label>
             <Label muted size={13}>
               트래블로그, 트래블월렛, 토스 외화통장 카드로 현지 엔화 현금을 뽑을
@@ -1268,7 +1268,7 @@ export function PayScreen({
                   {guide.feeInfo}
                 </Label>
                 <Label muted size={12}>
-                  💡 {guide.cardTips}
+                  {guide.cardTips}
                 </Label>
               </View>
             </Card>
@@ -1277,7 +1277,7 @@ export function PayScreen({
           {/* Size Chart Card */}
           <Card>
             <Label weight="700" size={17}>
-              📏 일본 ↔ 한국 의류·신발 사이즈 규격표
+              일본 ↔ 한국 의류·신발 사이즈 규격표
             </Label>
             <Label muted size={13}>
               일본 쇼핑 시 의류 호수와 신발 사이즈가 다를 때 바로 비교해 보세요.

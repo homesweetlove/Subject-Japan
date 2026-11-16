@@ -20,7 +20,7 @@ export const applianceChecks: ApplianceCheck[] = [
     voltageType: "danger",
     voltageText: "한국 전용 (220V Only)",
     guide:
-      "⚠️ 절대 주의: 220V 전용 열기구를 100V 콘센트에 꽂으면 온도가 거의 올라가지 않거나 모터가 망가질 수 있습니다. 반드시 '100-240V' 표기된 프리볼트 제품만 가져가세요.",
+      "절대 주의: 220V 전용 열기구를 100V 콘센트에 꽂으면 온도가 거의 올라가지 않거나 모터가 망가질 수 있습니다. 반드시 '100-240V' 표기된 프리볼트 제품만 가져가세요.",
   },
   {
     id: "ap-camera",

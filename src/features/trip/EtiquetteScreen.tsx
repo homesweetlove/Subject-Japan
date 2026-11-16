@@ -96,7 +96,7 @@ export function EtiquetteScreen() {
 
         <View style={{ gap: 10, marginTop: 4 }}>
           <Label weight="700" size={15} style={{ color: c.accent }}>
-            ✅ 이것은 꼭 지켜주세요 (DO)
+            이것은 꼭 지켜주세요 (DO)
           </Label>
           {guide.dos.map((item, idx) => (
             <View
@@ -115,7 +115,7 @@ export function EtiquetteScreen() {
 
         <View style={{ gap: 10, marginTop: 8 }}>
           <Label weight="700" size={15} style={{ color: c.error }}>
-            ❌ 이것은 삼가해 주세요 (DON'T)
+            이것은 삼가해 주세요 (DON'T)
           </Label>
           {guide.donts.map((item, idx) => (
             <View

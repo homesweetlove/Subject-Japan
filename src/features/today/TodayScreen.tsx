@@ -423,7 +423,7 @@ function WeatherCard({
                   </Label>
                   {d.rainChance !== null && (
                     <Label size={11} muted>
-                      ☂ {d.rainChance}%
+                      비 {d.rainChance}%
                     </Label>
                   )}
                 </View>

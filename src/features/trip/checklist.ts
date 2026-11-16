@@ -132,7 +132,7 @@ export const travelChecklistItems: ChecklistItem[] = [
     title: "오리히로 곤약젤리 (파우치형)",
     jpName: "ぷるんと蒟蒻ゼリー",
     description:
-      "⚠️ 컵형 곤약젤리는 한국 반입 금지! 반드시 튜브/파우치형만 구매하세요.",
+      "컵형 곤약젤리는 한국 반입 금지! 반드시 튜브/파우치형만 구매하세요.",
   },
   {
     id: "donki-suntory",

@@ -299,7 +299,7 @@ export function TranslateScreen({
       <View
         style={[
           {
-            borderRadius: 24,
+            borderRadius: 16,
             overflow: "hidden",
             backgroundColor: c.surface,
           },

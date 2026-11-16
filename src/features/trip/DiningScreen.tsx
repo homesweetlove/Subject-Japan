@@ -96,7 +96,7 @@ export function DiningScreen({ krwPer100Jpy }: { krwPer100Jpy?: number }) {
         <View style={{ gap: 12 }}>
           <Card>
             <Label weight="700">
-              💡 식당 팁: 일본에서는 손을 들며 "스미마셍!"
+              식당 팁: 일본에서는 손을 들며 "스미마셍!"
             </Label>
             <Label muted size={13}>
               직원을 부를 때는 가볍게 손을 들며 "すみません(스미마셍)"이라고
@@ -212,7 +212,7 @@ export function DiningScreen({ krwPer100Jpy }: { krwPer100Jpy?: number }) {
         <View style={{ gap: 14 }}>
           <Card>
             <Label weight="700" size={17}>
-              🏮 오토오시 (お通し)란?
+              오토오시 (お通し)란?
             </Label>
             <Label muted size={13}>
               일본 이자카야나 주점 등에서 첫 잔과 함께 나오는 기본
@@ -277,7 +277,7 @@ export function DiningScreen({ krwPer100Jpy }: { krwPer100Jpy?: number }) {
         <View style={{ gap: 14 }}>
           <Card>
             <Label weight="700" size={17}>
-              🍜 라멘 주문 취향 선택
+              라멘 주문 취향 선택
             </Label>
             <Label muted size={13}>
               이치란, 이에케이, 하카타 라멘 등에서 면 익힘과 국물 진하기를 내

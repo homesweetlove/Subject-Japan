@@ -168,7 +168,7 @@ export function TransitScreen({
                 {selectedPass.description}
               </Label>
               <Label muted size={12}>
-                💡 {selectedPass.notes}
+                {selectedPass.notes}
               </Label>
             </View>
           </Card>
@@ -177,7 +177,7 @@ export function TransitScreen({
         <View style={{ gap: 14 }}>
           <Card>
             <Label weight="700" size={17}>
-              🚄 신칸센 특대하물(대형 캐리어) 예약 필수 규정
+              신칸센 특대하물(대형 캐리어) 예약 필수 규정
             </Label>
             <Label muted size={13}>
               도카이도·산요·규슈 신칸센(도쿄-나고야-교토-신오사카-하카타 구간)
@@ -224,7 +224,7 @@ export function TransitScreen({
               </Label>
               {rule.penaltyFeeYen > 0 ? (
                 <Label size={12} style={{ color: c.error, fontWeight: "600" }}>
-                  ⚠️ 미예약 탑승 시 현장 수수료 ¥
+                  미예약 탑승 시 현장 수수료 ¥
                   {rule.penaltyFeeYen.toLocaleString()} 부과
                 </Label>
               ) : null}
@@ -304,10 +304,10 @@ export function TransitScreen({
         <View style={{ gap: 14 }}>
           <Card>
             <Label weight="700" size={17}>
-              🚕 일본 택시 요금 계산기 & 매너
+              일본 택시 요금 계산기 & 매너
             </Label>
             <Label muted size={13}>
-              ⚠️ 주의: 일본 택시 뒷좌석 문은 기사님이 레버로 열어주는
+              주의: 일본 택시 뒷좌석 문은 기사님이 레버로 열어주는
               '자동문'입니다. 직접 문을 열거나 닫지 마세요!
             </Label>
             <Label muted size={12}>

@@ -174,24 +174,26 @@ export function ProfileScreen({
               }}
             />
             {estimateJapanSize(field.key, profile.sizes[field.key]) ? (
-              <View
-                style={{
-                  gap: 4,
-                  padding: 12,
-                  borderRadius: 14,
-                  backgroundColor: c.accentSoft,
-                }}
-              >
-                <Label size={11} weight="700" style={{ color: c.accent }}>
-                  일본 매장용 참고값 (예상)
-                </Label>
-                <Label size={15} weight="700">
-                  {
-                    estimateJapanSize(field.key, profile.sizes[field.key])!
-                      .display
-                  }
-                </Label>
-                <Label size={11} muted>
+              <View style={{ gap: 2 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    alignItems: "baseline",
+                    gap: 8,
+                  }}
+                >
+                  <Label size={13} muted>
+                    일본 매장용 참고값 (예상)
+                  </Label>
+                  <Label size={16} weight="700" style={{ color: c.accentInk }}>
+                    {
+                      estimateJapanSize(field.key, profile.sizes[field.key])!
+                        .display
+                    }
+                  </Label>
+                </View>
+                <Label size={12} muted>
                   {estimateJapanSize(field.key, profile.sizes[field.key])!.note}
                 </Label>
               </View>
