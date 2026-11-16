@@ -53,13 +53,6 @@ test("capture every main screen", async ({ page }) => {
     await button(page, "이 제품 M 사이즈도 있나요?").click();
     await shot(page, "21-translate-phrase", true);
   });
-  await step("translate camera and voice", async () => {
-    await button(page, "카메라 번역").click();
-    await shot(page, "26-translate-camera");
-    await button(page, "음성 대화").click();
-    await shot(page, "27-translate-voice");
-    await button(page, "텍스트").click();
-  });
   await step("show screen", async () => {
     await button(page, "선택한 문장 크게 보기").click();
     await shot(page, "22-show");
@@ -71,6 +64,14 @@ test("capture every main screen", async ({ page }) => {
     await button(page, "입어 봐도 될까요?").click();
     await shot(page, "25-show-follow-up");
     await button(page, "닫기").click();
+  });
+  await step("translate camera and voice", async () => {
+    await tab(page, "번역").click();
+    await button(page, "카메라 번역").click();
+    await shot(page, "26-translate-camera");
+    await button(page, "음성 대화").click();
+    await shot(page, "27-translate-voice");
+    await button(page, "텍스트").click();
   });
   await step("today after showing", async () => {
     await tab(page, "오늘").click();

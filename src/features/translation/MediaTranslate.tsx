@@ -285,7 +285,7 @@ export function MediaTranslate({
             : "한국어와 일본어를 번갈아 선택하고 말해 주세요. 기기 내 음성 인식을 지원하는 기기·언어에서 사용할 수 있어요."
         }
       />
-      <View style={styles.between}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {(["ko", "ja"] as const).map((l) => (
           <Choice
             key={l}
