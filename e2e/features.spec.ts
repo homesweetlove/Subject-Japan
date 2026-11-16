@@ -29,7 +29,8 @@ test("nearby query consent, coarse coordinates, store matching and permission-fr
   await page
     .getByRole("button", { name: "나중에 입력하기", exact: true })
     .click();
-  await page.getByRole("tab", { name: "쿠폰", exact: true }).click();
+  await page.getByRole("tab", { name: "카드·쿠폰", exact: true }).click();
+  await page.getByRole("button", { name: "쿠폰·혜택", exact: true }).click();
   await page.getByRole("button", { name: "주변 매장", exact: true }).click();
   expect(queries).toHaveLength(0);
   await page
@@ -243,7 +244,7 @@ test("native feature fallback, authored formal phrases and no automatic network 
       exact: true,
     }),
   ).toBeVisible();
-  await page.getByRole("tab", { name: "카드", exact: true }).click();
+  await page.getByRole("tab", { name: "카드·쿠폰", exact: true }).click();
   await page
     .getByRole("button", { name: "교통카드 NFC 읽기", exact: true })
     .click();
@@ -252,7 +253,8 @@ test("native feature fallback, authored formal phrases and no automatic network 
       exact: true,
     }),
   ).toBeVisible();
-  await page.getByRole("tab", { name: "쿠폰", exact: true }).click();
+  await page.getByRole("tab", { name: "카드·쿠폰", exact: true }).click();
+  await page.getByRole("button", { name: "쿠폰·혜택", exact: true }).click();
   await page.getByRole("button", { name: "주변 매장", exact: true }).click();
   await expect(
     page.getByRole("button", {

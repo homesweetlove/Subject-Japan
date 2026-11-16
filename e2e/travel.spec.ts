@@ -170,7 +170,7 @@ test("small screen, explicit fallback, manual Japanese and navigation", async ({
     )
     .toBe(true);
   for (const [name, title] of [
-    ["카드", "이동을 더 가볍게"],
+    ["카드·쿠폰", "이동을 더 가볍게"],
     ["결제", "계산은 똑똑하게"],
   ]) {
     await page.getByRole("tab", { name, exact: true }).click();
@@ -194,7 +194,8 @@ test("coupons: filter, official conditions, local save, reload and reset", async
   await page
     .getByRole("button", { name: "나중에 입력하기", exact: true })
     .click();
-  await page.getByRole("tab", { name: "쿠폰", exact: true }).click();
+  await page.getByRole("tab", { name: "카드·쿠폰", exact: true }).click();
+  await page.getByRole("button", { name: "쿠폰·혜택", exact: true }).click();
   await page.getByRole("button", { name: "일반 고객용", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "돈키호테 상세 보기", exact: true }),
@@ -223,7 +224,8 @@ test("coupons: filter, official conditions, local save, reload and reset", async
     .getByRole("button", { name: "혜택 상세 닫기", exact: true })
     .click();
   await page.reload();
-  await page.getByRole("tab", { name: "쿠폰", exact: true }).click();
+  await page.getByRole("tab", { name: "카드·쿠폰", exact: true }).click();
+  await page.getByRole("button", { name: "쿠폰·혜택", exact: true }).click();
   await page
     .getByRole("button", { name: "저장한 혜택만", exact: true })
     .click();
@@ -263,7 +265,8 @@ test("coupons: filter, official conditions, local save, reload and reset", async
   await page
     .getByRole("button", { name: "나중에 입력하기", exact: true })
     .click();
-  await page.getByRole("tab", { name: "쿠폰", exact: true }).click();
+  await page.getByRole("tab", { name: "카드·쿠폰", exact: true }).click();
+  await page.getByRole("button", { name: "쿠폰·혜택", exact: true }).click();
   await page
     .getByRole("button", { name: "저장한 혜택만", exact: true })
     .click();

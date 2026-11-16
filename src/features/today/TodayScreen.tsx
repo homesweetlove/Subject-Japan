@@ -61,7 +61,9 @@ import {
 } from "./weather";
 import { Press } from "../../ui/Press";
 
-export type AppTab = "today" | "card" | "coupon" | "translate" | "pay" | "trip";
+export type AppTab = "today" | "card" | "translate" | "pay" | "trip";
+/** Where Today can send the traveller: a tab, or the coupon side of cards. */
+export type NavTarget = AppTab | "coupon";
 
 export function TodayScreen({
   state,
@@ -73,7 +75,7 @@ export function TodayScreen({
   onOpenTaxFreeGuide,
 }: {
   state: LocalState;
-  onNavigate: (tab: AppTab, section?: TripSection) => void;
+  onNavigate: (tab: NavTarget, section?: TripSection) => void;
   /** Opens PAY on the tax-free receipts list. */
   onOpenRefunds?: () => void;
   /** Opens PAY on the tax-free guide (airport planner). */
@@ -100,20 +102,6 @@ export function TodayScreen({
         subtitle={`일본 시각 ${jstHeadline(now)}`}
       />
       <HolidayNote now={now} />
-      {state.departure && (
-        <DepartureCard
-          departure={state.departure}
-          receipts={state.dutyFreeReceipts}
-          now={now}
-          onOpen={onOpenTaxFreeGuide ?? (() => onNavigate("pay"))}
-        />
-      )}
-      <WeatherCard
-        city={state.weatherCity}
-        weather={state.weather}
-        onCity={onWeatherCity}
-        onWeather={onWeather}
-      />
       <Card>
         <SectionTitle icon="calendar-outline" title="다음 일정" />
         {trip ? (
@@ -124,7 +112,7 @@ export function TodayScreen({
             style={{ gap: 4 }}
           >
             <View style={styles.between}>
-              <Label size={19} weight="700" style={{ flexShrink: 1 }}>
+              <Label size={24} weight="700" style={{ flexShrink: 1 }}>
                 {trip.title}
               </Label>
               <Badge
@@ -150,6 +138,20 @@ export function TodayScreen({
           </>
         )}
       </Card>
+      {state.departure && (
+        <DepartureCard
+          departure={state.departure}
+          receipts={state.dutyFreeReceipts}
+          now={now}
+          onOpen={onOpenTaxFreeGuide ?? (() => onNavigate("pay"))}
+        />
+      )}
+      <WeatherCard
+        city={state.weatherCity}
+        weather={state.weather}
+        onCity={onWeatherCity}
+        onWeather={onWeather}
+      />
       <QuakeCard
         autoCheck={state.weatherCity !== null}
         onGuide={() => onNavigate("trip", "emergency")}

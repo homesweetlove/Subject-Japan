@@ -194,7 +194,7 @@ Project-authored source code is available under the [MIT License](LICENSE), copy
 
 ## Next Steps / External Dependencies
 
-Existing features are connected across six tabs. Hardware/external-data dependencies include:
+Existing features are connected across five tabs (cards and coupons share one). Hardware/external-data dependencies include:
 
 - NFC: read-only physical FeliCa cards. Reading/recharging/paying with the same phone's Wallet card is not supported. iPhone distribution signing requires the NFC Tag Reading capability. A station-name database is not included.
 - Photos: Android uses bundled ML Kit Japanese/Korean OCR; iOS uses Vision. Handwriting, vertical text, and tiny receipt text can be recognized incorrectly, so users can edit before translation.

@@ -84,7 +84,8 @@ test("five regions, countdown editing, guide persistence and reset", async ({
       exact: true,
     }),
   ).toHaveAttribute("aria-checked", "true");
-  await page.getByRole("tab", { name: "쿠폰", exact: true }).click();
+  await page.getByRole("tab", { name: "카드·쿠폰", exact: true }).click();
+  await page.getByRole("button", { name: "쿠폰·혜택", exact: true }).click();
   await page
     .getByRole("textbox", { name: "매장·혜택 검색", exact: true })
     .fill("빅카메라");
@@ -145,6 +146,7 @@ test("backup copies to the clipboard and restores only after validation and conf
     .getByRole("button", { name: "나중에 입력하기", exact: true })
     .click();
   await page.getByRole("tab", { name: "여행", exact: true }).click();
+  await page.getByRole("button", { name: "일정·예약", exact: true }).click();
   await page
     .getByRole("textbox", { name: "일정 이름", exact: true })
     .fill("료칸 체크인");

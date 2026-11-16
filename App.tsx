@@ -15,11 +15,17 @@ import { StatusBar } from "expo-status-bar";
 import { initialState, type LocalState } from "./src/domain/models";
 import { ProfileScreen } from "./src/features/profile/ProfileScreen";
 import { TranslationHub } from "./src/features/translation/TranslationHub";
-import { CardHub } from "./src/features/cards/CardHub";
+import {
+  WalletHub,
+  type WalletSection,
+} from "./src/features/cards/WalletHub";
 import { PayScreen, type PayTab } from "./src/features/pay/PayScreen";
-import { CouponHub } from "./src/features/coupons/CouponHub";
 import { TripScreen, type TripSection } from "./src/features/trip/TripScreen";
-import { TodayScreen, type AppTab } from "./src/features/today/TodayScreen";
+import {
+  TodayScreen,
+  type AppTab,
+  type NavTarget,
+} from "./src/features/today/TodayScreen";
 import { planNotifications } from "./src/features/today/model";
 import { notifier } from "./src/features/today/notifications";
 import { refundSummary } from "./src/features/pay/taxFreeTracker";
@@ -51,13 +57,6 @@ import { dark, light, ThemeContext } from "./src/ui/theme";
 
 const tabs: TabItem<AppTab>[] = [
   { key: "today", label: "오늘", icon: "today-outline", activeIcon: "today" },
-  { key: "card", label: "카드", icon: "card-outline", activeIcon: "card" },
-  {
-    key: "coupon",
-    label: "쿠폰",
-    icon: "ticket-outline",
-    activeIcon: "ticket",
-  },
   {
     key: "translate",
     label: "번역",
@@ -66,6 +65,12 @@ const tabs: TabItem<AppTab>[] = [
   },
   { key: "pay", label: "결제", icon: "wallet-outline", activeIcon: "wallet" },
   { key: "trip", label: "여행", icon: "map-outline", activeIcon: "map" },
+  {
+    key: "card",
+    label: "카드·쿠폰",
+    icon: "card-outline",
+    activeIcon: "card",
+  },
 ];
 function Application() {
   const systemTheme = useColorScheme();
@@ -98,10 +103,20 @@ function Application() {
     return () => sub.remove();
   }, [profileOpen, tab]);
   // Remount key lets Today (or a tapped notification) open a TRIP section.
+  // A plain visit (no section) lands on the TRIP menu.
   const [tripTarget, setTripTarget] = useState<{
-    section: TripSection;
+    section: TripSection | null;
     nonce: number;
-  }>({ section: "itinerary", nonce: 0 });
+  }>({ section: null, nonce: 0 });
+  const resetTrip = () =>
+    setTripTarget((t) =>
+      t.section === null ? t : { section: null, nonce: t.nonce + 1 },
+    );
+  // Cards and coupons share one tab; Today can open either side of it.
+  const [walletTarget, setWalletTarget] = useState<{
+    section: WalletSection;
+    nonce: number;
+  }>({ section: "transit", nonce: 0 });
   // Same remount trick for PAY, so Today can open the tax-free receipts.
   const [payTarget, setPayTarget] = useState<{
     tab: PayTab;
@@ -118,11 +133,17 @@ function Application() {
     setPayTarget((t) => ({ tab, nonce: t.nonce + 1 }));
   };
   const openRefunds = () => openPay("customs");
-  const navigate = (next: AppTab, section?: TripSection) => {
+  const navigate = (next: NavTarget, section?: TripSection) => {
     if (next === "pay") resetPay();
-    if (next === "trip" && section)
-      setTripTarget((t) => ({ section, nonce: t.nonce + 1 }));
-    setTab(next);
+    if (next === "trip") {
+      if (section) setTripTarget((t) => ({ section, nonce: t.nonce + 1 }));
+      else resetTrip();
+    }
+    if (next === "card" || next === "coupon") {
+      const wallet: WalletSection = next === "coupon" ? "coupons" : "transit";
+      setWalletTarget((t) => ({ section: wallet, nonce: t.nonce + 1 }));
+    }
+    setTab(next === "coupon" ? "card" : next);
     setProfileOpen(false);
     scroll.current?.scrollTo({ y: 0, animated: false });
   };
@@ -451,19 +472,15 @@ function Application() {
                       }
                       onProfile={openProfile}
                     />
-                  ) : tab === "coupon" ? (
-                    <CouponHub
+                  ) : tab === "card" ? (
+                    <WalletHub
+                      key={walletTarget.nonce}
+                      initialSection={walletTarget.section}
                       state={state}
                       onToggleGuide={toggleGuide}
                       onToggleSaved={(id) =>
                         commit((s) => toggleSavedCoupon(s, id))
                       }
-                    />
-                  ) : tab === "card" ? (
-                    <CardHub
-                      cards={state.transitCards}
-                      memberships={state.membershipCards}
-                      rate={state.exchangeRate}
                       onSave={(value) =>
                         commit((s) => {
                           if (
@@ -603,6 +620,7 @@ function Application() {
               value={tab}
               onChange={(next) => {
                 if (next === "pay") resetPay();
+                if (next === "trip") resetTrip();
                 setTab(next);
                 scroll.current?.scrollTo({ y: 0, animated: false });
               }}
