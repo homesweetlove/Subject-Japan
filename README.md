@@ -2,9 +2,9 @@
 
 # SUBJECT:JAPAN
 
-[![Download Android test APK](https://img.shields.io/badge/Android-Download%20APK-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-36370733642/Subject-Japan-android-test-arm64.apk) [![View releases](https://img.shields.io/badge/GitHub-All%20Releases-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
+[![Download Android test APK](https://img.shields.io/badge/Android-Download%20APK-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43784286541/Subject-Japan-android-test-arm64.apk) [![View releases](https://img.shields.io/badge/GitHub-All%20Releases-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
 
-> **Android test build:** ARM64 only · built September 28, 2026. Tap the button to download the APK, then open the downloaded file to install it. This build predates later source changes; iOS installation is not available here. This repository is private, so downloading requires repository access.
+> **Latest Android test APK (November 16, 2026):** ARM64-only standalone preview built from commit `457bf4c`. Download the APK above and install it on a compatible Android device. This is **test-signed**, not a production/Play Store release; real-device translation, camera, microphone and NFC validation is still required. No iPhone installable package is provided. [Release details and SHA-256](docs/release-status.md).
 
 ## User problem and motivation
 
@@ -12,7 +12,7 @@ Finding a shopping phrase and typing the same clothing sizes repeatedly is diffi
 
 The architecture keeps shared React Native screens/domain logic behind provider interfaces with local Swift/Kotlin modules. Android Room and iOS AsyncStorage share the existing v1 JSON contract. Local phrase packs favor predictable offline behavior; general translation adds model downloads and device-specific constraints. This pass stays on Expo SDK 57 compatible patches rather than introducing a major SDK migration.
 
-**2026-10-22 reliability audit:** storage/restore ordering, native operation lifecycles, shopping usability, notifications and dependency alignment were improved. See the [verification record (Korean)](docs/quality-audit.md) for actual results, failed attempts and release blockers. GitHub runners are blocked by account billing/spending limits; new Android/iOS native compilation and device validation are still unverified. JS bundle export is not native compilation.
+**Verification update (November 16, 2026):** Quality, Android native compilation, iOS simulator compilation, and the standalone ARM64 Android test APK build all passed in GitHub Actions for commit `457bf4c`. Earlier billing/runner limitations described in the [October 22 audit](docs/quality-audit.md) are historical. Automated checks are **not physical-device acceptance tests**; see [current release status](docs/release-status.md) and the [device checklist](docs/device-validation.md).
 
 **2026-11-05 fact refresh:** emergency numbers (JNTO hotline 050-3816-2787, Korean embassy and consulate after-hours lines, new Yokohama and Kobe consulates), transit pass prices (Tokyo Subway Ticket ¥1,000/¥1,500/¥2,000, Osaka Amazing Pass ¥3,500), taxi tariffs (Tokyo 2026-04-20, Osaka 2025-11-05, Fukuoka), ATM and travel-card notes, coupon end dates, the 2026 power-bank rule and the ¥3,000 departure tax were re-checked against official sources.
 
@@ -22,7 +22,7 @@ A Japan travel utility app for Korean travelers, targeting both Android and iPho
 
 The feature list below describes **implemented source code and supported UI paths**, not a claim that every feature has passed physical-device testing. Android and iOS native bridges exist for ML Kit translation, camera OCR, offline speech recognition and FeliCa reading; their runtime support depends on the device, OS, model availability, permissions and app signing. Expo Go and web support a reduced feature set.
 
-**Still required before calling the iPhone version production-ready:** a signed iPhone build, bidirectional offline-translation checks, camera and microphone tests, Apple NFC Tag Reading entitlement verification, genuine Suica/PASMO/ICOCA scans (including cards with fewer than 20 usable records), and notification tests. The source includes Android/iOS build workflows, but this review did not run them. See [native validation checklist](docs/device-validation.md).
+**Still required before calling the iPhone version production-ready:** a signed iPhone build, bidirectional offline-translation checks, camera and microphone tests, Apple NFC Tag Reading entitlement verification, genuine Suica/PASMO/ICOCA scans (including cards with fewer than 20 usable records), and notification tests. The November 16 CI did compile Android and an iOS simulator app, but signed iPhone distribution and physical-device checks remain outstanding. See [native validation checklist](docs/device-validation.md).
 
 ## Features implemented in source
 
@@ -93,7 +93,7 @@ The web/Expo Go builds do not pretend arbitrary text was translated when that fe
 
 ### Download Android Test APK
 
-Download `Subject-Japan-android-test-arm64.apk` from the **Subject Japan Android Test** release on [GitHub Releases](https://github.com/homesweetlove/Subject-Japan/releases). It targets ARM64 Android devices and runs without a development server or Expo Go. The installed app name is **Subject Japan Test**. The first time you use free-form translation, connect to Wi-Fi to download the translation models.
+Download the [November 16 Android test APK](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43784286541/Subject-Japan-android-test-arm64.apk) from [GitHub Releases](https://github.com/homesweetlove/Subject-Japan/releases). It targets ARM64 Android devices and runs without a development server or Expo Go. The installed app name is **Subject Japan Test**. The first time you use free-form translation, connect to Wi-Fi to download the translation models.
 
 The test-only package `com.subjectjapan.app.preview` keeps its data separate from the production app. The APK uses Expo template test signing and is not a Play Store distribution. Signing key files are not stored in the repository or release. Future test APKs can also be generated from GitHub Actions using **Android test APK → Run workflow**; the workflow verifies bundle inclusion, signature, and package ID, then publishes the APK and SHA-256 to a GitHub prerelease.
 
@@ -171,17 +171,21 @@ npm run test:e2e                  # after build:bundles or build:web
 
 `expo export` does not replace Swift/Kotlin compilation. The GitHub Actions Native builds workflow compiles an Android debug APK and an iOS simulator app. Native iOS compilation cannot be performed locally on Windows. Real model download, airplane-mode translation, and device clipboard behavior are checked separately with the [device validation checklist](docs/device-validation.md).
 
-Automatic CI performs compilation only. To retain APKs as GitHub artifacts, run Native builds manually with `upload-artifacts` enabled; the account needs remaining artifact storage quota. Debug APKs are development builds that connect to a dev server. Standalone distribution builds use EAS preview/production profiles.
+The **Native builds** workflow checks Android/iOS compilation (its debug Android APK needs a development server). The separate **Android test APK** workflow builds and publishes a standalone, test-signed ARM64 APK with a checksum; it is not a production-signed release. For future changes to app code, trigger that workflow again and update the README download link after the new release succeeds. [Release guidance](docs/release-status.md).
 
 Quality checks run for every code change; native compilation runs for module/plugin/app-config/dependency changes. If CI workflows themselves change or full native revalidation is required, run Native builds manually.
 
 ## Privacy and Security
 
-Profiles, sizes, history, transit cards, exchange rates, itineraries, benefits, last-train entries, and checklists are stored only on the device. Android dedicated builds use a Room 2.8.5 database and automatically migrate validated existing AsyncStorage data. iOS, Expo Go, and web use AsyncStorage implementations of the same storage contract. There is no self-hosted server, login, advertising, or analytics SDK. Android backup and iOS AsyncStorage backup are disabled. The storage layer is not an encrypted vault, so do not use it for passwords or payment information. See [privacy design](docs/privacy.md).
+Profiles, sizes, history, transit cards, exchange rates, itineraries, benefits, last-train entries, and checklists are stored only on the device. Android dedicated builds use a Room 2.8.5 database and automatically migrate validated existing AsyncStorage data. iOS, Expo Go, and web use AsyncStorage implementations of the same storage contract. There is no self-hosted server, login, advertising, or analytics SDK. Android backup and iOS AsyncStorage backup are disabled. The storage layer is not an encrypted vault, so do not use it for passwords or payment information. See [privacy design](docs/privacy.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
 
 `.env*`, certificates, keystores, and platform-service configuration are excluded by `.gitignore`. Expo `EXPO_PUBLIC_*` values are public bundle values and must not contain secrets.
 
 The build tool `xcode` indirectly depends on `uuid`; the project pins CommonJS-compatible `uuid` 11.1.1 to address security advisory GHSA-w5hq-g745-h8pq. CI verifies the v4 calls and project generation used by `xcode`. Remove the override when the upstream package resolves it.
+
+## License
+
+Project-authored source code is available under the [MIT License](LICENSE), copyright © 2026 homesweetlove. Dependencies, third-party content and official information sources retain their own terms; see [Third-party notices](THIRD_PARTY_NOTICES.md).
 
 ## Next Steps / External Dependencies
 

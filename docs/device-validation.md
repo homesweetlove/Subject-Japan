@@ -1,8 +1,14 @@
 # 네이티브 기기 검증
 
-## 2026-10-22 검증 범위
+## 2026-11-16 CI 업데이트 (실기기 검증과 구분)
 
-[품질 점검 기록](quality-audit.md)에 이번 수정과 자동 검사 결과를 기록했습니다. JS 번들, Expo 설정 introspection과 Android prebuild는 확인했지만, Android 컴파일은 JDK/SDK 부재로 시작하지 못했고 iOS 컴파일은 Windows에서 실행하지 못했습니다. GitHub 러너도 계정 결제/한도 제한으로 시작되지 않습니다. 아래 실기기 항목은 이번에도 미검증입니다.
+커밋 `457bf4cd4099dcb832ae51e55f27730f037d300c`에서 [Quality](https://github.com/homesweetlove/Subject-Japan/actions/runs/43784286549), [Native builds](https://github.com/homesweetlove/Subject-Japan/actions/runs/43784286531)(Android 및 iOS 시뮬레이터), [Android test APK](https://github.com/homesweetlove/Subject-Japan/actions/runs/43784286541) 워크플로가 모두 성공했습니다. ARM64 독립 실행 테스트 APK가 GitHub [프리릴리스](https://github.com/homesweetlove/Subject-Japan/releases/tag/android-test-43784286541)에 게시됐습니다.
+
+위 결과는 컴파일·자동 테스트·패키지 확인 결과입니다. 실제 Galaxy/iPhone에서 모델 설치와 오프라인 번역, 카메라, 마이크, 실물 교통카드 NFC, 로컬 알림, 데이터 백업·복원은 별도 검증이 필요합니다. 특히 iOS는 시뮬레이터 빌드 성공만 확인됐으며 서명된 실기기 설치나 FeliCa entitlement는 검증되지 않았습니다. [릴리스 상태](release-status.md)를 참고하세요.
+
+## 2026-10-22 당시 검증 범위 (이전 기록)
+
+[품질 점검 기록](quality-audit.md)에 이번 수정과 자동 검사 결과를 기록했습니다. JS 번들, Expo 설정 introspection과 Android prebuild는 확인했지만, Android 컴파일은 JDK/SDK 부재로 시작하지 못했고 iOS 컴파일은 Windows에서 실행하지 못했습니다. 당시에는 GitHub 러너도 계정 결제/한도 제한으로 시작되지 않았습니다. 2026-11-16에는 위 워크플로가 성공했습니다. 아래 실기기 항목은 이번에도 미검증입니다.
 
 추가 회귀 항목: 권한 다이얼로그 중 화면 이동 후 마이크가 시작되지 않는지, 말하기 끝 직후 오디오 세션이 해제되는지, OCR 취소 뒤 늦은 결과가 사라지는지, NFC 취소 직후 재시도가 안전한지, 초기화/복원 중 이전 알림 작업이 완료돼도 삭제한 알림이 되살아나지 않는지 확인합니다. 복원 전후 실제 사이즈·예약번호·즐겨찾기를 비교하고 실패 시 원본이 보존되는지도 검사합니다.
 

@@ -2,9 +2,9 @@
 
 # SUBJECT:JAPAN
 
-[![Android APK 바로 다운로드](https://img.shields.io/badge/Android-APK%20%EB%B0%94%EB%A1%9C%20%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-36370733642/Subject-Japan-android-test-arm64.apk) [![전체 릴리스](https://img.shields.io/badge/GitHub-%EC%A0%84%EC%B2%B4%20%EB%A6%B4%EB%A6%AC%EC%8A%A4-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
+[![Android APK 바로 다운로드](https://img.shields.io/badge/Android-APK%20%EB%B0%94%EB%A1%9C%20%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43784286541/Subject-Japan-android-test-arm64.apk) [![전체 릴리스](https://img.shields.io/badge/GitHub-%EC%A0%84%EC%B2%B4%20%EB%A6%B4%EB%A6%AC%EC%8A%A4-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
 
-> **Android 테스트 APK:** ARM64 전용 · 2026년 9월 28일 빌드. 버튼을 누르면 APK가 다운로드되며, 내려받은 파일을 열어 설치할 수 있습니다. 이후 소스 수정 사항은 포함되지 않았습니다. iPhone 설치 파일은 제공되지 않습니다. 비공개 저장소이므로 다운로드하려면 저장소 접근 권한이 필요합니다.
+> **최신 Android 테스트 APK (2026년 11월 16일):** 커밋 `457bf4c`에서 빌드한 ARM64 전용 독립 실행 미리보기입니다. 위 버튼에서 APK를 내려받아 호환 기기에 설치할 수 있습니다. **테스트 서명본**으로 정식 배포/Play Store 버전이 아니며, 번역·카메라·마이크·NFC 실기기 검증은 남아 있습니다. iPhone 설치 파일은 없습니다. [릴리스 정보 및 SHA-256](docs/release-status.md).
 
 한국 여행자를 위한 일본 여행 유틸리티. Android와 iPhone에서 쓰는 하나의 앱을 목표로 합니다. 첫 번째 기능은 **번역과 내 사이즈를 기억하는 쇼핑 문장**입니다.
 
@@ -14,7 +14,7 @@
 
 **핵심 흐름:** 내 사이즈 저장 → 번역의 사이즈/재고 문장 선택 → 일본어 확인·크게 보기 → 필요하면 즐겨찾기 → 앱을 다시 열어 재사용. 저장 실패 시 기존 데이터를 유지하고 오류를 안내합니다.
 
-**2026-10-22 품질 점검:** SDK 57 호환 패치 정렬, 저장·복원 및 네이티브 작업 수명·쇼핑 흐름·알림 경쟁 상태를 개선했습니다. 로컬 검증과 미실행 검증, 실제 Actions 실패 원인은 [품질 점검 기록](docs/quality-audit.md)에 구분했습니다. 계정 결제/한도 문제로 GitHub 러너가 시작되지 않으며, 새 Android/iOS 네이티브 컴파일과 실기기 통과는 확인되지 않았습니다.
+**2026-11-16 검증 업데이트:** 커밋 `457bf4c` 기준 GitHub Actions의 Quality, Android 네이티브 빌드, iOS 시뮬레이터 빌드, ARM64 독립 실행 테스트 APK 빌드가 모두 성공했습니다. [10월 22일 품질 점검 기록](docs/quality-audit.md)의 계정 한도·러너 문제는 당시 상황입니다. 자동 빌드 성공을 **실기기 기능 검증 완료**로 해석하지 않습니다. [최신 릴리스 현황](docs/release-status.md) · [실기기 체크리스트](docs/device-validation.md)
 
 **2026-11-05 정보 최신화:** 긴급 연락처(일본정부관광국 상담 050-3816-2787, 대사관·총영사관 근무시간 외 번호, 요코하마·고베 총영사관 추가), 교통 패스 가격(도쿄 서브웨이 티켓 1,000/1,500/2,000엔, 오사카 주유패스 3,500엔), 택시 요금표(도쿄 2026-04-20, 오사카 2025-11-05, 후쿠오카), 현금 인출기·트래블카드 안내, 쿠폰 종료일, 2026년 보조배터리 규정, 출국세 3,000엔을 공식 안내와 다시 대조했습니다.
 
@@ -22,7 +22,7 @@
 
 아래 기능 목록은 **소스에 구현된 기능과 UI 경로**를 설명합니다. Android·iOS 네이티브 모듈에 번역, OCR, 기기 내 음성 인식, FeliCa 읽기 코드가 존재하지만, 이것이 모든 실기기에서 정상 동작함을 보증하지는 않습니다. 기종·OS·언어팩·권한·서명에 따라 지원 범위가 달라집니다. Expo Go와 웹은 별도 제한 기능만 제공합니다.
 
-**iPhone 출시 전 검증이 필요한 부분:** 실제 서명된 앱 설치, 한↔일 오프라인 번역, 카메라·마이크, Apple NFC capability와 실물 Suica/PASMO/ICOCA(기록이 20건보다 적은 카드 포함), 로컬 알림. CI에는 Android/iOS 빌드 구성이 있으나 이번 환경에서는 새 네이티브 컴파일을 완료하거나 실기기를 테스트하지 못했습니다. [실기기 검증 체크리스트](docs/device-validation.md)를 참고하세요.
+**iPhone 출시 전 검증이 필요한 부분:** 실제 서명된 앱 설치, 한↔일 오프라인 번역, 카메라·마이크, Apple NFC capability와 실물 Suica/PASMO/ICOCA(기록이 20건보다 적은 카드 포함), 로컬 알림. 2026년 11월 16일 CI에서는 Android와 iOS 시뮬레이터 컴파일이 성공했지만, 실제 서명된 iPhone 배포와 실기기 기능 검증은 완료되지 않았습니다. [실기기 검증 체크리스트](docs/device-validation.md)를 참고하세요.
 
 ## 소스에 구현된 기능
 
@@ -98,7 +98,7 @@ React Native + Expo SDK 57 + TypeScript. 공통 UI와 도메인 코드를 사용
 
 ### Android 테스트 APK 다운로드
 
-[GitHub Releases](https://github.com/homesweetlove/Subject-Japan/releases)에서 **Subject Japan Android Test** 릴리스의 `Subject-Japan-android-test-arm64.apk`를 내려받아 설치합니다. ARM64 Android 기기용이며 개발 서버나 Expo Go 없이 실행합니다. 설치된 앱 이름은 **Subject Japan Test**입니다. 처음 자유 입력 번역을 사용할 때는 Wi-Fi로 번역팩을 내려받습니다.
+[2026년 11월 16일 Android 테스트 APK](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43784286541/Subject-Japan-android-test-arm64.apk)를 [GitHub Releases](https://github.com/homesweetlove/Subject-Japan/releases)에서 내려받아 설치합니다. ARM64 Android 기기용이며 개발 서버나 Expo Go 없이 실행합니다. 설치된 앱 이름은 **Subject Japan Test**입니다. 처음 자유 입력 번역을 사용할 때는 Wi-Fi로 번역팩을 내려받습니다.
 
 테스트 전용 패키지 `com.subjectjapan.app.preview`는 정식 앱과 데이터가 분리됩니다. APK는 Expo 템플릿의 테스트 서명을 사용하며 Play Store 배포본이 아닙니다. 키 파일은 저장소나 릴리스에 올리지 않습니다. 다음 테스트 APK도 GitHub Actions의 **Android test APK → Run workflow**에서 생성할 수 있으며, 번들 포함·서명·패키지 ID를 검사한 후 GitHub 프리릴리스에 APK와 SHA-256을 게시합니다.
 
@@ -176,17 +176,21 @@ npm run test:e2e                  # build:bundles 또는 build:web 이후
 
 `expo export`는 Swift/Kotlin 컴파일을 대신하지 않습니다. GitHub Actions의 Native builds 워크플로는 Android debug APK와 iOS simulator용 앱을 컴파일합니다. 로컬 Windows에서는 iOS 네이티브 컴파일을 할 수 없습니다. 실제 모델 다운로드·비행기 모드 번역·디바이스 클립보드는 [기기 검증 체크리스트](docs/device-validation.md)로 별도 확인합니다.
 
-자동 CI는 컴파일만 수행합니다. APK를 GitHub 아티팩트로 보관하려면 Native builds를 수동 실행하며 `upload-artifacts`를 켭니다. 계정의 아티팩트 저장 용량이 남아 있어야 합니다. Debug APK는 개발 서버에 연결하는 개발용 빌드이며, 독립 실행 배포본은 EAS preview/production 프로필로 만듭니다.
+**Native builds**는 Android/iOS 컴파일을 확인하며 Android 디버그 APK는 개발 서버가 필요합니다. 별도 **Android test APK** 워크플로는 독립 실행 가능한 ARM64 테스트 서명 APK와 체크섬을 릴리스에 게시합니다. 정식 배포 서명본은 아닙니다. 앱 코드가 변경되면 워크플로를 다시 실행하고 성공한 최신 다운로드 링크로 README를 갱신해야 합니다. [릴리스 안내](docs/release-status.md).
 
 Quality 검사는 모든 코드 변경에 실행하며, 네이티브 컴파일은 모듈·플러그인·앱 설정·의존성 변경에 실행합니다. CI 워크플로 자체를 변경했거나 전체 네이티브 재검증이 필요하면 Native builds를 수동 실행합니다.
 
 ## 개인정보와 보안
 
-프로필·사이즈·기록·교통카드·환율·일정·혜택·막차·체크리스트는 기기에만 보관합니다. Android 전용 빌드는 Room 2.8.5 DB를 사용하고 기존 AsyncStorage 데이터를 검증 후 자동 이전합니다. iOS·Expo Go·웹은 같은 저장소 계약의 AsyncStorage 구현을 사용합니다. 자체 서버, 로그인, 광고, 분석 SDK는 없습니다. Android 백업과 iOS AsyncStorage 백업을 비활성화했습니다. 저장소는 앱 수준 암호화 저장소가 아니므로 비밀번호·결제정보 저장에 사용하지 않습니다. [개인정보 처리 설계](docs/privacy.md)를 참고하세요.
+프로필·사이즈·기록·교통카드·환율·일정·혜택·막차·체크리스트는 기기에만 보관합니다. Android 전용 빌드는 Room 2.8.5 DB를 사용하고 기존 AsyncStorage 데이터를 검증 후 자동 이전합니다. iOS·Expo Go·웹은 같은 저장소 계약의 AsyncStorage 구현을 사용합니다. 자체 서버, 로그인, 광고, 분석 SDK는 없습니다. Android 백업과 iOS AsyncStorage 백업을 비활성화했습니다. 저장소는 앱 수준 암호화 저장소가 아니므로 비밀번호·결제정보 저장에 사용하지 않습니다. [개인정보 처리 설계](docs/privacy.md)와 [외부 구성요소 고지](THIRD_PARTY_NOTICES.md)를 참고하세요.
 
 `.env*`, 인증서, 키스토어, 플랫폼 서비스 설정은 `.gitignore`로 제외합니다. Expo의 `EXPO_PUBLIC_*`는 공개 번들 값이므로 비밀키를 넣지 않습니다.
 
 빌드 도구 `xcode`의 간접 의존성 `uuid`는 보안 권고 GHSA-w5hq-g745-h8pq를 해결하는 CommonJS 호환 버전 11.1.1로 고정했습니다. `xcode`에서 사용하는 v4 호출과 프로젝트 생성을 CI로 검증합니다. 상위 패키지에서 해결되면 override를 제거합니다.
+
+## 라이선스
+
+프로젝트에서 작성한 소스 코드는 [MIT 라이선스](LICENSE)(© 2026 homesweetlove)를 적용합니다. 외부 라이브러리·자료·상표는 각 권리자의 이용 조건이 우선합니다. [외부 구성요소 고지](THIRD_PARTY_NOTICES.md)를 참고하세요.
 
 ## 다음 단계
 
