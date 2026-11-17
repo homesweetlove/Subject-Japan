@@ -1,0 +1,37 @@
+name: Add Expo package (branch only)
+
+# pkg/ 로 시작하는 가지에서만 동작합니다. main에는 절대 직접 올리지 않고,
+# 같은 가지에만 package.json / package-lock.json 변경을 커밋합니다.
+on:
+  push:
+    branches: ['pkg/**']
+    paths:
+      - .github/expo-packages.txt
+      - .github/workflows/add-package.yml
+
+permissions:
+  contents: write
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install listed packages
+        run: |
+          grep -v '^#' .github/expo-packages.txt | grep -v '^$' | while read -r pkg; do
+            node -e "const p=require('./package.json');process.exit((p.dependencies||{})['$pkg']?0:1)" || npx expo install "$pkg"
+          done
+      - name: Commit to this branch only
+        run: |
+          if git diff --quiet -- package.json package-lock.json; then echo "no change"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: add packages listed in .github/expo-packages.txt"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

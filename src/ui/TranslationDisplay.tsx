@@ -11,6 +11,7 @@ import {
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import type { Translation } from "../domain/models";
 import { Button } from "./components";
+import { haptic } from "./haptics";
 import { motion, useReducedMotion } from "./motion";
 import { Press } from "./Press";
 import { Rise } from "./Rise";
@@ -128,7 +129,10 @@ export function TranslationDisplay({
                 icon="swap-vertical"
                 variant="ghost"
                 size="sm"
-                onPress={() => setFacing(!facing)}
+                onPress={() => {
+                  haptic.tap();
+                  setFacing(!facing);
+                }}
               />
             )}
           </View>
@@ -229,7 +233,10 @@ export function TranslationDisplay({
                           accessibilityRole="button"
                           accessibilityLabel={`${item.ja} (${item.ko})`}
                           accessibilityState={{ selected: on }}
-                          onPress={() => setReply(item.id)}
+                          onPress={() => {
+                            haptic.tick();
+                            setReply(item.id);
+                          }}
                           pressScale={0.94}
                           style={{
                             minHeight: 56,
@@ -307,7 +314,10 @@ export function TranslationDisplay({
                           <Button
                             label={item.label}
                             icon="arrow-forward"
-                            onPress={() => onFollowUp?.(item.key)}
+                            onPress={() => {
+                              haptic.tap();
+                              onFollowUp?.(item.key);
+                            }}
                           />
                         </Rise>
                       ))}
