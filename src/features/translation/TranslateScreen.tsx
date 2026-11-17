@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
+import { haptic } from "../../ui/haptics";
 import {
   languageNames,
   type LocalState,
@@ -166,6 +167,7 @@ export function TranslateScreen({
     setNotice("");
     try {
       await onFavorite(value);
+      haptic.done();
     } catch (error) {
       if (alive.current && sequence === request.current)
         setNotice(
