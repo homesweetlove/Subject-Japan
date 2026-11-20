@@ -32,7 +32,7 @@ The feature list below describes **implemented source code and supported UI path
 - Camera/photo translation: Japanese/Korean OCR → edit → on-device translation (photos are not uploaded)
 - Voice conversation: on-device speech recognition → original-text confirmation → translation → system TTS, with bidirectional conversation history
 - Read physical Suica/PASMO/ICOCA cards by NFC, keep the latest balance and up to 20 transaction records, manage names for up to 20 cards, and show KRW conversion
-- Card wallet: store up to 40 user-entered membership barcodes (EAN-13/Code 128) and HTTPS links locally. Static codes do not replace dynamic QR codes or merchant authentication
+- Card wallet: scan static QR codes and barcodes from photos or the camera, or enter a membership number or HTTPS link. Up to 40 cards stay on the device. Static codes do not replace dynamic QR codes or merchant authentication
 - Optional Japan shopping size estimates alongside original profile sizes; always verify actual brand sizing
 - On-demand coupon-source freshness checks from an external status service; coupons remain browsable offline, and status does not guarantee redemption
 - PAY & finance helpers:

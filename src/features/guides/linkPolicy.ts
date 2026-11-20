@@ -2,6 +2,7 @@
 import { officialHosts } from "../coupons/model";
 const hosts = new Set([
   ...officialHosts,
+  "taxfree-coupon.hankyu-hanshin-dept.co.jp",
   "www.keisei.co.jp",
   "www.haneda-tokyo-access.com",
   "www.howto-osaka.com",

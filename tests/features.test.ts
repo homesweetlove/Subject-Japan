@@ -228,7 +228,7 @@ describe("nearby store candidates", () => {
       ],
     };
     expect(parseNearby(json, origin, Date.parse("2026-09-22"))).toHaveLength(1);
-    expect(parseNearby(json, origin, Date.parse("2026-12-01"))).toHaveLength(0);
+    expect(parseNearby(json, origin, Date.parse("2027-05-01"))).toHaveLength(0);
   });
   it("validates response shape and distance", () => {
     expect(() => parseNearby({}, origin)).toThrow();

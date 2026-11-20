@@ -42,6 +42,7 @@ export function parseNearby(
   json: unknown,
   origin: Coordinate,
   now = Date.now(),
+  catalog = coupons,
 ): NearbyStore[] {
   const elements = (json as { elements?: unknown[] })?.elements;
   if (!Array.isArray(elements))
@@ -80,7 +81,7 @@ export function parseNearby(
             .flatMap(([, ids]) => ids),
         ),
       ].filter((id) =>
-        coupons.some((c) => c.id === id && couponStatus(c, now) !== "expired"),
+        catalog.some((c) => c.id === id && couponStatus(c, now) !== "expired"),
       );
       const distance = distanceMeters(origin, { latitude, longitude });
       return couponIds.length && distance <= 2100
@@ -104,7 +105,7 @@ export function parseNearby(
     .sort((a, b) => a.distance - b.distance)
     .slice(0, 40);
 }
-export async function findNearby(origin: Coordinate, signal: AbortSignal) {
+export async function findNearby(origin: Coordinate, signal: AbortSignal, catalog = coupons) {
   if (
     !Number.isFinite(origin.latitude) ||
     !Number.isFinite(origin.longitude) ||
@@ -128,5 +129,5 @@ export async function findNearby(origin: Coordinate, signal: AbortSignal) {
     throw new Error(
       "주변 매장 서버가 응답하지 않아요. 잠시 후 다시 시도해 주세요.",
     );
-  return parseNearby(await response.json(), origin);
+  return parseNearby(await response.json(), origin, Date.now(), catalog);
 }

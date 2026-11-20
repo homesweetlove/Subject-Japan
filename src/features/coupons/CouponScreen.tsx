@@ -1,4 +1,11 @@
-import { useDeferredValue, useMemo, useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Linking,
   Modal,
@@ -18,7 +25,9 @@ import {
 } from "../../ui/components";
 import { useTheme } from "../../ui/theme";
 import { useNow } from "../../ui/useNow";
-import { couponCatalog } from "./catalog";
+import { bundledFeed } from "./catalog";
+import { cachedFeed, refreshFeed } from "./feed";
+import { Choice } from "../../ui/Choice";
 import {
   audienceLabels,
   couponDDay,
@@ -95,11 +104,14 @@ function DetailSection({
     </View>
   );
 }
-const categories = [...new Set(couponCatalog.map((coupon) => coupon.category))];
 export function CouponScreen({
+  autoRefresh,
+  onAutoRefresh,
   savedIds,
   onToggleSaved,
 }: {
+  autoRefresh: boolean;
+  onAutoRefresh: (enabled: boolean) => Promise<void>;
   savedIds: string[];
   onToggleSaved: (id: string) => Promise<void>;
 }) {
@@ -109,7 +121,13 @@ export function CouponScreen({
   const [category, setCategory] = useState<CouponCategory | "all">("all");
   const [savedOnly, setSavedOnly] = useState(false);
   const [validOnly, setValidOnly] = useState(false);
-  const [selected, setSelected] = useState<Coupon | null>(null);
+  const [feed, setFeed] = useState(bundledFeed);
+  const categories = useMemo(
+    () => [...new Set(feed.items.map((c) => c.category))],
+    [feed],
+  );
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = feed.items.find((c) => c.id === selectedId);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [checkingSources, setCheckingSources] = useState(false);
@@ -117,35 +135,65 @@ export function CouponScreen({
   const [sourceStatuses, setSourceStatuses] = useState<
     Record<string, CouponSourceStatus>
   >({});
-  const checkSources = async () => {
-    if (checkingSources) return;
+  const request = useRef<AbortController | null>(null);
+  const checkSources = useCallback(async () => {
+    if (request.current) return;
+    const controller = new AbortController();
+    request.current = controller;
     setCheckingSources(true);
     setSourceNotice("");
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 12000);
     try {
-      const statuses = await fetchCouponSourceStatuses(controller.signal);
-      setSourceStatuses(statuses);
+      const [catalog, sources] = await Promise.allSettled([
+        refreshFeed(controller.signal),
+        fetchCouponSourceStatuses(controller.signal),
+      ]);
+      if (request.current !== controller) return;
+      if (catalog.status === "fulfilled") setFeed(catalog.value);
+      if (sources.status === "fulfilled") setSourceStatuses(sources.value);
       setSourceNotice(
-        Object.keys(statuses).length
-          ? "외부 데이터 제공처의 확인 상태를 불러왔어요. 사용 가능 여부는 매장에서 다시 확인해 주세요."
-          : "이 혜택에 연결된 최신 확인 상태가 없어요. 공식 안내를 확인해 주세요.",
-      );
-    } catch {
-      setSourceNotice(
-        "최신 상태를 확인하지 못했어요. 저장된 쿠폰 안내는 그대로 사용할 수 있어요.",
+        [
+          catalog.status === "fulfilled"
+            ? "최신 배포 목록을 확인했어요."
+            : "목록을 받지 못해 기기의 혜택을 표시해요.",
+          sources.status === "rejected"
+            ? "출처 확인 서버에 연결하지 못했어요."
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
       );
     } finally {
       clearTimeout(timeout);
-      setCheckingSources(false);
+      if (request.current === controller) {
+        request.current = null;
+        setCheckingSources(false);
+      }
     }
-  };
+  }, []);
+  useEffect(() => {
+    let active = true;
+    void cachedFeed().then((cached) => {
+      if (active)
+        setFeed((current) =>
+          cached.revision > current.revision ? cached : current,
+        );
+    });
+    return () => {
+      active = false;
+      request.current?.abort();
+      request.current = null;
+    };
+  }, []);
+  useEffect(() => {
+    if (autoRefresh) void checkSources();
+  }, [autoRefresh, checkSources]);
   const now = useNow(60000);
   // Typing stays responsive; the list catches up with the deferred query.
   const deferredQuery = useDeferredValue(query);
   const results = useMemo(
     () =>
-      filterCoupons(couponCatalog, {
+      filterCoupons(feed.items, {
         query: deferredQuery,
         audience,
         category,
@@ -154,7 +202,16 @@ export function CouponScreen({
         validOnly,
         now,
       }),
-    [deferredQuery, audience, category, savedOnly, savedIds, validOnly, now],
+    [
+      feed,
+      deferredQuery,
+      audience,
+      category,
+      savedOnly,
+      savedIds,
+      validOnly,
+      now,
+    ],
   );
   const save = async (id: string) => {
     setBusy(true);
@@ -269,14 +326,23 @@ export function CouponScreen({
       </Label>
       <View style={{ gap: 6 }}>
         <Button
-          label="쿠폰 출처 최신 확인 상태 조회"
+          label="쿠폰 혜택 새로고침"
           icon="refresh-outline"
           busy={checkingSources}
           onPress={() => void checkSources()}
         />
+        <Choice
+          checkbox
+          label="탭을 열 때 자동 새로고침"
+          selected={autoRefresh}
+          onPress={() =>
+            void onAutoRefresh(!autoRefresh).catch(() =>
+              setError("자동 새로고침 설정을 저장하지 못했어요."),
+            )
+          }
+        />
         <Label muted size={11}>
-          눌렀을 때 외부 조회 서버에 접속합니다. 결과는 쿠폰 발급·사용 보장이
-          아니에요.
+          새로고침하면 공개 쿠폰 목록과 출처별 확인 시각을 받아요.
         </Label>
         {!!sourceNotice && <Label size={12}>{sourceNotice}</Label>}
       </View>
@@ -377,7 +443,7 @@ export function CouponScreen({
                 label={`${coupon.merchant} 상세 보기`}
                 onPress={() => {
                   setError("");
-                  setSelected(coupon);
+                  setSelectedId(coupon.id);
                 }}
               />
               <Button
@@ -394,12 +460,12 @@ export function CouponScreen({
       })}
       <Label muted size={12}>
         목록과 저장한 혜택은 기기에서 볼 수 있어요. 실제 사용에는 공식
-        사이트·앱의 최신 쿠폰이 필요하며, 주변 매장 검색은 아직 지원하지 않아요.
+        사이트·앱의 최신 쿠폰이 필요해요.
       </Label>
       <Modal
         visible={!!selected}
         animationType="slide"
-        onRequestClose={() => setSelected(null)}
+        onRequestClose={() => setSelectedId(null)}
         presentationStyle="pageSheet"
       >
         {selected ? (
@@ -427,7 +493,7 @@ export function CouponScreen({
                   <IconButton
                     name="close"
                     label="혜택 상세 닫기"
-                    onPress={() => setSelected(null)}
+                    onPress={() => setSelectedId(null)}
                   />
                 </View>
                 <ScrollView

@@ -347,3 +347,29 @@ test("airport planner, keep-sealed badge and Today refund card", async ({
     page.getByText("등록된 쇼핑 내역 (1건)", { exact: true }),
   ).toBeVisible();
 });
+
+test("refreshes benefit terms and keeps them across an offline restart", async ({ page }) => {
+  const { bundledFeed } = await import("../src/features/coupons/catalog");
+  const feed = { revision: bundledFeed.revision + 1, items: bundledFeed.items.map(c =>
+    c.id === "biccamera-livejapan" ? {...c, benefit:"갱신된 테스트 혜택"} : c) };
+  await page.route("**/catalog.v1.json", route => route.fulfill({json: feed}));
+  await page.route("**/v1/source-status", route => route.fulfill({json: {items:[
+    {id:"biccamera-livejapan",status:"fresh",checkedAt:"2020-01-01T00:00:00Z"}
+  ]}}));
+  await page.goto("/");
+  await page.getByRole("button", {name:"나중에 입력하기", exact:true}).click();
+  const coupons = async () => {
+    await page.getByRole("tab", {name:"카드·쿠폰", exact:true}).click();
+    await page.getByRole("button", {name:"쿠폰·혜택", exact:true}).click();
+  };
+  await coupons();
+  await page.getByRole("button", {name:"쿠폰 혜택 새로고침"}).click();
+  await expect(page.getByText("갱신된 테스트 혜택", {exact:true})).toBeVisible();
+  await expect(page.getByText(/자동 확인 지연/)).toBeVisible();
+  await page.route("**/catalog.v1.json", route => route.abort());
+  await page.reload();
+  await coupons();
+  await page.getByRole("checkbox", {name:"탭을 열 때 자동 새로고침"}).click();
+  await expect(page.getByText(/목록을 받지 못해/)).toBeVisible();
+  await expect(page.getByText("갱신된 테스트 혜택", {exact:true})).toBeVisible();
+});

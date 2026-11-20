@@ -4,9 +4,11 @@ import * as Location from "expo-location";
 import { Button, Card, Label } from "../../ui/components";
 import { Choice } from "../../ui/Choice";
 import { Field } from "../../ui/Field";
-import { couponCatalog as coupons } from "./catalog";
+import { cachedFeed } from "./feed";
+import { couponCatalog } from "./catalog";
 import { findNearby, type NearbyStore } from "./nearby";
 export function NearbyScreen() {
+  const [coupons, setCoupons] = useState(couponCatalog);
   const [manual, setManual] = useState(false);
   const [region, setRegion] = useState("東京");
   const [merchant, setMerchant] = useState("ビックカメラ");
@@ -58,8 +60,10 @@ export function NearbyScreen() {
       if (!alive.current || cancel.signal.aborted) return;
       clearTimeout(timeout);
       timeout = setTimeout(() => cancel.abort(), 25000);
-      const results = await findNearby(point.coords, cancel.signal);
+      const { items } = await cachedFeed();
+      const results = await findNearby(point.coords, cancel.signal, items);
       if (alive.current) {
+        setCoupons(items);
         setStores(results);
         setSearched(true);
       }
