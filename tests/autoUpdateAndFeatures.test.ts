@@ -135,7 +135,7 @@ describe("Coupon Live D-Day & Validity Auto-Refresh", () => {
   it("identifies ongoing coupons without fixed end date", () => {
     const info = couponDDay(baseCoupon, Date.now());
     expect(info.status).toBe("ongoing");
-    expect(info.label).toBe("상시 혜택");
+    expect(info.label).toBe("종료일 미공개");
   });
 
   it("computes accurate D-Day status and labels", () => {
@@ -145,13 +145,13 @@ describe("Coupon Live D-Day & Validity Auto-Refresh", () => {
     const couponSoon: Coupon = { ...baseCoupon, expiresOn: "2026-10-15" };
     const soonInfo = couponDDay(couponSoon, now);
     expect(soonInfo.status).toBe("ending-soon");
-    expect(soonInfo.daysRemaining).toBe(6);
-    expect(soonInfo.label).toBe("마감 임박 (D-6)");
+    expect(soonInfo.daysRemaining).toBe(5);
+    expect(soonInfo.label).toBe("마감 임박 (D-5)");
 
     // Same day: D-Day
     const couponToday: Coupon = { ...baseCoupon, expiresOn: "2026-10-10" };
     const todayInfo = couponDDay(couponToday, now);
-    expect(todayInfo.status).toBe("ending-soon"); // <= 7 days
+    expect(todayInfo.status).toBe("d-day");
 
     // Past date: expired
     const couponExpired: Coupon = { ...baseCoupon, expiresOn: "2026-10-09" };

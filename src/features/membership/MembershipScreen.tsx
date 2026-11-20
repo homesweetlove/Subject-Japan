@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import * as Clipboard from "expo-clipboard";
 import {
   Linking,
@@ -12,6 +12,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, Icon, IconButton, Label, styles } from "../../ui/components";
 import { useTheme } from "../../ui/theme";
+import type { ScannedCode } from "./scannedCode";
+import { ScannedCodeView } from "./ScannedCodeView";
+import { pickCode } from "./pickCode";
 import { BarcodeView } from "./BarcodeView";
 import { makeMembershipCard, type MembershipCard } from "./model";
 
@@ -29,6 +32,28 @@ export function MembershipScreen({
   const [presenting, setPresenting] = useState<MembershipCard | null>(null);
   const [name, setName] = useState("");
   const [barcodeValue, setBarcodeValue] = useState("");
+  const [scannedCode, setScannedCode] = useState<ScannedCode>();
+  const scanLock = useRef(false);
+  const [scanning, setScanning] = useState(false);
+  const scan = async (source: "camera" | "library") => {
+    if (scanLock.current) return;
+    scanLock.current = true;
+    setScanning(true);
+    setNotice("");
+    try {
+      const code = await pickCode(source);
+      if (code) {
+        setScannedCode(code);
+        setBarcodeValue("");
+        setNotice("코드를 인식했어요. 이름을 확인하고 저장해 주세요.");
+      }
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "코드를 읽지 못했어요.");
+    } finally {
+      scanLock.current = false;
+      setScanning(false);
+    }
+  };
   const [link, setLink] = useState("");
   const [note, setNote] = useState("");
   const [notice, setNotice] = useState("");
@@ -39,6 +64,7 @@ export function MembershipScreen({
     setEditing(null);
     setName("");
     setBarcodeValue("");
+    setScannedCode(undefined);
     setLink("");
     setNote("");
     setDeleteConfirm("");
@@ -48,6 +74,7 @@ export function MembershipScreen({
     setEditing(card);
     setName(card.name);
     setBarcodeValue(card.barcodeValue);
+    setScannedCode(card.scannedCode);
     setLink(card.link);
     setNote(card.note);
     setDeleteConfirm("");
@@ -62,6 +89,7 @@ export function MembershipScreen({
         id: editing?.id,
         name,
         barcodeValue,
+        scannedCode,
         link,
         note,
         now: Date.now(),
@@ -96,7 +124,7 @@ export function MembershipScreen({
           내 멤버십
         </Label>
         <Label muted size={13}>
-          매장 앱 링크나 회원 바코드를 등록해 계산대에서 바로 꺼냅니다.
+          회원 바코드나 Visit Japan Web QR을 촬영하거나 스크린샷에서 등록하세요.
         </Label>
       </View>
 
@@ -119,9 +147,13 @@ export function MembershipScreen({
                 {card.name}
               </Label>
               <Label muted size={12}>
-                {card.barcodeValue
-                  ? `바코드 · ${card.barcodeValue.length}자리`
-                  : "웹 멤버십 바로가기"}
+                {card.scannedCode
+                  ? card.scannedCode.kind === "qr"
+                    ? "QR 코드"
+                    : "바코드"
+                  : card.barcodeValue
+                    ? `바코드 · ${card.barcodeValue.length}자리`
+                    : "웹 멤버십 바로가기"}
                 {card.note ? ` · ${card.note}` : ""}
               </Label>
             </View>
@@ -176,26 +208,50 @@ export function MembershipScreen({
             backgroundColor: c.surface,
           }}
         />
-        <TextInput
-          accessibilityLabel="바코드 번호"
-          placeholder="바코드 번호  선택"
-          placeholderTextColor={c.muted}
-          value={barcodeValue}
-          onChangeText={setBarcodeValue}
-          autoCapitalize="none"
-          autoCorrect={false}
-          maxLength={24}
-          style={{
-            color: c.ink,
-            minHeight: 46,
-            paddingHorizontal: 12,
-            borderWidth: 1,
-            borderColor: c.line,
-            borderRadius: 7,
-            backgroundColor: c.surface,
-            fontVariant: ["tabular-nums"],
-          }}
+        <Button
+          label="QR·바코드 촬영"
+          icon="camera-outline"
+          disabled={scanning || busy}
+          onPress={() => void scan("camera")}
         />
+        <Button
+          label="사진·스크린샷에서 인식"
+          icon="image-outline"
+          disabled={scanning || busy}
+          onPress={() => void scan("library")}
+        />
+        {scanning && <Label muted>코드를 읽고 있어요…</Label>}
+        {scannedCode ? (
+          <>
+            <ScannedCodeView code={scannedCode} />
+            <Button
+              label="인식한 코드 지우기"
+              variant="ghost"
+              onPress={() => setScannedCode(undefined)}
+            />
+          </>
+        ) : (
+          <TextInput
+            accessibilityLabel="바코드 번호"
+            placeholder="바코드 번호  선택"
+            placeholderTextColor={c.muted}
+            value={barcodeValue}
+            onChangeText={setBarcodeValue}
+            autoCapitalize="none"
+            autoCorrect={false}
+            maxLength={24}
+            style={{
+              color: c.ink,
+              minHeight: 46,
+              paddingHorizontal: 12,
+              borderWidth: 1,
+              borderColor: c.line,
+              borderRadius: 7,
+              backgroundColor: c.surface,
+              fontVariant: ["tabular-nums"],
+            }}
+          />
+        )}
         {previewReady ? (
           <View style={{ gap: 6 }}>
             <BarcodeView value={previewValue} compact />
@@ -247,9 +303,9 @@ export function MembershipScreen({
           }}
         />
         <Label muted size={11}>
-          번호와 링크는 Subject Japan 서버로 보내지 않고 이 기기에만 저장합니다.
-          매장이 특정 앱 QR이나 동적 바코드를 요구하면 공식 앱 바로가기를
-          사용하세요.
+          코드는 이 기기에서 인식하고 저장해요. 여행 QR도 앱의 전체 데이터
+          백업에 포함됩니다. Visit Japan Web 면세 QR의 유효기간이 지나면 공식
+          사이트에서 새 코드를 받아 주세요.
         </Label>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flex: 1 }}>
@@ -257,6 +313,7 @@ export function MembershipScreen({
               label={editing ? "수정 저장" : "추가"}
               primary
               busy={busy}
+              disabled={scanning}
               onPress={() => void save()}
             />
           </View>
@@ -324,6 +381,9 @@ export function MembershipScreen({
                   gap: 18,
                 }}
               >
+                {presenting.scannedCode && (
+                  <ScannedCodeView code={presenting.scannedCode} />
+                )}
                 {presenting.barcodeValue ? (
                   <>
                     <BarcodeView value={presenting.barcodeValue} />

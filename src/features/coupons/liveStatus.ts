@@ -28,7 +28,6 @@ const couponSourceIds: Record<string, string> = {
   "mcdonalds-app": "mcdonalds-coupon",
   "starbucks-personal-cup": "starbucks-cup",
   "satudora-taxfree": "satudora-taxfree",
-  "edion-taxfree": "edion-taxfree",
   "biccamera-livejapan": "biccamera-livejapan",
   "sugi-taxfree": "sugi-taxfree",
   "hankyu-guest": "hankyu-service",
@@ -56,6 +55,7 @@ function stringOrNull(value: unknown) {
 
 export function parseCouponSourceStatuses(
   value: unknown,
+  now = Date.now(),
 ): Record<string, CouponSourceStatus> {
   const payload = value as { items?: unknown };
   if (!payload || !Array.isArray(payload.items)) return {};
@@ -67,9 +67,12 @@ export function parseCouponSourceStatuses(
     ) {
       continue;
     }
+    // Collectors run every three hours. A stalled deployment can still serve "fresh".
+    const last = Date.parse(stringOrNull(raw.lastSuccessfulAt) ?? stringOrNull(raw.checkedAt) ?? "");
+    const recent = Number.isFinite(last) && last <= now && now - last <= 24 * 3600000;
     bySource[raw.id] = {
       sourceId: raw.id,
-      state: raw.status,
+      state: recent ? raw.status : "stale",
       checkedAt: stringOrNull(raw.checkedAt),
       lastSuccessfulAt: stringOrNull(raw.lastSuccessfulAt),
       changed: raw.changed === true,

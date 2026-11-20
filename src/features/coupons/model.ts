@@ -88,14 +88,14 @@ export interface CouponDDayInfo {
 
 export function couponDDay(coupon: Coupon, now = Date.now()): CouponDDayInfo {
   if (!coupon.expiresOn) {
-    return { status: "ongoing", label: "상시 혜택" };
+    return { status: "ongoing", label: "종료일 미공개" };
   }
   const expiry = Date.parse(`${coupon.expiresOn}T23:59:59.999+09:00`);
   if (!Number.isFinite(expiry) || now > expiry) {
     return { status: "expired", label: "기간 만료" };
   }
-  const msRemaining = expiry - now;
-  const daysRemaining = Math.max(0, Math.ceil(msRemaining / 86400000));
+  const japanDay = (time: number) => Math.floor((time + 9 * 3600000) / 86400000);
+  const daysRemaining = japanDay(expiry) - japanDay(now);
   if (daysRemaining === 0) {
     return { status: "d-day", label: "오늘 마감 (D-Day)", daysRemaining: 0 };
   }

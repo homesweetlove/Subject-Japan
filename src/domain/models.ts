@@ -47,6 +47,7 @@ export interface LocalState {
   tripItems: TripItem[];
   dutyFreeReceipts: DutyFreeReceipt[];
   autoRefreshRate: boolean;
+  autoRefreshCoupons: boolean;
   notifications: NotificationSettings;
   /** Unset until the user picks a city, so no forecast request happens before. */
   weatherCity: WeatherCityId | null;
@@ -73,6 +74,7 @@ export const initialState = (): LocalState => ({
   dutyFreeReceipts: [],
   // Opt-in: the rate server only sees requests the user has allowed.
   autoRefreshRate: false,
+  autoRefreshCoupons: false,
   notifications: defaultNotificationSettings(),
   weatherCity: null,
   weather: null,

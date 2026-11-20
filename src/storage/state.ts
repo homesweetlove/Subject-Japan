@@ -226,6 +226,7 @@ export function decodeState(raw: string | null): LocalState {
         )
         .slice(0, RECEIPT_LIMIT)
     : [];
+  state.autoRefreshCoupons = value.autoRefreshCoupons === true;
   state.autoRefreshRate = value.autoRefreshRate === true;
   state.notifications = validNotificationSettings(value.notifications)
     ? {

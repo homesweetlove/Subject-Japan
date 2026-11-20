@@ -1,7 +1,10 @@
+import { validScannedCode, type ScannedCode } from "./scannedCode";
+
 export interface MembershipCard {
   id: string;
   name: string;
   barcodeValue: string;
+  scannedCode?: ScannedCode;
   link: string;
   note: string;
   createdAt: number;
@@ -39,6 +42,7 @@ export function makeMembershipCard(input: {
   id?: string;
   name: string;
   barcodeValue?: string;
+  scannedCode?: ScannedCode;
   link?: string;
   note?: string;
   now?: number;
@@ -51,7 +55,12 @@ export function makeMembershipCard(input: {
   const link = normalizeMembershipLink(input.link ?? "");
   const note = (input.note ?? "").trim();
   if (note.length > 100) throw new Error("메모는 100자까지 입력할 수 있어요.");
-  if (!barcodeValue && !link)
+  if (
+    input.scannedCode !== undefined &&
+    (!validScannedCode(input.scannedCode) || barcodeValue)
+  )
+    throw new Error("인식한 코드를 다시 선택해 주세요.");
+  if (!barcodeValue && !link && !input.scannedCode)
     throw new Error("바코드 번호나 바로가기 링크 중 하나는 등록해 주세요.");
   const now = input.now ?? Date.now();
   return {
@@ -59,6 +68,7 @@ export function makeMembershipCard(input: {
       input.id ??
       `membership-${now.toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     name,
+    ...(input.scannedCode ? { scannedCode: input.scannedCode } : {}),
     barcodeValue,
     link,
     note,
@@ -82,7 +92,9 @@ export function validMembershipCard(value: unknown): value is MembershipCard {
       normalizeMembershipLink(card.link) === card.link &&
       typeof card.note === "string" &&
       card.note.length <= 100 &&
-      (!!card.barcodeValue || !!card.link) &&
+      (card.scannedCode === undefined ||
+        (validScannedCode(card.scannedCode) && !card.barcodeValue)) &&
+      (!!card.barcodeValue || !!card.link || !!card.scannedCode) &&
       Number.isFinite(card.createdAt) &&
       Number.isFinite(card.updatedAt)
     );

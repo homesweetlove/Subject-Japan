@@ -31,6 +31,7 @@ export function WalletHub({
   onSection,
   onSave,
   onDelete,
+  onCouponAutoRefresh,
   onSaveMembership,
   onDeleteMembership,
   onToggleSaved,
@@ -42,6 +43,7 @@ export function WalletHub({
   onSection: (section: WalletSection) => void;
   onSave: (card: TransitCard) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onCouponAutoRefresh: (enabled: boolean) => Promise<void>;
   onSaveMembership: (card: MembershipCard) => Promise<void>;
   onDeleteMembership: (id: string) => Promise<void>;
   onToggleSaved: (id: string) => Promise<void>;
@@ -65,6 +67,8 @@ export function WalletHub({
         />
       ) : section === "coupons" ? (
         <CouponScreen
+          autoRefresh={state.autoRefreshCoupons}
+          onAutoRefresh={onCouponAutoRefresh}
           savedIds={state.savedCouponIds}
           onToggleSaved={onToggleSaved}
         />

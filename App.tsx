@@ -460,6 +460,7 @@ function Application() {
                     />
                   ) : tab === "card" ? (
                     <WalletHub
+                      onCouponAutoRefresh={(enabled) => commit(s => ({ ...s, autoRefreshCoupons: enabled }))}
                       section={walletSection}
                       onSection={setWalletSection}
                       state={state}

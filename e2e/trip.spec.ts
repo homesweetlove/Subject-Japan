@@ -93,7 +93,7 @@ test("five regions, countdown editing, guide persistence and reset", async ({
     .getByRole("button", { name: "빅카메라·코지마 상세 보기", exact: true })
     .click();
   await expect(
-    page.getByText("게시된 종료일: 2026-10-31 (일본 시간)", { exact: true }),
+    page.getByText("게시된 종료일: 2027-04-30 (일본 시간)", { exact: true }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "혜택 상세 닫기", exact: true })

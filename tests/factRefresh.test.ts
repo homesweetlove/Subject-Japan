@@ -68,11 +68,12 @@ describe("2026-11-05 fact refresh", () => {
     expect(tax?.description).toContain("3,000엔");
   });
 
-  it("marks ended coupons as ended on the review date", () => {
-    const now = Date.parse("2026-11-05T12:00:00+09:00");
-    for (const id of ["biccamera-livejapan", "edion-taxfree"]) {
+  it("tracks the renewed partner coupons and the November review", () => {
+    const now = Date.parse("2026-11-20T12:00:00+09:00");
+    for (const [id, end] of [["biccamera-livejapan", "2027-04-30"], ["edion-taxfree", "2027-12-31"]]) {
       const c = couponCatalog.find((x) => x.id === id)!;
-      expect(couponStatus(c, now)).toBe("expired");
+      expect(c.expiresOn).toBe(end);
+      expect(couponStatus(c, now)).toBe("checked");
     }
     for (const id of ["donki-visitor", "takashimaya-shoppers", "daimaru-tokyo"]) {
       const c = couponCatalog.find((x) => x.id === id)!;

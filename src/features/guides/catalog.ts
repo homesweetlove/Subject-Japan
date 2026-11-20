@@ -158,6 +158,10 @@ export const guestGuides: readonly TravelGuide[] = [
     ],
     links: [
       {
+        label: "한큐 게스트 e카드 로그인",
+        url: "https://taxfree-coupon.hankyu-hanshin-dept.co.jp/",
+      },
+      {
         label: "한큐 공식 사전등록·카운터 안내",
         url: "https://global.hankyu-hanshin-dept.co.jp/ko/store/hankyuhonten/service/",
       },
