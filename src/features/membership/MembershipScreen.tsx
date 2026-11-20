@@ -304,8 +304,8 @@ export function MembershipScreen({
         />
         <Label muted size={11}>
           코드는 이 기기에서 인식하고 저장해요. 여행 QR도 앱의 전체 데이터
-          백업에 포함됩니다. 매장이 특정 앱 QR이나 동적 바코드를 요구하면 공식
-          앱 바로가기를 사용하세요.
+          백업에 포함됩니다. Visit Japan Web 면세 QR의 유효기간이 지나면 공식
+          사이트에서 새 코드를 받아 주세요.
         </Label>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flex: 1 }}>
