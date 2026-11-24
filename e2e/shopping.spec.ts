@@ -366,6 +366,9 @@ test("refreshes benefit terms and keeps them across an offline restart", async (
   await page.getByRole("button", {name:"쿠폰 혜택 새로고침"}).click();
   await expect(page.getByText("갱신된 테스트 혜택", {exact:true})).toBeVisible();
   await expect(page.getByText(/자동 확인 지연/)).toBeVisible();
+  await expect(page.getByText("새 쿠폰 혜택을 내려받았어요.")).toBeVisible();
+  await page.getByRole("button", {name:"쿠폰 혜택 새로고침"}).click();
+  await expect(page.getByText("새로 배포된 혜택이 없어요. 기존 목록을 유지해요.")).toBeVisible();
   await page.route("**/catalog.v1.json", route => route.abort());
   await page.reload();
   await coupons();
