@@ -107,10 +107,13 @@ describe("merged shopping helpers", () => {
           changed: false,
         },
         { id: "hankyu-service", status: "stale", changed: true },
+        { id: "edion-taxfree", status: "fresh", checkedAt: "2026-09-28T01:00:00Z" },
         { id: "wrong", status: "unsupported" },
       ],
     }, Date.parse("2026-09-28T02:00:00Z"));
     expect(statuses["donki-visitor"]?.state).toBe("fresh");
+    expect(statuses["edion-taxfree"]?.state).toBe("fresh");
+    expect(() => parseCouponSourceStatuses({ invalid: true })).toThrow();
     expect(statuses["hankyu-vip"]?.changed).toBe(true);
     expect(couponSourceStatusLabel(statuses["hankyu-vip"])).toMatch(/변경/);
     expect(statuses.wrong).toBeUndefined();
