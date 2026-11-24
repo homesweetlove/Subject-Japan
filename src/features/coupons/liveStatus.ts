@@ -29,6 +29,7 @@ const couponSourceIds: Record<string, string> = {
   "starbucks-personal-cup": "starbucks-cup",
   "satudora-taxfree": "satudora-taxfree",
   "biccamera-livejapan": "biccamera-livejapan",
+  "edion-taxfree": "edion-taxfree",
   "sugi-taxfree": "sugi-taxfree",
   "hankyu-guest": "hankyu-service",
   "hankyu-vip": "hankyu-service",
@@ -58,7 +59,7 @@ export function parseCouponSourceStatuses(
   now = Date.now(),
 ): Record<string, CouponSourceStatus> {
   const payload = value as { items?: unknown };
-  if (!payload || !Array.isArray(payload.items)) return {};
+  if (!payload || !Array.isArray(payload.items)) throw new Error("출처 확인 응답 형식이 올바르지 않아요.");
   const bySource: Record<string, CouponSourceStatus> = {};
   for (const raw of payload.items as ApiSourceStatus[]) {
     if (
