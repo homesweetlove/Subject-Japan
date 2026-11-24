@@ -144,6 +144,7 @@ export function CouponScreen({
     setSourceNotice("");
     const timeout = setTimeout(() => controller.abort(), 12000);
     try {
+      const previous = await cachedFeed();
       const [catalog, sources] = await Promise.allSettled([
         refreshFeed(controller.signal),
         fetchCouponSourceStatuses(controller.signal),
@@ -151,10 +152,13 @@ export function CouponScreen({
       if (request.current !== controller) return;
       if (catalog.status === "fulfilled") setFeed(catalog.value);
       if (sources.status === "fulfilled") setSourceStatuses(sources.value);
+      else setSourceStatuses({});
       setSourceNotice(
         [
           catalog.status === "fulfilled"
-            ? "최신 배포 목록을 확인했어요."
+            ? catalog.value.revision > previous.revision
+              ? "새 쿠폰 혜택을 내려받았어요."
+              : "새로 배포된 혜택이 없어요. 기존 목록을 유지해요."
             : "목록을 받지 못해 기기의 혜택을 표시해요.",
           sources.status === "rejected"
             ? "출처 확인 서버에 연결하지 못했어요."
