@@ -2,11 +2,11 @@
 
 # SUBJECT:JAPAN
 
-[![Android APK 바로 다운로드](https://img.shields.io/badge/Android-APK%20%EB%B0%94%EB%A1%9C%20%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43793915298/Subject-Japan-android-test-arm64.apk) [![전체 릴리스](https://img.shields.io/badge/GitHub-%EC%A0%84%EC%B2%B4%20%EB%A6%B4%EB%A6%AC%EC%8A%A4-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
+[![Android APK 바로 다운로드](https://img.shields.io/badge/Android-APK%20%EB%B0%94%EB%A1%9C%20%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-45324759232/Subject-Japan-android-test-arm64.apk) [![전체 릴리스](https://img.shields.io/badge/GitHub-%EC%A0%84%EC%B2%B4%20%EB%A6%B4%EB%A6%AC%EC%8A%A4-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
 
-> **최신 Android 테스트 APK (2026년 11월 16일):** 커밋 `7aca1c8`에서 빌드한 ARM64 전용 독립 실행 미리보기입니다. 위 버튼에서 APK를 내려받아 호환 기기에 설치할 수 있습니다. **테스트 서명본**으로 정식 배포/Play Store 버전이 아니며, 번역·카메라·마이크·NFC 실기기 검증은 남아 있습니다. iPhone 설치 파일은 없습니다. [릴리스 정보 및 SHA-256](docs/release-status.md).
+> **프로젝트 상태 (2026년 11월 25일):** 주요 기능 구현 완료 및 개발자 일본 현지 실사용 테스트 완료(2026년 11월 21~23일). 최신 Android ARM64 독립 실행 테스트 APK는 11월 24일 커밋 `86371de`에서 빌드·게시했습니다. 테스트 서명본이며 Play Store 정식 배포본은 아닙니다. iPhone 설치 파일은 없습니다. [릴리스 정보 및 SHA-256](docs/release-status.md).
 
-한국 여행자를 위한 일본 여행 유틸리티. Android와 iPhone에서 쓰는 하나의 앱을 목표로 합니다. 첫 번째 기능은 **번역과 내 사이즈를 기억하는 쇼핑 문장**입니다.
+한국 여행자를 위한 일본 여행 유틸리티 앱입니다. 오프라인 쇼핑·번역, 여행 일정, 결제 계산, 쿠폰 혜택, 멤버십 지갑을 하나의 앱에서 제공합니다.
 
 ## 사용자 문제와 개발 동기
 
@@ -14,17 +14,17 @@
 
 **핵심 흐름:** 내 사이즈 저장 → 번역의 사이즈/재고 문장 선택 → 일본어 확인·크게 보기 → 필요하면 즐겨찾기 → 앱을 다시 열어 재사용. 저장 실패 시 기존 데이터를 유지하고 오류를 안내합니다.
 
-**2026-11-16 검증 업데이트:** 최신 `main`의 Quality 검사(`7dbbe4a`), Android·iOS 시뮬레이터 네이티브 빌드(`4c45919`), ARM64 테스트 APK 빌드(`7aca1c8`)가 각각 성공했습니다. 이후 `main`의 변경은 E2E 테스트 검증식 1건으로 앱 실행 코드는 같습니다. [10월 22일 품질 점검 기록](docs/quality-audit.md)의 계정 한도·러너 문제는 당시 상황입니다. 자동 빌드 성공을 **실기기 기능 검증 완료**로 해석하지 않습니다. [최신 릴리스 현황](docs/release-status.md) · [실기기 체크리스트](docs/device-validation.md)
+**2026-11-25 검증 업데이트:** 개발자가 직접 일본을 방문해 실사용 테스트를 마쳤으며, 이후 쿠폰 새로고침의 에디온 출처 매핑·잘못된 응답 처리·목록 변경 여부 안내를 보완했습니다. `86371de`의 Android APK 및 화면 캡처 워크플로는 성공했습니다. `32b6703`의 TypeScript 검사와 단위 테스트는 통과했으나 Expo Doctor가 실패하여 해당 실행의 번들·브라우저 E2E 검사는 건너뛰었습니다. 11월 20일 `95a215a`의 Quality·네이티브 빌드는 성공했습니다. 현지 실사용과 자동 검사는 별개의 근거이며, 기능별 실기기 결과표와 서명된 iPhone 검증까지 완료되었다는 의미는 아닙니다. [릴리스 현황](docs/release-status.md) · [실기기 체크리스트](docs/device-validation.md)
 
 **2026-11-05 정보 최신화:** 긴급 연락처(일본정부관광국 상담 050-3816-2787, 대사관·총영사관 근무시간 외 번호, 요코하마·고베 총영사관 추가), 교통 패스 가격(도쿄 서브웨이 티켓 1,000/1,500/2,000엔, 오사카 주유패스 3,500엔), 택시 요금표(도쿄 2026-04-20, 오사카 2025-11-05, 후쿠오카), 현금 인출기·트래블카드 안내, 쿠폰 종료일, 2026년 보조배터리 규정, 출국세 3,000엔을 공식 안내와 다시 대조했습니다.
 
 ## 구현 상태와 실기기 검증 범위
 
-아래 기능 목록은 **소스에 구현된 기능과 UI 경로**를 설명합니다. Android·iOS 네이티브 모듈에 번역, OCR, 기기 내 음성 인식, FeliCa 읽기 코드가 존재하지만, 이것이 모든 실기기에서 정상 동작함을 보증하지는 않습니다. 기종·OS·언어팩·권한·서명에 따라 지원 범위가 달라집니다. Expo Go와 웹은 별도 제한 기능만 제공합니다.
+아래 목록은 구현된 기능과 UI 경로입니다. 개발자의 일본 현지 실사용 테스트는 완료했으며, 개별 기종·기능별 결과표는 별도로 기록하지 않았습니다. Android·iOS 네이티브 모듈의 번역, OCR, 기기 내 음성 인식, FeliCa 읽기는 기종·OS·언어팩·권한·서명에 따라 지원 범위가 달라집니다. Expo Go와 웹은 제한된 기능만 제공합니다.
 
-**iPhone 출시 전 검증이 필요한 부분:** 실제 서명된 앱 설치, 한↔일 오프라인 번역, 카메라·마이크, Apple NFC capability와 실물 Suica/PASMO/ICOCA(기록이 20건보다 적은 카드 포함), 로컬 알림. 2026년 11월 16일 CI에서는 Android와 iOS 시뮬레이터 컴파일이 성공했지만, 실제 서명된 iPhone 배포와 실기기 기능 검증은 완료되지 않았습니다. [실기기 검증 체크리스트](docs/device-validation.md)를 참고하세요.
+**iPhone 출시 전 검증이 필요한 부분:** 실제 서명된 앱 설치, 한↔일 오프라인 번역, 카메라·마이크, Apple NFC capability와 실물 Suica/PASMO/ICOCA(기록이 20건보다 적은 카드 포함), 로컬 알림. 2026년 11월 20일 CI에서는 Android와 iOS 시뮬레이터 컴파일이 성공했지만, 실제 서명된 iPhone 배포와 실기기 기능 검증은 완료되지 않았습니다. [실기기 검증 체크리스트](docs/device-validation.md)를 참고하세요.
 
-## 소스에 구현된 기능
+## 주요 기능
 
 - 오늘(홈): 일본 시각, 선택한 도시의 현재 기온·3일 예보(일본 기상청 JMA, 무료·상업 이용 가능, 출처 표시), 다음 일정·공항 막차 카운트다운, 환율·교통카드 잔액, 번역·긴급 SOS·식당 카드·쿠폰 바로 가기
 - 막차·일정 로컬 알림 (전용 앱): 막차 역 출발 30분 전·출발 시각, 일정 30분/1/2시간 전. 서버·푸시 토큰 없이 기기에서 예약하며 잠금화면 노출을 고려해 예약번호·메모·주소는 넣지 않음
@@ -32,9 +32,9 @@
 - 카메라·사진 번역: 일본어/한국어 OCR → 편집 → 기기 내 번역 (사진은 업로드하지 않음)
 - 음성 대화: 기기 내 음성 인식 → 원문 확인 → 번역 → 시스템 음성 읽기, 양방향 대화 기록
 - 실물 Suica/PASMO/ICOCA NFC 읽기, 마지막 잔액·최대 20건 기록, 카드 20장 이름 관리, 원화 환산
-- 카드 → 멤버십: 사진·카메라에서 인식한 QR·바코드, 직접 입력한 회원번호, 멤버십 링크를 기기에 최대 40개 저장. 동적 QR·공식 앱 인증은 대신하지 않음
+- 카드 → 멤버십: 사진·카메라에서 인식한 QR·바코드(Visit Japan Web QR 포함), 직접 입력한 회원번호, 멤버십 링크를 기기에 최대 40개 저장. 동적 QR·공식 앱 인증은 대신하지 않음
 - 프로필·쇼핑 체크리스트: 일본 쇼핑용 **참고 사이즈**와 원본 표기를 함께 표시. 실제 치수는 브랜드별 확인 필요
-- 쿠폰: 버튼을 눌렀을 때만 외부 데이터 서버의 출처 확인 상태 조회(사용 가능 보장 아님). 기본 목록·저장은 오프라인 유지
+- 쿠폰: 공개 버전형 쿠폰 목록과 출처별 확인 상태를 수동으로 갱신하거나 탭 진입 시 자동 새로고침을 선택할 수 있습니다. 새 유효 목록이 없으면 기존 오프라인 목록을 유지하며, 실제 사용 가능 여부는 보장하지 않습니다.
 - PAY & 금융 도우미:
   - Android 전용 사진 금액 인식: 가격표·영수증에서 엔화 후보를 기기 내 OCR로 추출. 선택한 값만 입력란에 반영하고 자동 구매·등록은 하지 않음
   - 참고 환율 자동 최신화(기본 꺼짐, 켜면 PAY 진입 시 6시간 이상 지난 값 갱신)·수동 환율, 입력/조회한 환율 기반 엔화-원화 환산표
@@ -78,7 +78,7 @@
 
 예: 상의 `44` 저장 → 사이즈/재고 → `이 제품 44 사이즈도 있나요?` → `この商品の44サイズはありますか？`
 
-쿠폰에는 빅카메라·코지마, 에디온, 스기약국, 사츠도라, 한큐 게스트/VIP, 미츠코시이세탄과 기존 6개 혜택을 포함합니다. 일본의 모든 외국인용 쿠폰을 포괄하거나 실시간 갱신하는 서비스는 아닙니다. 일반 고객용 앱 쿠폰은 일본 서비스 가입·발급 조건을 충족해야 합니다. 실제 쿠폰·QR은 공식 사이트/앱에서 열고, 앱에는 한국어 조건 요약을 보관합니다. [출처와 갱신 정책](docs/coupons.md)을 참고하세요.
+쿠폰 목록은 11월 20일 조건을 재확인한 13개 혜택을 포함합니다. 돈키호테, 빅카메라·코지마, 에디온, 스기약국, 사츠도라, 한큐 게스트/VIP, 미츠코시이세탄 등이 포함되며 한큐 게스트 e카드 등록 안내로 연결합니다. 실제 쿠폰 발급·사용은 공식 매장 조건을 따르고, 앱에는 한국어 조건 요약을 보관합니다. [출처와 갱신 정책](docs/coupons.md)을 참고하세요.
 
 **계정 서버와 로그인은 없습니다.** 현재 가입 경험은 로컬 프로필 온보딩입니다. 향후 인증을 추가하더라도 사이즈와 번역 기록은 별도 동의 없이 계정에 업로드하지 않는 구조입니다. 사이즈는 브랜드·국가 규격이 다르므로 자동 환산하지 않습니다. 단위가 필요한 값은 `24 cm`, `28 inch`처럼 입력합니다.
 
@@ -102,7 +102,7 @@ React Native + Expo SDK 57 + TypeScript. 공통 UI와 도메인 코드를 사용
 
 ### Android 테스트 APK 다운로드
 
-[2026년 11월 16일 Android 테스트 APK](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43793915298/Subject-Japan-android-test-arm64.apk)를 [GitHub Releases](https://github.com/homesweetlove/Subject-Japan/releases)에서 내려받아 설치합니다. ARM64 Android 기기용이며 개발 서버나 Expo Go 없이 실행합니다. 설치된 앱 이름은 **Subject Japan Test**입니다. 처음 자유 입력 번역을 사용할 때는 Wi-Fi로 번역팩을 내려받습니다.
+[2026년 11월 24일 Android 테스트 APK](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-45324759232/Subject-Japan-android-test-arm64.apk)를 [GitHub Releases](https://github.com/homesweetlove/Subject-Japan/releases)에서 내려받아 설치합니다. ARM64 Android 기기용이며 개발 서버나 Expo Go 없이 실행합니다. 설치된 앱 이름은 **Subject Japan Test**입니다. 처음 자유 입력 번역을 사용할 때는 Wi-Fi로 번역팩을 내려받습니다.
 
 테스트 전용 패키지 `com.subjectjapan.app.preview`는 정식 앱과 데이터가 분리됩니다. APK는 Expo 템플릿의 테스트 서명을 사용하며 Play Store 배포본이 아닙니다. 키 파일은 저장소나 릴리스에 올리지 않습니다. 다음 테스트 APK도 GitHub Actions의 **Android test APK → Run workflow**에서 생성할 수 있으며, 번들 포함·서명·패키지 ID를 검사한 후 GitHub 프리릴리스에 APK와 SHA-256을 게시합니다.
 
@@ -187,7 +187,7 @@ Quality 검사는 모든 코드 변경에 실행하며, 네이티브 컴파일�
 
 ## 개인정보와 보안
 
-프로필·사이즈·기록·교통카드·환율·일정·혜택·막차·체크리스트는 기기에만 보관합니다. Android 전용 빌드는 Room 2.8.5 DB를 사용하고 기존 AsyncStorage 데이터를 검증 후 자동 이전합니다. iOS·Expo Go·웹은 같은 저장소 계약의 AsyncStorage 구현을 사용합니다. 자체 서버, 로그인, 광고, 분석 SDK는 없습니다. Android 백업과 iOS AsyncStorage 백업을 비활성화했습니다. 저장소는 앱 수준 암호화 저장소가 아니므로 비밀번호·결제정보 저장에 사용하지 않습니다. [개인정보 처리 설계](docs/privacy.md)와 [외부 구성요소 고지](THIRD_PARTY_NOTICES.md)를 참고하세요.
+프로필·사이즈·기록·교통카드·환율·일정·혜택·막차·체크리스트는 기기에만 보관합니다. Android 전용 빌드는 Room 2.8.5 DB를 사용하고 기존 AsyncStorage 데이터를 검증 후 자동 이전합니다. iOS·Expo Go·웹은 같은 저장소 계약의 AsyncStorage 구현을 사용합니다. 계정 서버, 로그인, 광고, 분석 SDK는 없습니다. 공개 쿠폰 목록·출처 상태 조회에는 외부 데이터 주소를 사용하며 개인 프로필과 여행 기록은 기기에 보관합니다. Android 백업과 iOS AsyncStorage 백업을 비활성화했습니다. 저장소는 앱 수준 암호화 저장소가 아니므로 비밀번호·결제정보 저장에 사용하지 않습니다. [개인정보 처리 설계](docs/privacy.md)와 [외부 구성요소 고지](THIRD_PARTY_NOTICES.md)를 참고하세요.
 
 `.env*`, 인증서, 키스토어, 플랫폼 서비스 설정은 `.gitignore`로 제외합니다. Expo의 `EXPO_PUBLIC_*`는 공개 번들 값이므로 비밀키를 넣지 않습니다.
 
@@ -197,7 +197,7 @@ Quality 검사는 모든 코드 변경에 실행하며, 네이티브 컴파일�
 
 프로젝트에서 작성한 소스 코드는 [MIT 라이선스](LICENSE)(© 2026 homesweetlove)를 적용합니다. 외부 라이브러리·자료·상표는 각 권리자의 이용 조건이 우선합니다. [외부 구성요소 고지](THIRD_PARTY_NOTICES.md)를 참고하세요.
 
-## 다음 단계
+## 유지보수 및 알려진 제한
 
 다섯 탭에 기존 기능을 연결했습니다(카드와 쿠폰은 한 탭). 하드웨어·외부 데이터 의존성은 다음과 같습니다.
 
@@ -205,7 +205,7 @@ Quality 검사는 모든 코드 변경에 실행하며, 네이티브 컴파일�
 - 사진: Android는 번들 ML Kit 일본어/한국어 OCR, iOS는 Vision. 손글씨·세로쓰기·영수증의 작은 글자는 인식 오류가 있을 수 있어 수정 후 번역합니다.
 - 음성: Android 12 이상 및 기기 내 인식 서비스, iOS는 언어별 `supportsOnDeviceRecognition` 지원이 필요합니다. 지원하지 않으면 서버 인식으로 전환하지 않습니다. TTS는 기기 시스템 음성 서비스를 사용합니다.
 - 정중함: 미리 작성한 문장팩 23개에 3가지 표현을 제공합니다. ML Kit 자유 입력 번역에는 말투 제어 API가 없어 임의 문장의 정중함 변환은 미지원입니다.
-- 주변 쿠폰: OpenStreetMap에 등록된 매장 후보입니다. 검색할 때 동의 후 약 100m 단위 좌표를 Overpass에 전송하며, 지점의 쿠폰 사용 가능 여부를 보장하지 않습니다. 일본의 모든 쿠폰 수집·자동 갱신은 아직 제공하지 않습니다.
+- 주변 쿠폰: OpenStreetMap에 등록된 매장 후보입니다. 검색할 때 동의 후 약 100m 단위 좌표를 Overpass에 전송하며, 지점의 쿠폰 사용 가능 여부를 보장하지 않습니다. 목록의 선택적 자동 갱신은 지원하지만 모든 쿠폰 수집이나 실시간 사용 가능 여부 확인은 제공하지 않습니다.
 - 막차: 확인한 시간 수동 등록 방식입니다. 실시간 운행·자동 막차 검색은 별도 시간표 공급자가 필요합니다. 앱 종료 중 알림은 전용 앱의 로컬 알림으로 제공하며 웹/브라우저는 지원하지 않습니다.
 - 결제: 참고 계산이며 매장 승인·카드사 청구 금액을 보장하지 않습니다. 2026-11-01 면세 환급 방식 안내와 관광청 출처를 제공합니다. 환급 방법·수수료·기간은 매장·환급 업체마다 달라 앱이 보장하지 않습니다.
 

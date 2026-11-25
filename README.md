@@ -2,9 +2,9 @@
 
 # SUBJECT:JAPAN
 
-[![Download Android test APK](https://img.shields.io/badge/Android-Download%20APK-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43793915298/Subject-Japan-android-test-arm64.apk) [![View releases](https://img.shields.io/badge/GitHub-All%20Releases-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
+[![Download Android test APK](https://img.shields.io/badge/Android-Download%20APK-2EA44F?style=for-the-badge&logo=android&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-45324759232/Subject-Japan-android-test-arm64.apk) [![View releases](https://img.shields.io/badge/GitHub-All%20Releases-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/homesweetlove/Subject-Japan/releases)
 
-> **Latest Android test APK (November 16, 2026):** ARM64-only standalone preview built from commit `7aca1c8`. Download the APK above and install it on a compatible Android device. This is **test-signed**, not a production/Play Store release; real-device translation, camera, microphone and NFC validation is still required. No iPhone installable package is provided. [Release details and SHA-256](docs/release-status.md).
+> **Project status (November 25, 2026):** Core feature implementation is complete, and the developer completed hands-on testing during a trip to Japan (November 21–23, 2026). The latest standalone Android ARM64 test APK was published November 24 from `86371de`. It is test-signed, not a Play Store release. A signed iPhone package is not available. [Release status and SHA-256](docs/release-status.md).
 
 ## User problem and motivation
 
@@ -12,19 +12,19 @@ Finding a shopping phrase and typing the same clothing sizes repeatedly is diffi
 
 The architecture keeps shared React Native screens/domain logic behind provider interfaces with local Swift/Kotlin modules. Android Room and iOS AsyncStorage share the existing v1 JSON contract. Local phrase packs favor predictable offline behavior; general translation adds model downloads and device-specific constraints. This pass stays on Expo SDK 57 compatible patches rather than introducing a major SDK migration.
 
-**Verification update (November 16, 2026):** The latest `main` Quality workflow passed at `7dbbe4a`, Android/iOS simulator native builds passed at `4c45919`, and the latest standalone ARM64 test APK was built successfully from `7aca1c8`. The later `main` commit changes only an E2E test assertion, not app runtime code. Earlier billing/runner limitations described in the [October 22 audit](docs/quality-audit.md) are historical. Automated checks are **not physical-device acceptance tests**; see [current release status](docs/release-status.md) and the [device checklist](docs/device-validation.md).
+**Verification update (November 25, 2026):** The developer completed in-country testing in Japan and subsequently refined coupon refresh handling, including EDION source mapping, invalid response handling and unchanged-catalog notices. Android APK and screen capture workflows succeeded at `86371de`. At `32b6703`, TypeScript and unit tests passed, but Expo Doctor failed, so bundle and browser E2E checks were skipped in that run. The November 20 Quality and native builds passed at `95a215a`. Field testing and automated checks are separate evidence; no per-feature device-test matrix or signed iPhone validation is claimed. [Release status](docs/release-status.md) · [Device checklist](docs/device-validation.md).
 
 **2026-11-05 fact refresh:** emergency numbers (JNTO hotline 050-3816-2787, Korean embassy and consulate after-hours lines, new Yokohama and Kobe consulates), transit pass prices (Tokyo Subway Ticket ¥1,000/¥1,500/¥2,000, Osaka Amazing Pass ¥3,500), taxi tariffs (Tokyo 2026-04-20, Osaka 2025-11-05, Fukuoka), ATM and travel-card notes, coupon end dates, the 2026 power-bank rule and the ¥3,000 departure tax were re-checked against official sources.
 
-A Japan travel utility app for Korean travelers, targeting both Android and iPhone. Its first feature is **shopping phrases that remember your translations and personal sizes**.
+A Japan travel utility app designed for Korean travelers, combining offline shopping and translation tools, travel planning, payment calculators, coupon discovery and a local membership wallet.
 
 ## Implementation and verification status
 
-The feature list below describes **implemented source code and supported UI paths**, not a claim that every feature has passed physical-device testing. Android and iOS native bridges exist for ML Kit translation, camera OCR, offline speech recognition and FeliCa reading; their runtime support depends on the device, OS, model availability, permissions and app signing. Expo Go and web support a reduced feature set.
+The feature list below describes implemented source code and supported UI paths. Hands-on field testing in Japan is complete as reported by the developer; individual device/feature results are not enumerated. Android and iOS native bridges exist for ML Kit translation, camera OCR, offline speech recognition and FeliCa reading; runtime support depends on device, OS, models, permissions and signing. Expo Go and web support a reduced feature set.
 
-**Still required before calling the iPhone version production-ready:** a signed iPhone build, bidirectional offline-translation checks, camera and microphone tests, Apple NFC Tag Reading entitlement verification, genuine Suica/PASMO/ICOCA scans (including cards with fewer than 20 usable records), and notification tests. The November 16 CI did compile Android and an iOS simulator app, but signed iPhone distribution and physical-device checks remain outstanding. See [native validation checklist](docs/device-validation.md).
+**Still required before calling the iPhone version production-ready:** a signed iPhone build, bidirectional offline-translation checks, camera and microphone tests, Apple NFC Tag Reading entitlement verification, genuine Suica/PASMO/ICOCA scans (including cards with fewer than 20 usable records), and notification tests. The November 20 CI compiled Android and an iOS simulator app, but signed iPhone distribution and physical-device checks remain outstanding. See [native validation checklist](docs/device-validation.md).
 
-## Features implemented in source
+## Features
 
 - Today (Home): current Japan time, current temperature + 3-day forecast for the selected city (Japan Meteorological Agency/JMA, free for commercial use with attribution), next-schedule and airport-last-train countdowns, exchange rate and transit-card balance, plus shortcuts to translation, emergency SOS, restaurant cards, and coupons
 - Local last-train / schedule notifications (native app): notifications 30 minutes before and at the saved last-train departure time, and 30 minutes / 1 hour / 2 hours before an itinerary item. These are scheduled locally on the device with no server or push token, and reservation numbers, notes, and addresses are intentionally omitted from lock-screen notifications
@@ -32,9 +32,9 @@ The feature list below describes **implemented source code and supported UI path
 - Camera/photo translation: Japanese/Korean OCR → edit → on-device translation (photos are not uploaded)
 - Voice conversation: on-device speech recognition → original-text confirmation → translation → system TTS, with bidirectional conversation history
 - Read physical Suica/PASMO/ICOCA cards by NFC, keep the latest balance and up to 20 transaction records, manage names for up to 20 cards, and show KRW conversion
-- Card wallet: scan static QR codes and barcodes from photos or the camera, or enter a membership number or HTTPS link. Up to 40 cards stay on the device. Static codes do not replace dynamic QR codes or merchant authentication
+- Card wallet: scan static QR codes and barcodes (including Visit Japan Web QR codes) from photos or the camera, or enter a membership number or HTTPS link. Up to 40 cards stay on the device. Static codes do not replace dynamic QR codes or merchant authentication
 - Optional Japan shopping size estimates alongside original profile sizes; always verify actual brand sizing
-- On-demand coupon-source freshness checks from an external status service; coupons remain browsable offline, and status does not guarantee redemption
+- Coupon refresh: download and validate the public versioned catalog and source-check status on demand, or optionally when opening the coupon tab. Retain the offline catalog if no newer valid data is available; status does not guarantee redemption.
 - PAY & finance helpers:
   - Optional reference exchange-rate refresh (off by default; refreshes rates older than 6 hours when PAY opens), manual exchange rate, JPY↔KRW conversions from entered/fetched rates
   - Sequential discount / tax-free / later-refund / fee / cashback calculator
@@ -77,7 +77,7 @@ The feature list below describes **implemented source code and supported UI path
 
 Example: save top size `44` → Size/Stock → “Do you also have this in size 44?” → `この商品の44サイズはありますか？`
 
-The coupon catalog includes Bic Camera/Kojima, Edion, Sugi Pharmacy, Satsudora, Hankyu Guest/VIP, Mitsukoshi Isetan, and six existing benefits. It does not attempt to cover every foreign-visitor coupon in Japan or guarantee real-time updates. General consumer app coupons may require meeting Japanese service registration/issuance conditions. Actual coupon codes/QRs open from official websites/apps; the app stores Korean summaries of conditions. See [sources and update policy](docs/coupons.md).
+The coupon catalog contains 13 benefits whose terms were rechecked on November 20, including Don Quijote, Bic Camera/Kojima, EDION, Sugi Pharmacy, Satsudora, Hankyu Guest/VIP and Mitsukoshi Isetan. Hankyu guest e-card registration is linked from the app. Actual coupon issuance and redemption remain subject to official merchant conditions; the app stores Korean summaries rather than issuing coupons. See [sources and update policy](docs/coupons.md).
 
 **There is no account server or login.** The current sign-up experience is only local profile onboarding. Even if authentication is added later, size and translation history should not be uploaded to an account without separate consent. Because sizing differs by brand and country, sizes are not automatically converted. Include units where necessary, such as `24 cm` or `28 inch`.
 
@@ -97,7 +97,7 @@ The web/Expo Go builds do not pretend arbitrary text was translated when that fe
 
 ### Download Android Test APK
 
-Download the [November 16 Android test APK](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-43793915298/Subject-Japan-android-test-arm64.apk) from [GitHub Releases](https://github.com/homesweetlove/Subject-Japan/releases). It targets ARM64 Android devices and runs without a development server or Expo Go. The installed app name is **Subject Japan Test**. The first time you use free-form translation, connect to Wi-Fi to download the translation models.
+Download the [November 24 Android test APK](https://github.com/homesweetlove/Subject-Japan/releases/download/android-test-45324759232/Subject-Japan-android-test-arm64.apk) from [GitHub Releases](https://github.com/homesweetlove/Subject-Japan/releases). It targets ARM64 Android devices and runs without a development server or Expo Go. The installed app name is **Subject Japan Test**. The first time you use free-form translation, connect to Wi-Fi to download the translation models.
 
 The test-only package `com.subjectjapan.app.preview` keeps its data separate from the production app. The APK uses Expo template test signing and is not a Play Store distribution. Signing key files are not stored in the repository or release. Future test APKs can also be generated from GitHub Actions using **Android test APK → Run workflow**; the workflow verifies bundle inclusion, signature, and package ID, then publishes the APK and SHA-256 to a GitHub prerelease.
 
@@ -182,7 +182,7 @@ Quality checks run for every code change; native compilation runs for module/plu
 
 ## Privacy and Security
 
-Profiles, sizes, history, transit cards, exchange rates, itineraries, benefits, last-train entries, and checklists are stored only on the device. Android dedicated builds use a Room 2.8.5 database and automatically migrate validated existing AsyncStorage data. iOS, Expo Go, and web use AsyncStorage implementations of the same storage contract. There is no self-hosted server, login, advertising, or analytics SDK. Android backup and iOS AsyncStorage backup are disabled. The storage layer is not an encrypted vault, so do not use it for passwords or payment information. See [privacy design](docs/privacy.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
+Profiles, sizes, history, transit cards, exchange rates, itineraries, benefits, last-train entries, and checklists are stored only on the device. Android dedicated builds use a Room 2.8.5 database and automatically migrate validated existing AsyncStorage data. iOS, Expo Go, and web use AsyncStorage implementations of the same storage contract. There is no account server, login, advertising, or analytics SDK. Public coupon catalog and source-status requests use external endpoints; personal profiles and travel records remain local. Android backup and iOS AsyncStorage backup are disabled. The storage layer is not an encrypted vault, so do not use it for passwords or payment information. See [privacy design](docs/privacy.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
 
 `.env*`, certificates, keystores, and platform-service configuration are excluded by `.gitignore`. Expo `EXPO_PUBLIC_*` values are public bundle values and must not contain secrets.
 
@@ -192,7 +192,7 @@ The build tool `xcode` indirectly depends on `uuid`; the project pins CommonJS-c
 
 Project-authored source code is available under the [MIT License](LICENSE), copyright © 2026 homesweetlove. Dependencies, third-party content and official information sources retain their own terms; see [Third-party notices](THIRD_PARTY_NOTICES.md).
 
-## Next Steps / External Dependencies
+## Maintenance / Known Limitations
 
 Existing features are connected across five tabs (cards and coupons share one). Hardware/external-data dependencies include:
 
@@ -200,7 +200,7 @@ Existing features are connected across five tabs (cards and coupons share one). 
 - Photos: Android uses bundled ML Kit Japanese/Korean OCR; iOS uses Vision. Handwriting, vertical text, and tiny receipt text can be recognized incorrectly, so users can edit before translation.
 - Voice: Android 12+ and an on-device recognition service are required; iOS requires language-specific `supportsOnDeviceRecognition`. If unavailable, the app does not fall back to server recognition. TTS uses the device system voice service.
 - Politeness: 23 prewritten phrase-pack entries provide three expression levels. ML Kit free-form translation has no tone-control API, so arbitrary politeness conversion is not supported.
-- Nearby coupons: candidates come from stores registered in OpenStreetMap. With user consent, searches send coordinates rounded to about 100 m to Overpass and do not guarantee coupon eligibility at a branch. Complete coupon collection/automatic refresh is not provided.
+- Nearby coupons: candidates come from stores registered in OpenStreetMap. With user consent, searches send coordinates rounded to about 100 m to Overpass and do not guarantee coupon eligibility at a branch. The catalog supports optional refresh, but does not provide exhaustive or real-time coupon eligibility.
 - Last train: verified-time manual-entry model. Real-time operation and automatic last-train search require a separate timetable provider. Native-app local notifications work while the app is closed; web/browser does not support them.
 - Payments: reference calculations only and do not guarantee store authorization or card-billing amounts. The app explains the November 1, 2026 refund method with Japan Tourism Agency sources; refund methods, fees and timing depend on each shop or refund company.
 
