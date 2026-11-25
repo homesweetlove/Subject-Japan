@@ -1,2 +1,6 @@
-# 한 줄에 패키지 하나. pkg/ 가지에서만 설치됩니다.
-expo-haptics
+expo-build-properties@~57.0.24
+expo-dev-client@~57.0.22
+expo-image-manipulator@~57.0.23
+expo-image-picker@~57.0.22
+expo-location@~57.0.24
+expo-notifications@~57.0.26
